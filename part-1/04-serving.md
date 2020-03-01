@@ -665,4 +665,39 @@ Uma vez que tenhamos feito isso, devemos adicionar `.data(Clients::new())` a tod
     }
 ```
 
+### Serializando o Response
+
+Até o momento estavamos utilizando o formato de criação de `HttpResponse` da seguinte maneira `HttpResponse::Ok().content_type("application/json").body(serde_json::to_string(&struct).expect("Failed to serialize todo cards"))`, mas existe uma forma que pode simplificar nossa vida por nos permitir delegar a chamada de `serde_json`. Esse formato substitui o `.body(...)` por `.json(...)`. A vantagem de se utilizar este formato é que reduz quantidade de código que nós devemos manter, delegando ao actix essa responsabilidade. Nos capítulo introdutórios do livro falamos que o actix estava com muita vantagem em relação aos outros frameworks nos benchmarks do `TECHEMPOWER`, porém, no caso de serialização Json, existem alguns frameworks C/C++ a sua frente e inclusive a crate `hyper`. O Objetivo de `body` é principalmente enviar mensagens sem dados estruturados ou estruturados em outros formatos como Edn.
+
+Com esse pequeno refactor, nossos controllers de `todo` vão ser modificados para o seguinte formato:
+
+```rust
+// src/todo_web_api/controller/todo.rs
+// ...
+pub async fn create_todo(state: web::Data<Clients>, info: web::Json<TodoCard>) -> impl Responder {
+    let todo_card = adapter::todo_json_to_db(info, uuid::Uuid::new_v4());
+
+    match put_todo(state.dynamo.clone(), todo_card) {
+        None => {
+            error!("Failed to create todo card");
+            HttpResponse::BadRequest().body("Failed to create todo card")
+        }
+        Some(id) => HttpResponse::Created()
+            .content_type("application/json")
+            .json(TodoIdResponse::new(id))
+    }
+}
+
+pub async fn show_all_todo(state: web::Data<Clients>) -> impl Responder {
+    match get_todos(state.dynamo.clone()) {
+        None => {
+            error!("Failed to read todo cards");
+            HttpResponse::InternalServerError().body("Failed to read todo cards")
+        }
+        Some(todos) => HttpResponse::Ok().content_type("application/json")
+            .json(TodoCardsResponse { cards: todos })
+    }
+}
+```
+
 Com isso, nosso código está pronto para receber novos clientes e nós podemos começar a pensar em autenticação.

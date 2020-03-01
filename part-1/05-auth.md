@@ -1354,7 +1354,32 @@ pub fn create_token(user: User, update_date: UpdateDate) -> String {
 }
 ```
 
-A primeira coisa que fazemos em `create_token` é gerar o algoritmo com a struct `Algorithm`.  Como vamos utilizar um algoritmo `HMAC SHA256` chamamos a função `new_hmac` e passamos como argumento o id que tipo que vamos utilizar com `AlgorithmID::HS256` e o segredo que vai ser passado. Uma boa alternativa para não ter o segredo exposto assim é ler ele de uma variável de ambiente. Depois disso, definimos o `header` com o algoritmo, o tipo e a data de criação em `json!({ "alg": alg.name(), "typ": "jwt", "date":  Utc::now().to_string()});`, note o uso da macro `json!` vinda de `serde_json`. Da mesma forma que com header, criamos o `payload` com os campos que nos interessam, `id, email, expires_at`. Por último geramos o token passando todas estas informações como argumento para função `encode` em `encode(&header, &payload, &alg).unwrap()`. Login pronto. Agora precisamos implementar o logout.
+A primeira coisa que fazemos em `create_token` é gerar o algoritmo com a struct `Algorithm`.  Como vamos utilizar um algoritmo `HMAC SHA256` chamamos a função `new_hmac` e passamos como argumento o id que tipo que vamos utilizar com `AlgorithmID::HS256` e o segredo que vai ser passado. Uma boa alternativa para não ter o segredo exposto assim é ler ele de uma variável de ambiente. Depois disso, definimos o `header` com o algoritmo, o tipo e a data de criação em `json!({ "alg": alg.name(), "typ": "jwt", "date":  Utc::now().to_string()});`, note o uso da macro `json!` vinda de `serde_json`. Da mesma forma que com header, criamos o `payload` com os campos que nos interessam, `id, email, expires_at`. Por último geramos o token passando todas estas informações como argumento para função `encode` em `encode(&header, &payload, &alg).unwrap()`.
+
+Para finalizar precisamos que `generate_jwt` responda um status com o conteúdo do token. Para isso fazemos um match em `resp` e retornamos `HttpResponse::InternalServerError().finish()` para o caso de `Err` e para o caso de `Ok` retornamos um `HttpResponse::Ok()` com um Json contendo a struct `Jst` serializada:
+
+```rust
+pub async fn generate_jwt(user: User, state: web::Data<Clients>) -> HttpResponse {
+    // ...
+    let resp = state.postgres.send(update_date.clone());
+    let token_jwt = create_token(user, update_date);
+    let jwt = crate::todo_api::model::core::Jwt::new(token_jwt);
+
+    match resp.await {
+        Ok(_) => {
+            HttpResponse::Ok()
+                .content_type("application/json")
+                .json(jwt)
+        }
+        Err(e) => {
+            error!("{:?}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+```
+
+Login pronto. Agora precisamos implementar o logout.
 
 ## Implementando o logout
 
@@ -1702,6 +1727,77 @@ A função `decode_jwt` consiste em separar os tokents do argumento `jwt` em par
 #[cfg(feature = "db-test")]
 pub fn decode_jwt(jwt: &str) -> Value {
     serde_json::from_str("{\"expires_at\": \"2020-11-02T00:00:00\", \"id\": \"bc45a88e-8bb9-4308-a206-6cc6eec9e6a1\", \"email\": \"my@email.com\"}").unwrap()
+}
+```
+
+Essa função não necessita grandes testes, já que ela não vai ser alterada com o tempo, mas é sempre bom testar que os valores batem. Assim, o módulo a seguire testa um token Jwt criado no site jwt.io e os valores de seu `claim` sendo transformado em Json pela macro `json!`. Depois disso, testamos a igualdade das partes. Com o teste a seguir vamos quebrar nossa pipeline de testes, pois este teste não utilzia a feature `dbtest` e é executado junto com todos os oturos testes. A solução mais simples para isso é separar testes unitários de testes de integração. Assim, criaremos um target `unit` no Makefile que executará `cargo test --lib`, e os testes de integração serão executados com `cargo test --test lib --features "dbtest"` que executará toda `lib` de `tests/lib`. Note os argumentos `--locked`, `--no-fail-fast` e `-- --test-threads 3`, que representam validar o `Cargo.lock`, não terminar o processo quando algum testes falha e executar os testes em 3 threads, repectivamente. Além disso, os testes `all_args_are_equal_is_accepted` e `all_args_are_not_equal_is_unauth` deverão ser movidos para a pasta de testes de integração `tests`, pois necessitam da feature `db-test`, coloquei eles em um módulo `todo_api_web/validation`.
+
+```rust
+#[cfg(test)]
+mod decode_jwt {
+    use super::decode_jwt;
+    use serde_json::json;
+
+    #[test]
+    fn decodes_random_jwt() {
+        let jwt = decode_jwt("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.tRF6jrkFnCfv6ksyU-JwVq0xsW3SR3y5cNueSTdHdAg");
+        let expected = json!({"sub": "1234567890", "name": "test", "iat": 1516239022 });
+
+        assert_eq!(jwt, expected);
+    }
+}
+```
+
+```sh
+int: db
+	sleep 2
+	diesel setup
+	diesel migration run
+	cargo test --test lib --no-fail-fast --features "dbtest" -- --test-threads 3
+	diesel migration redo
+
+
+unit:
+	cargo test --locked --no-fail-fast --lib -- --test-threads 3
+
+test: unit int
+```
+
+```rust
+// todo_api_web/validation.rs
+use todo_server::todo_api::core::{validate_jwt_info};
+use todo_server::todo_api::model::auth::User;
+use todo_server::todo_api_web::model::http::Clients;
+use actix_web::http::StatusCode;
+
+#[actix_rt::test]
+async fn all_args_are_equal_is_accepted() {
+    use dotenv::dotenv;
+    dotenv().ok();
+
+    let exec = Clients::new();
+    let state = actix_web::web::Data::new(exec);
+
+    let user = User::from("my@email.com".to_string(), "pass".to_string());
+    let email = "my@email.com".to_string();
+
+    let resp = validate_jwt_info(email.clone(), email, Ok(user), state).await;
+    assert_eq!(resp.status(), StatusCode::ACCEPTED);
+}
+
+#[actix_rt::test]
+async fn all_args_are_not_equal_is_unauth() {
+    use dotenv::dotenv;
+    dotenv().ok();
+
+    let exec = Clients::new();
+    let state = actix_web::web::Data::new(exec);
+
+    let user = User::from("not_my@email.com".to_string(), "pass".to_string());
+    let email = "my@email.com".to_string();
+
+    let resp = validate_jwt_info(email.clone(), email, Ok(user), state).await;
+    assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
 ```
 
