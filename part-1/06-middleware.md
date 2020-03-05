@@ -510,12 +510,19 @@ pub fn scan_user(user_email: String, conn: &PgConnection) -> Result<User, DbErro
 
 #[cfg(feature = "dbtest")]
 pub fn scan_user(user_email: String, _conn: &PgConnection) -> Result<User, DbError> {
+    use crate::schema::auth_user::dsl::*;
+    use diesel::debug_query;
+    use diesel::pg::Pg;
+    let query = auth_user.filter(email.eq(&user_email));
+    let expected = "SELECT \"auth_user\".\"email\", \"auth_user\".\"id\", \"auth_user\".\"password\", \"auth_user\".\"expires_at\", \"auth_user\".\"is_active\" FROM \"auth_user\" WHERE \"auth_user\".\"email\" = $1 -- binds: [\"my@email.com\"]".to_string();
+
+    assert_eq!(debug_query::<Pg, _>(&query).to_string(), expected);
     Ok(User::from(user_email, "this is a hash".to_string()))
 }
 
 #[cfg(feature = "dbtest")]
-pub fn test_scan_user(user_email: String, id: String, _conn: &PgConnection) -> Result<User, DbError> {
-    Ok(User::test_from(user_email, "this is a hash".to_string(), id))
+pub fn test_scan_user(user_email: String, auth_id: String, _conn: &PgConnection) -> Result<User, DbError> {
+    Ok(User::test_from(user_email, "this is a hash".to_string(), auth_id))
 }
 
 // src/todo_api/model/auth.rs

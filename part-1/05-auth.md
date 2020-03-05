@@ -1141,7 +1141,7 @@ pub fn scan_user(user_email: String, conn: &PgConnection) -> Result<Vec<User>,Db
 }
 ```
 
-É bastante simples o que acontece aqui, filtramos na tabela `auth_user` por um `user_email` que seja igual ao que enviamos. Caso essa lista seja maior que 1, houve um problema no banco de dados, pois como `email` é uma chave primária não podem haver 2, ou mais, repetidos. Qualquer outro `Err` é um `DbError` de não encontrar o usuário ou problemas de conexão. Temos um `Ok` extra que valida se a lista é zero, e retorna o erro `CannotFindUser` como a cláusula `Err`. E o `Ok` restante é o caso que procuramos. Note que ainda temos um refactor a fazer aqui, este refactor é modificar o tipo de retorno `Result<Vec<User>,DbError>` para `Result<User,DbError>` utilizando um `.first().unwrap()`, já que temos certeza que esse `first` existe. Além disso, precisamos adaptar este código para o teste, já que a ação `user.filter(email.eq(&user_email)).load::<User>(conn)` não deve existir. Fazemos essa adaptação retornando um `Ok` com um `User` contendo o email que enviamos. Caso você prefira substituir o `password` por uma hash válida para a senha sendo enviada no teste, não seria mais necessário utilizar a `cfg feature` para `verify`:
+É bastante simples o que acontece aqui, filtramos na tabela `auth_user` por um `user_email` que seja igual ao que enviamos. Caso essa lista seja maior que 1, houve um problema no banco de dados, pois como `email` é uma chave primária não podem haver 2, ou mais, repetidos. Qualquer outro `Err` é um `DbError` de não encontrar o usuário ou problemas de conexão. Temos um `Ok` extra que valida se a lista é zero, e retorna o erro `CannotFindUser` como a cláusula `Err`. E o `Ok` restante é o caso que procuramos. Note que ainda temos um refactor a fazer aqui, este refactor é modificar o tipo de retorno `Result<Vec<User>,DbError>` para `Result<User,DbError>` utilizando um `.first().unwrap()`, já que temos certeza que esse `first` existe. Além disso, precisamos adaptar este código para o teste, já que a ação `user.filter(email.eq(&user_email)).load::<User>(conn)` não deve existir. Fazemos essa adaptação retornando um `Ok` com um `User` contendo o email que enviamos. Na função `scan_user` com a feature `dbtest` ainda fazemos um assert na query que será gerada por `auth_user.filter(email.eq(&user_email))` e validamos com o `debug_query`. Caso você prefira substituir o `password` por uma hash válida para a senha sendo enviada no teste, não seria mais necessário utilizar a `cfg feature` para `verify`:
 
 ```rust
 #[cfg(not(feature = "dbtest"))]
@@ -1162,6 +1162,13 @@ pub fn scan_user(user_email: String, conn: &PgConnection) -> Result<User, DbErro
 
 #[cfg(feature = "dbtest")]
 pub fn scan_user(user_email: String, _conn: &PgConnection) -> Result<User, DbError>{
+    use crate::schema::auth_user::dsl::*;
+    use diesel::debug_query;
+    use diesel::pg::Pg;
+    let query = auth_user.filter(email.eq(&user_email));
+    let expected = "SELECT \"auth_user\".\"email\", \"auth_user\".\"id\", \"auth_user\".\"password\", \"auth_user\".\"expires_at\", \"auth_user\".\"is_active\" FROM \"auth_user\" WHERE \"auth_user\".\"email\" = $1 -- binds: [\"my@email.com\"]".to_string();
+
+    assert_eq!(debug_query::<Pg, _>(&query).to_string(), expected);
     Ok(User::from(user_email, "this is a hash".to_string()))
 }
 ```
