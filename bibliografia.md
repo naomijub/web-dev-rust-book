@@ -14,3 +14,5 @@
 12. [Código do frontend para visualização de passagens](https://github.com/web-dev-rust/wasm-airline)
 13. [Actix](https://actix.rs/)
 14. [Guia do Diesel](http://diesel.rs/guides/getting-started/)
+15. [How to Graphql](https://www.howtographql.com/)
+16. [Livro GraphQL da Casa do Código](https://www.casadocodigo.com.br/products/livro-graphql?_pos=1&_sid=a01bcef18&_ss=r)

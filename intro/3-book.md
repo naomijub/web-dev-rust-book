@@ -2,19 +2,22 @@
 
 Este livro está organizado da seguinte forma. Nos capítulos de introdução teremos um guia de instalação e um exercício básico. Nosso primeiro projeto será um servidor gerenciador de tarefas, com a primeira parte sendo um serviço baseado em Actix-web, o framework rust que tem feito muito barulho pelas suas constantes primeiras colocações nos benchmarks de performance, principalmente da Techempower, e algumas confusões pelo uso de `unsafe`, mas acredito que o framework seja bastante simples de entender e muito completo, mais informações no apêndice A. Vamos utilizar diversas ferramentas da stack Actix para garantir um serviço completo e algumas ferramentas clássicas da comunidade rust como Serde para serialização de Json e um banco de dados. Para este projeto vamos utilizar DynamoDB como banco de dados, e um padrão de arquitetura de software inspirado no framework phoenix do Elixir. Na segunda parte vamos modelar um serviço que retorna valores e rotas de passagens aéreas e responde via GraphQL, esse serviço realizará requests pare serviços reais. Este outro serviço será desenvolvido em um novo padrão, conhecido como Cebola, inspirado no livro **Clean Architecture** de Robert C. Martin, na qual separamos funções puras na parte de dentro e funções impuras na parte mais externa. A terceira parte do livro será a construção de um frontend com a Yew Stack baseada em WebAssembly para a repsentação das passagens. Lembrando que Html e Css serão mantidos de forma primitiva por não serem o foco deste livro.
 
- ### Por que do DynamoDB 
+* Para a parte 2 do livro, recomendo conhecer os conceitos de GraphQL, livros e tutoriais estão indicados na bibliografia. 
+* Para a parte 3 do livro, recomendo conhecer os conceitos de WebAssembly, livro oficial gratuíto indicado na bibliografia.
+
+### Por que do DynamoDB 
  
- Existem dois motivos para eu ter escolhido utilizar o DyanomeDB para nosso serviço.
- 1. Existem centenas de ótimos exemplos utilizando o banco Postgres com a crate Diesel. Inclusive integrando com AWS e em Português. Além do mais, vamos utilizar o Postgres com Diesel, só que não como nosso principal banco de dados, já que é bastante comum aplicações diferentes possuirem mais de um tipo de banco de dados.
- 2. Em um mundo cada vez mais voltado ao cloud, escolher uma tecnologia nativa de cloud parece uma boa solução.
- Agora, isso não quer dizer que o DynamoDB seja o banco que modela perfeitamente nosso domínio ou as relações entre ele, mas é um banco com uma eprformance excepcional que permite muita flexibilidade ao modelar domínios. Alguns limites associados a transações e typos no DynamoDB:
- * O tamanho máximo de uma String é limitada a `400KB`, assim como para binários. 
- * Uma String de expressão pode ter no máximo `4KB`.
- * Uma transação não pode conter mais de 25 itens únicos, assim como não pode conter mais de `25MB` de dados.
- * É possível ter até 50 request simultâneos para criar, atualizar ou deletar tabelas.
- * `BatchGetItem`, buscar um conjunto de itens pode trazer no máximo 100 itens e um total de `16MB` de dados.
- * `BatchWriteItem`, como `PutItem` e `DeleteItem` podem conter até 25 itens e um total de `16MB` de dados.
- * `Query` e `Scan` tem um limite de `1MB` por chamada.
+Existem dois motivos para eu ter escolhido utilizar o DyanomeDB para nosso serviço.
+1. Existem centenas de ótimos exemplos utilizando o banco Postgres com a crate Diesel. Inclusive integrando com AWS e em Português. Além do mais, vamos utilizar o Postgres com Diesel, só que não como nosso principal banco de dados, já que é bastante comum aplicações diferentes possuirem mais de um tipo de banco de dados.
+2. Em um mundo cada vez mais voltado ao cloud, escolher uma tecnologia nativa de cloud parece uma boa solução.
+Agora, isso não quer dizer que o DynamoDB seja o banco que modela perfeitamente nosso domínio ou as relações entre ele, mas é um banco com uma eprformance excepcional que permite muita flexibilidade ao modelar domínios. Alguns limites associados a transações e typos no DynamoDB:
+* O tamanho máximo de uma String é limitada a `400KB`, assim como para binários. 
+* Uma String de expressão pode ter no máximo `4KB`.
+* Uma transação não pode conter mais de 25 itens únicos, assim como não pode conter mais de `25MB` de dados.
+* É possível ter até 50 request simultâneos para criar, atualizar ou deletar tabelas.
+* `BatchGetItem`, buscar um conjunto de itens pode trazer no máximo 100 itens e um total de `16MB` de dados.
+* `BatchWriteItem`, como `PutItem` e `DeleteItem` podem conter até 25 itens e um total de `16MB` de dados.
+* `Query` e `Scan` tem um limite de `1MB` por chamada.
 
 ### Phoenix MVC
  
