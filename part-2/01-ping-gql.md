@@ -71,3 +71,188 @@ async fn main() -> std::io::Result<()> {
 ```
 
 Pronto! ao acessar `localhost:4000` recebemos um `404`. Próximo passo é adicionarmos a query de `ping`.
+
+## Ping em GraphQL
+
+Primeiro passo para o `ping` seria pensarmos o schema correspondente na estrutura GraphQL. Assim, nosso objetivo é realizar uma query nomeada `ping` que retorne uma string contento `"pong"`. Para isso sabemos que precisaremos que uma função `ping` que retornar um `Result<String, Error>` que contém `pong`, algo como:
+
+```rust
+fn ping() -> Result<String, Error> {
+    Ok(String::from("pong"))
+}
+```
+
+Mas esta função precisa estar dentro de um contexto `Query` do graphql e para isso criamos uma struct chamada de `QueryRoot`, que corresponde a raiz das queries, e aplicamos a macro `#[juniper::object]` que transforma essa implementação de queries, `impl QueryRoot`, em um objeto graphql do tipo `Query`. Note que o tipo de retorno é um `FieldResult`, que corresponde a um tipo `Result` que já abstraiu o tipo do `Error` para um erro que o GraphQL possa entender.
+
+```rust
+use juniper::FieldResult;
+
+pub struct QueryRoot;
+
+#[juniper::object]
+impl QueryRoot {
+    fn ping() -> FieldResult<String> {
+        Ok(String::from("pong"))
+    }
+}
+```
+
+Segundo passo seria declarar um tipo `Schema` que poderá ser utilizado pelos handlers do Graphql para validar as queries, as mutations e os tipos. Esse `Schema` é composto de duas partes, a `QueryRoot` e a `MutationRoot`, que são designadas a um nó contendo os schemas chamado `RootNode`, `pub type Schema = RootNode<'static, QueryRoot, MutationRoot>;`. Como ainda não temos nenhuma mutation, nosso `MutationRoot` é bastante simples:
+
+```rust
+pub struct MutationRoot;
+
+#[juniper::object]
+impl MutationRoot {}
+```
+
+> Queries e Mutations
+> 
+> O objetivo de uma query é "perguntar" para o sistema algum conjunto de infotmações, enquanto o objetivo da mutation é "mutar" alguma informação que o sistema possui, mas suas declarações são bastante parecidas com as das queries.
+
+Por último precisamos de uma função que retorne o schema que criamos, que chamaremos de `create_schema`:
+
+```rust
+use juniper::FieldResult;
+use juniper::RootNode;
+
+pub struct QueryRoot;
+
+#[juniper::object]
+impl QueryRoot {
+    fn ping() -> FieldResult<String> {
+        Ok(String::from("pong"))
+    }
+}
+
+pub struct MutationRoot;
+
+#[juniper::object]
+impl MutationRoot {}
+
+pub type Schema = RootNode<'static, QueryRoot, MutationRoot>;
+
+pub fn create_schema() -> Schema {
+    Schema::new(QueryRoot {}, MutationRoot {})
+}
+```
+
+Com isso podemos criar o módulo `schema` em `schema.rs`. Próximo passo é disponibilizar este `Schema` para a aplicação, podemos fazer isso utilizando a função `data` de `actix_web::App`:
+
+```rust
+#[macro_use]
+extern crate juniper;
+extern crate serde_json;
+
+use actix_web::{web, App, HttpServer};
+
+mod schemas;
+
+use crate::schemas::{create_schema, Schema};
+
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
+    let schema: std::sync::Arc<Schema> = std::sync::Arc::new(create_schema());
+
+    HttpServer::new(move || {
+        App::new()
+            .data(schema.clone())
+            .default_service(web::to(|| async { "404" }))
+    })
+    .bind("127.0.0.1:4000")?
+    .run()
+    .await
+}
+```
+
+Estamos utilizando a definição `let schema: std::sync::Arc<Schema> =` para fazer um vínculo da variável `schema` ao contexto de `main`, note, também, que seu tipo precis ser `std::sync::Arc`, pois todas as threads do graphql estarão acessado esse `Schema`. O próximo passo é definirmos as rotas dos `handlers` para o GraphQL, fazemos isso no módulo `handlers` e exportamos estas infos pela função `routes`:
+
+```rust
+#[macro_use]
+extern crate juniper;
+extern crate serde_json;
+
+use actix_web::{web, App, HttpServer};
+
+mod handlers;
+mod schemas;
+
+use crate::handlers::routes;
+use crate::schemas::{create_schema, Schema};
+
+
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
+    let schema: std::sync::Arc<Schema> = std::sync::Arc::new(create_schema());
+
+    HttpServer::new(move || {
+        App::new()
+            .data(schema.clone())
+            .configure(routes)
+            .default_service(web::to(|| async { "404" }))
+    })
+    .bind("127.0.0.1:4000")?
+    .run()
+    .await
+}
+```
+
+Assim, a função `routes` do módulo `handlers` possuirá a seguinte estrutura:
+
+```rust
+pub fn routes(config: &mut web::ServiceConfig) {
+    config
+        .route("/graphql", web::post().to(graphql))
+        .route("/graphiql", web::get().to(graphiql));
+}
+```
+
+Nossa configuração possuirá duas rotas `/graphql`, que é a rota na qual fazemos um post com nossa query, e `/graphiql`, que será uma rota que nos exibirá uma página web interativa da nossa aplicação:
+
+![página interativa do graphiql](../imagens/graphiqlping.png)
+
+Note que a direita na rota `graphiql` existe uma aba chamada de `Documentation Explorer`, ela nos permite saber as queries e as mutations disponíveis, assim como seus tipos de entrada e tipos de retorno.
+
+Agora, o handler `graphiql`é bastante simples, sua única função é encondar em `HTML` o handler `graphql`:
+
+```rust
+pub async fn graphiql() -> HttpResponse {
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(graphiql_source("/graphql"))
+}
+```
+
+Com isso, podemos finalmente entender o que o handler `graphql` faz:
+
+```rust
+use std::sync::Arc;
+
+use actix_web::{web, Error, HttpResponse};
+use juniper::http::graphiql::graphiql_source;
+use juniper::http::GraphQLRequest;
+
+use crate::schemas::{Schema};
+
+pub async fn graphql(
+    schema: web::Data<Arc<Schema>>,
+    data: web::Json<GraphQLRequest>,
+) -> Result<HttpResponse, Error> {
+    let res = web::block(move || {
+        let res = data.execute(&schema, &());
+        Ok::<_, serde_json::error::Error>(serde_json::to_string(&res)?)
+    })
+    .await
+    .map_err(Error::from)?;
+
+    Ok(HttpResponse::Ok()
+        .content_type("application/json")
+        .body(res))
+}
+```
+
+O handler `graphql` recebe como argumento dois campos 1. `schema` através do tipo actix `web::Data<Arc<Schema>>` e o request `data` do tipo `web::Json<GraphQLRequest>`. A magia acontece na linha `data.execute(&schema, &())`, na qual o GraphQL executa nosso request, `data`, com base no `schema`. Depois disso, encodamos o resultado para Json e respondemos como um `Result<HttpResponse, Error>` oriundo de ` Ok(HttpResponse::Ok().content_type("application/json").body(res))`. Se você executar este código será possível fazer a query `ping` em localhost:4000/graphql:
+
+![QUery `ping` em `/graphql`](../imagens/ping_via_postman.png)
+
+## Testando o endpoint
