@@ -159,3 +159,15 @@ Continue lendo em https://medium.com/@maxsparr0w/performance-of-node-js-compared
     "x-auth": "eyJhbGciOiJIUzI1NiIsImRhdGUiOiIyMDIwLTAyLTI4IDAxOjQxOjU2LjA2NjYxNTQwMCBVVEMiLCJ0eXAiOiJqd3QifQ.eyJlbWFpbCI6Im15QGVtYWlsLmNvbSIsImV4cGlyZXNfYXQiOiIyMDIwLTAyLTI5VDAxOjQxOjU2LjA2MzI2ODgwMCIsImlkIjoiZDdjNTk1MTItYjlhYS00NzBhLWEwNjUtZTAwYTYxMTcxYmE0In0.gIycarcQhbbcjvYIHDW_9fVgCFrFs1LjlJFMZGIm_kw"
 }
 ```
+
+## Recomendations GraphQL
+
+### GraphQL:
+-  Graphich interface: http://localhost:4000/graphiql
+-  Para requests: 
+
+### API Externa
+
+- Recomendações de voos: https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/recommendations/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=
+
+- Melhores preços https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=

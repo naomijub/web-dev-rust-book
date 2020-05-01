@@ -256,3 +256,48 @@ O handler `graphql` recebe como argumento dois campos 1. `schema` através do ti
 ![QUery `ping` em `/graphql`](../imagens/ping_via_postman.png)
 
 ## Testando o endpoint
+
+Como na parte anterior do livro falamos de como criar testes de integração no diretório `tests/`, agora vamos partir para outra estratégia, que é criar testes de integração dentro do `src/`, pois isto nos permite tirar proveito da flag `#[cfg(test)]`. Para fazermos isso, precisamos criar um módulo `test`, anotoado com a flag `#[cfg(test)]` em `main.rs`:
+
+```rust
+...
+mod handlers;
+mod schemas;
+#[cfg(test)] mod test;
+...
+```
+
+Depois disso é preciso criar o arquivo `src/test/mod.rs`, que declarará o nome dos submodulos de teste, neste caso um simples `pub mod ping;`. Para testarmos o `ping` precisamos criar o módulo que declaramos em `src/test/ping.rs`:
+
+```rust
+#[cfg(test)]
+mod ping_readiness {
+    use crate::handlers::routes;
+    use crate::schemas::{create_schema, Schema};
+
+    use actix_web::{test, App};
+    use bytes::Bytes;
+
+    #[actix_rt::test]
+    async fn test_ping_pong() {
+        let schema: std::sync::Arc<Schema> = std::sync::Arc::new(create_schema());
+
+        let mut app =
+            test::init_service(App::new().data(schema.clone()).configure(routes)).await;
+
+        let req = test::TestRequest::post()
+            .uri("/graphql")
+            .header("Content-Type", "application/json")
+            .set_payload("{\"query\": \"query ping { ping }\"}")
+            .to_request();
+        let resp = test::read_response(&mut app, req).await;
+
+        assert_eq!(resp, Bytes::from_static(b"{\"data\":{\"ping\":\"pong\"}}"));
+    }
+}
+
+```
+
+A estrutura do teste é praticamente igual a estrutura que estavamos utilizando anteriormente, as únicas diferenças são `let schema: std::sync::Arc<Schema> = std::sync::Arc::new(create_schema());`, que a rota agora é `/graphql` e que o payload é um json contendo um campo `query` seguido de sua query `"{\"query\": \"query ping { ping }\"}"`. 
+
+Agora vamos a implementação da primeira query de consulta, que chamaremos de `bestPrices`.
