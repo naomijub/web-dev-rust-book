@@ -52,12 +52,12 @@ todo_api
         |-> web
         |-> db
         |-> message
-    |-> controllers
+    |-> controllers/resolvers
     |-> adapters
     |-> core 
         |-> business
         |-> compute
-    |-> models
+    |-> models/schemas
 ```
 
 * Qual nomenclatura ou quais nomes específicos você vai dar para seus módulos é menos relevante do que a forma como as coisas estarão organizadas, a única coisa importante de lembrar é a necessidade de seu código e sua orgsanização ser inteligivel para todas as pessoas.
