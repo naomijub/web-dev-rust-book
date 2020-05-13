@@ -1,6 +1,6 @@
 # Best Prices
 
-Nesta query vamos fazer uma consulta a uma API externa que retorna os melhores preços para uma rota (data, origem e destino). Chamaremos esta query de `bestPrices` e consultaremos a URL `https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=`, na qual `departure` é a data de partida no formato `ano-mes-dia`, `origin` é o código IATA da cidade ou do aeroporto de origem, `destination` é o código IATA da cidade ou do aeroporto de destino. Assim, nossa query deve receber 3 argumentos `departure`, `origin` e `destination`, além de lançar erros, caso estes argumentos não estejam dentro do padrão esperado. Com isso, nosso primeiro passo será implementar a função `bestPrices` que recebe os 3 argumentos e por enquanto retornará uma `String`.
+Nesta query, `bestPrices`, vamos fazer uma consulta a uma API externa que retorna os melhores preços para uma rota (data, origem e destino). Consultaremos a URL de `bestPrices` da Latam `https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=`, na qual `departure` é a data de partida no formato `ano-mes-dia`, `origin` é o código IATA da cidade ou do aeroporto de origem, `destination` é o código IATA da cidade ou do aeroporto de destino. Assim, nossa query deve receber 3 argumentos `departure`, `origin` e `destination` e retornar um conjunto de melhores preços, além de lançar erros. Caso estes argumentos não estejam dentro do padrão esperado. Com isso, nosso primeiro passo será implementar a função `bestPrices` que recebe os 3 argumentos e por enquanto retornará uma `String`.
 
 ## Implementando a função básica de `bestPrices`
 
@@ -378,3 +378,236 @@ fn bestPrices(
 Próximo passo é responder as informações de `bestPrices` em vez de `Ok(String::from("test"))`.
 
 ## Respondendo informacões de `bestPrices`
+
+Para este caso devemos utilizar um cliente HTTP, que usualmente são assíncronos em Rust, porém a crate que estamos utilizando para GraphQL ainda não tem um suporte muito sólido para `async/await`, e por isso preferi utilizar a crate de cliente HTTP `reqwest` com o módulo `reqwest::blocking`, mesmo que actix possua seu próprio módulo de cliente `actix_web::client`.
+
+> Exemplo de client com `actix_web::client`
+> 
+> ```rust 
+> use actix_web::client::Client;
+> 
+> #[actix_rt::main]
+> async fn main() {
+>   let mut client = Client::default();
+>
+>   // Cria `request builder` e envia com `send`
+>   let response = client.get("http://www.rust-lang.org")
+>      .header("User-Agent", "Actix-web")
+>      .send().await;  // <-Envia o request
+>
+>   println!("Response: {:?}", response);
+>}
+> ```
+
+### Conhecendo o endpoint
+
+Consultando o endpoint de `best_prices` para origem `POA` e destino `GRU` https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure={data}&origin={iata}&destination={iata}&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode= recebemos o seguinte campos relevantes no Json:
+
+```json
+{
+    "itinerary":{
+       "date":"2020-07-21",
+       "originDestinations":[
+          {
+             "duration":95,
+             "departure":{
+                "airport":"POA",
+                "city":"POA",
+                "country":"BR",
+                "timestamp":"2020-07-21T11:10-03:00"
+             },
+             "arrival":{
+                "airport":"GRU",
+                "city":"SAO",
+                "country":"BR",
+                "timestamp":"2020-07-21T12:45-03:00"
+             }
+          }
+       ]
+    },
+    "bestPrices":[
+       {
+          "date":"2020-07-18",
+          "available":true,
+          "price":{
+             "amount":117.03,
+             "currency":"BRL"
+          }
+       },
+       {
+          "date":"2020-07-19",
+          "available":true,
+          "price":{
+             "amount":117.03,
+             "currency":"BRL"
+          }
+       },
+       {
+          "date":"2020-07-20",
+          "available":true,
+          "price":{
+             "amount":117.03,
+             "currency":"BRL"
+          }
+       },
+       {
+          "date":"2020-07-21",
+          "available":true,
+          "price":{
+             "amount":117.03,
+             "currency":"BRL"
+          }
+       },
+       {
+          "date":"2020-07-22",
+          "available":true,
+          "price":{
+             "amount":117.03,
+             "currency":"BRL"
+          }
+       },
+       {
+          "date":"2020-07-23",
+          "available":true,
+          "price":{
+             "amount":117.03,
+             "currency":"BRL"
+          }
+       },
+       {
+          "date":"2020-07-24",
+          "available":true,
+          "price":{
+             "amount":117.03,
+             "currency":"BRL"
+          }
+       }
+    ]
+ }
+```
+
+Com isso, precisamos modelar a resposta de cada campo para uma estrutura de dados correspondete localizadas em `schema/model/web.rs`, chamaremos esta estrutura de `BestPrices`:
+
+```rust
+use juniper::GraphQLObject;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct BestPrices {
+    itinerary: Itinerary,
+    best_prices: Vec<BestPrice>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct Itinerary {
+    date: String,
+    origin_destinations: Vec<OriginDestination>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct OriginDestination {
+    duration: i32,
+    departure: AirportInfo,
+    arrival: AirportInfo,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct AirportInfo {
+    airport: String,
+    city: String,
+    country: String,
+    timestamp: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct BestPrice {
+    date: String,
+    available: bool,
+    price: Price,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct Price {
+    amount: f64,
+    currency: String,
+}
+}
+```
+
+Para podermos converter o json em uma estrutura de dados Rust vamos precisar utilizar a crate `serde` e adicionar `#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]` em todas as struct anteriores. Além disso, utilizaremos `#[serde(rename_all = "camelCase")]` para transformar campos `snake_case` em `camelCase`, como `origin_destinations`, e a macro `GraphQLObject` para indicar que estas structs correspondem a um objeto GraphQL. Agora podemos fazer um request para este endpoint, para isso vamos criar o módulo `boundaries/http_out` e utilizar o `reqwest` para fazer um `GET` no endpoint:
+
+```rust
+use reqwest::{blocking::Response, Result};
+
+pub fn best_prices(departure: String, origin: String, destination: String) -> Result<Response> {
+    let url =
+        format!("https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure={}&origin={}&destination={}&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=", departure, origin, destination);
+    reqwest::blocking::get(&url)
+}
+```
+
+A função `best_prices` formata a `url` do request adicionando os parâmetros `departure, origin, destination` para utilizar a função bloqueante `get` de `reqwest`, `reqwest::blocking::get(&url)`. O tipo de retorno é um `Result<Response>` da própria crate `reqwest`.
+
+### Resolvendo `BestPrices`
+
+Com a função `boundaries::http_out::best_prices` fazendo o request, precisamos transformar o resultado desse request em uma estrutura de dados do tipo `BestPrices` que serializa e implementa `GraphQLObject`. Para coordenarmos isso, criamos um módulo `resolvers/internal` que vai implementar a função `best_prices_info`: 
+
+```rust
+use crate::boundaries::http_out::best_prices;
+use crate::schema::{errors::InputError, model::web::BestPrices};
+
+pub fn best_prices_info(
+    departure: String,
+    origin: String,
+    destination: String,
+) -> Result<BestPrices, InputError> {
+    let best_prices_text = best_prices(departure, origin, destination)
+        .unwrap()
+        .text()
+        .unwrap();
+
+    let best_prices: BestPrices = serde_json::from_str(&best_prices_text).unwrap();
+
+    Ok(best_prices)
+}
+```
+
+Note que o resultado da função `boundaries::http_out::best_prices` é um `reqwest::Result<reqwest::blocking::response>`, e que para utilizarmos seus dados precisamos tratar como um `Result` usual, por isso aplicamos `unwrap`. Além disso, queremos a informação presente no `body` da resposta, que obtemos como texto utilizando a função `text`, que retorna um `Result`, definimos o resultado deste processo como `best_prices_text`. Com `best_prices_text` podemos transformar esse texto em uma estrutura `BestPrices` utilizando a função `serde_json::from_str`, como em `let best_prices: BestPrices = serde_json::from_str(&best_prices_text).unwrap();` e retornar essa infomacão em um `Ok`. O código ainda possui alguns defeitos como a grande quantidade de `unwraps` e um `InputError` totalmente deslocado, logo veremos como melhorar o código neste sentido. `best_prices_info` ainda não está conectado a nenhuma parte do código GraphQL, assim, precisamos chamar esta função no resolver GraphQL `best_prices` e mudar seu tipo de resposta para utilizar `schema::model::web::BestPrices`, `Result<BestPrices, InputError`.
+
+```rust
+use crate::core::error;
+use crate::resolvers::internal::best_prices_info;
+use crate::schema::{errors::InputError, model::web::BestPrices};
+use juniper::FieldResult;
+use juniper::RootNode;
+
+pub struct QueryRoot;
+
+#[juniper::object]
+impl QueryRoot {
+    fn ping() -> FieldResult<String> {
+        Ok(String::from("pong"))
+    }
+
+    fn bestPrices(
+        departure: String,
+        origin: String,
+        destination: String,
+    ) -> Result<BestPrices, InputError> {
+        match (
+            error::iata_format(&origin, &destination),
+            error::departure_date_format(&departure),
+        ) {
+            (Err(e), Err(e2)) => Err(e),
+            (Err(e), _) => Err(e),
+            (_, Err(e)) => Err(e),
+            _ => best_prices_info(departure, origin, destination),
+        }
+    }
+}
+// ...
+```
+
+## Melhorando as mensagens de erro.
