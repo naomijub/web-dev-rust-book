@@ -430,56 +430,49 @@ Consultando o endpoint de `best_prices` para origem `POA` e destino `GRU` https:
           "date":"2020-07-18",
           "available":true,
           "price":{
-             "amount":117.03,
-             "currency":"BRL"
+             "amount":117.03, "currency":"BRL"
           }
        },
        {
           "date":"2020-07-19",
           "available":true,
           "price":{
-             "amount":117.03,
-             "currency":"BRL"
+             "amount":117.03, "currency":"BRL"
           }
        },
        {
           "date":"2020-07-20",
           "available":true,
           "price":{
-             "amount":117.03,
-             "currency":"BRL"
+             "amount":117.03, "currency":"BRL"
           }
        },
        {
           "date":"2020-07-21",
           "available":true,
           "price":{
-             "amount":117.03,
-             "currency":"BRL"
+             "amount":117.03, "currency":"BRL"
           }
        },
        {
           "date":"2020-07-22",
           "available":true,
           "price":{
-             "amount":117.03,
-             "currency":"BRL"
+             "amount":117.03, "currency":"BRL"
           }
        },
        {
           "date":"2020-07-23",
           "available":true,
           "price":{
-             "amount":117.03,
-             "currency":"BRL"
+             "amount":117.03, "currency":"BRL"
           }
        },
        {
           "date":"2020-07-24",
           "available":true,
           "price":{
-             "amount":117.03,
-             "currency":"BRL"
+             "amount":117.03, "currency":"BRL"
           }
        }
     ]
@@ -611,3 +604,218 @@ impl QueryRoot {
 ```
 
 ## Melhorando as mensagens de erro.
+
+O conceito de `Input Error` é particularmente estranho para erros de conversão de Json com `serde` ou de request com `reqwest`, assim, uma possível solução é fazer um **"super grupo"** de erros, que vou chamar de `GenericError`, e esse vai possuír um `enum` chamado `InternalError`:
+
+```Rust
+#[derive(Debug, Clone, PartialEq)]
+pub enum GenericError {
+    InputError(InputError),
+    InternalError(InternalError),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InputError {
+    IataFormatError,
+    DateFormatError,
+    InvalidDateError,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InternalError {
+    RequestFailedError,
+    ResponseParseError,
+}
+```
+
+A próxima mudança que podemos fazer é alterar todos os `Result<BestPrices, InputError>` para `Result<BestPrices, GenericError>`, o que causa uma grande quantidade de alarmes em nosso código, mas em vez de arrumarmos cada um dos alarmes e termos mais dor de cabeça, vamos implementar a trait `From` para dois erros do tipo `GenericError::InternalError`, `reqwest::Error` e `serde_json::Error`, pois estes são os erros que queremos lançar na função `esolvers::internal::best_prices_info;`. O primeiro erro, `reqwest::Error`, tem como objetivo retirar o `unwrap` e o `expect` da chamada `best_prices(departure, origin, destination).unwrap().text().expect(...);`, obtendo como resultado `best_prices(departure, origin, destination)?.text()?;`, que nos ajuda a aproveitar o tipo de retorno `GenericError`. O mesmo faremos para transformar a chamada de `serde_json::from_str(&best_prices_text).unwrap();` em `serde_json::from_str(&best_prices_text)?;` aplicando a trait `From` no tipo de erro `serde_json::Error`:
+
+```rust
+impl From<reqwest::Error> for GenericError {
+    fn from(e: reqwest::Error) -> Self {
+        GenericError::InternalError(InternalError::RequestFailedError)
+    }
+}
+
+impl From<serde_json::Error> for GenericError {
+    fn from(e: serde_json::Error) -> Self {
+        GenericError::InternalError(InternalError::ResponseParseError)
+    }
+}
+```
+
+O efeito disso é que o arquivo `resolver/internal.rs` se torna muito mais simples:
+
+```rust
+use crate::boundaries::http_out::best_prices;
+use crate::schema::{errors::GenericError, model::web::BestPrices};
+
+pub fn best_prices_info(
+    departure: String,
+    origin: String,
+    destination: String,
+) -> Result<BestPrices, GenericError> {
+    let best_prices_text = best_prices(departure, origin, destination)?.text()?;
+    let best_prices: BestPrices = serde_json::from_str(&best_prices_text)?;
+
+    Ok(best_prices)
+}
+```
+
+Com isso, podemos notar que a vida da query `bestPrices` ficou muito mais simples, pois o `match` se torna desnecessário, já que as funções `error::iata_format`e `error::departure_date_format` retornam um tipo `Result<(),InputError>`, que é facilmente convertido para um `Result<(),GenericError>`, nos permitindo utilizar a sintaxe `try` para elas na query `bestPrices`, `error::iata_format(&origin, &destination)?;` e `error::departure_date_format(&departure)?;`. O arquivo `core/error.rs` passa a ter a seguinte aparência:
+
+```rust
+use crate::schema::errors::{GenericError, InputError};
+use chrono::{naive::NaiveDate, offset::Utc};
+
+pub fn iata_format(origin: &str, destination: &str) -> Result<(), GenericError> {
+    if origin.len() != 3
+        || !origin.chars().all(char::is_alphabetic)
+        || destination.len() != 3
+        || !destination.chars().all(char::is_alphabetic)
+    {
+        Err(GenericError::InputError(InputError::IataFormatError))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn departure_date_format(date: &str) -> Result<(), GenericError> {
+    let departure = NaiveDate::parse_from_str(date, "%Y-%m-%d");
+    match departure {
+        Err(_) => Err(GenericError::InputError(InputError::DateFormatError)),
+        Ok(d) => {
+            let today = Utc::today();
+            if d.signed_duration_since(today.naive_utc()).num_days() > 0 {
+                Ok(())
+            } else {
+                Err(GenericError::InputError(InputError::InvalidDateError))
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod date {
+    use super::departure_date_format;
+    use crate::schema::errors::{InputError, GenericError};
+
+    #[test]
+    fn date_is_correct() {
+        assert!(departure_date_format("3020-01-20").is_ok());
+    }
+
+    #[test]
+    fn date_should_be_yyyy_mm_dd() {
+        assert_eq!(
+            departure_date_format("2020/01/20").err().unwrap(),
+            GenericError::InputError(InputError::DateFormatError)
+        );
+    }
+
+    #[test]
+    fn date_should_be_greater_than_today() {
+        assert_eq!(
+            departure_date_format("2019-01-20").err().unwrap(),
+            GenericError::InputError(InputError::InvalidDateError)
+        );
+    }
+}
+
+#[cfg(test)]
+mod iata {
+    use super::iata_format;
+    use crate::schema::errors::{InputError, GenericError};
+
+    #[test]
+    fn len_should_be_3() {
+        assert_eq!(
+            iata_format("IATA", "IAT").err().unwrap(),
+            GenericError::InputError(InputError::IataFormatError)
+        );
+
+        assert_eq!(
+            iata_format("IAT", "IATA").err().unwrap(),
+            GenericError::InputError(InputError::IataFormatError)
+        );
+    }
+
+    #[test]
+    fn only_letters() {
+        assert_eq!(
+            iata_format("IAT", "I4T").err().unwrap(),
+            GenericError::InputError(InputError::IataFormatError)
+        );
+
+        assert_eq!(
+            iata_format("I&T", "IAT").err().unwrap(),
+            GenericError::InputError(InputError::IataFormatError)
+        );
+    }
+}
+```
+
+Todas essas mudanças nos permitem ainda simplificar a query `bestPrices` para utilizar os operadores `try`:
+
+```rust
+#[juniper::object]
+impl QueryRoot {
+    fn ping() -> FieldResult<String> {
+        Ok(String::from("pong"))
+    }
+
+    fn bestPrices(
+        departure: String,
+        origin: String,
+        destination: String,
+    ) -> Result<BestPrices, GenericError> {
+        error::iata_format(&origin, &destination)?;
+        error::departure_date_format(&departure)?;
+        let best_price = best_prices_info(departure, origin, destination)?;
+        Ok(best_price)
+    }
+}
+```
+
+Note que ainda há um problema envolvendo a trait `IntoFieldError` que não está implementada para o enum `GenericError`. Fazemos isso refatorando a implementação da trait para o enum `InputError`, reaproveitando todos seus campos:
+
+```rust
+impl IntoFieldError for GenericError {
+    fn into_field_error(self) -> FieldError {
+        match self {
+            GenericError::InputError(InputError::IataFormatError) => FieldError::new(
+                "The IATA format for origin and destinantion consists of 3 letter",
+                graphql_value!({
+                    "type": "IATA FORMAT ERROR"
+                }),
+            ),
+            GenericError::InputError(InputError::DateFormatError) => FieldError::new(
+                "departure date should be formated yyyy-mm-dd",
+                graphql_value!({
+                    "type": "DATE FORMAT ERROR"
+                }),
+            ),
+            GenericError::InputError(InputError::InvalidDateError) => FieldError::new(
+                "Date should be greater than today",
+                graphql_value!({
+                    "type": "INVALID DATE ERROR"
+                }),
+            ),
+            GenericError::InternalError(InternalError::RequestFailedError) => FieldError::new(
+                "Could not complete properly request to the backend",
+                graphql_value!({
+                    "type": "REQUEST FAILED ERROR"
+                }),
+            ),
+            GenericError::InternalError(InternalError::ResponseParseError) => FieldError::new(
+                "Could not parse response from backend",
+                graphql_value!({
+                    "type": "RESPONSE PARSE ERROR"
+                }),
+            ),
+        }
+    }
+}
+```
+
+Agora que evoluímos os erros da nossa API, podemos fazer a query de recommendations.
