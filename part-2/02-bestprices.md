@@ -401,7 +401,7 @@ Para este caso devemos utilizar um cliente HTTP, que usualmente são assíncrono
 
 ### Conhecendo o endpoint
 
-Consultando o endpoint de `best_prices` para origem `POA` e destino `GRU` https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure={data}&origin={iata}&destination={iata}&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode= recebemos o seguinte campos relevantes no Json:
+Consultando o endpoint de `best_prices` para data `"2020-07-21"`, para origem `POA` e para destino `GRU` https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure={data}&origin={iata}&destination={iata}&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode= recebemos o seguinte campos relevantes no Json:
 
 ```json
 {
