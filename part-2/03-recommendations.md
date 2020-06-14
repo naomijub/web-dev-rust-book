@@ -56,7 +56,7 @@ Agora podemos começar a implementar o resolver `recommendations_info`, começan
 
 ## Conhecendo o endpoint de `recommendations`
 
-Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para origem `POA` e para destino `GRU` https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/recommendations/oneway?departure={data}&origin={iata}&destination={iata}&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode= recebemos o seguinte campos relevantes no Json:
+Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para origem `POA` e para destino `GRU` https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/recommendations/oneway?departure={data}&origin={iata}&destination={iata}&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode= recebemos o seguinte campos relevantes no Json (muitos campos foram ocultos pois não vamos utilizar):
 
 ```json
 {
@@ -74,11 +74,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
             "date":"2020-07-21",
             "dateTime":"2020-07-21T10:50-03:00",
             "overnights":0,
-            "time":{
-              "stamp":"10:50",
-              "hours":"10",
-              "minutes":"50"
-            }
+            "time":{ "stamp":"10:50", "hours":"10", "minutes":"50" }
           },
           "departure":{
             "airportCode":"POA",
@@ -89,11 +85,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
             "date":"2020-07-21",
             "dateTime":"2020-07-21T09:15-03:00",
             "overnights":null,
-            "time":{
-              "stamp":"09:15",
-              "hours":"09",
-              "minutes":"15"
-            }
+            "time":{ "stamp":"09:15", "hours":"09", "minutes":"15" }
           },
           "stops":0,
           "segments":[
@@ -101,18 +93,12 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
               "flightCode":"LA4596",
               "flightNumber":"4596",
               "waitTime":null,
-              "equipment":{
-                "name":"Airbus 321",
-                "code":"321"
-              },
+              "equipment":{ "name":"Airbus 321", "code":"321" },
               "legs":[
 
               ],
               "airline":{
-                "marketing":{
-                  "code":"LA",
-                  "name":"LATAM Airlines"
-                },
+                "marketing":{ "code":"LA", "name":"LATAM Airlines" },
                 "operating":{
                   "code":"JJ",
                   "name":"LATAM Airlines Brasil"
@@ -129,11 +115,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
                 "date":"2020-07-21",
                 "dateTime":"2020-07-21T09:15-03:00",
                 "overnights":null,
-                "time":{
-                  "stamp":"09:15",
-                  "hours":"09",
-                  "minutes":"15"
-                }
+                "time":{ "stamp":"09:15", "hours":"09", "minutes":"15" }
               },
               "arrival":{
                 "airportCode":"GRU",
@@ -144,10 +126,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
                 "date":"2020-07-21",
                 "dateTime":"2020-07-21T10:50-03:00",
                 "overnights":0,
-                "time":{
-                  "stamp":"10:50",
-                  "hours":"10",
-                  "minutes":"50"
+                "time":{ "stamp":"10:50", "hours":"10", "minutes":"50"
                 }
               },
               "familiesMap":{
@@ -198,125 +177,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
                       "total":101.03
                     }
                   },
-                  "pricesPerPassenger":{
-                    "adult":{
-                      "currency":"BRL",
-                      "slice":{
-                        "base":68.9,
-                        "tax":32.13,
-                        "total":101.03
-                      },
-                      "wholeTrip":{
-                        "base":68.9,
-                        "tax":32.13,
-                        "total":101.03
-                      }
-                    }
-                  },
-                  "fareAttributes":{
-                    "changeBefore":{
-                      "allowed":true,
-                      "price":{
-                        "amount":68.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "changeAfter":{
-                      "allowed":true,
-                      "price":{
-                        "amount":68.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "refund":{
-                      "allowed":false,
-                      "price":{
-                        "amount":0
-                      }
-                    },
-                    "carryOnBaggage":{
-                      "pieces":1,
-                      "allowed":true
-                    },
-                    "checkedBaggage":{
-                      "price":{
-                        "amount":43,
-                        "currency":"BRL"
-                      },
-                      "allowed":false
-                    },
-                    "features":[
-                      {
-                        "code":"050",
-                        "value":"CHARGE"
-                      },
-                      {
-                        "code":"05Z",
-                        "value":"CHARGE"
-                      },
-                      {
-                        "code":"06X",
-                        "value":"FREE"
-                      }
-                    ]
-                  },
-                  "branded":true,
-                  "visibility":"UNRESTRICTED",
-                  "accountCode":"",
                   "availabilityCount":18,
-                  "_links":{
-                    "bookingDetails":{
-                      "href":"/itinerary/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/solution/YOQrcDNWLPERAtEBLYqieN002/booking"
-                    },
-                    "orderCreation":{
-                      "href":"/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/recommendation/YOQrcDNWLPERAtEBLYqieN002/order"
-                    }
-                  },
-                  "normalizedFareAttributes":{
-                    "carryOnBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":1
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "availability":"CHARGE",
-                      "price":{
-                        "amount":43,
-                        "currency":"BRL"
-                      }
-                    },
-                    "seatSelection":{
-                      "allowed":true,
-                      "availability":"CHARGE"
-                    },
-                    "prioritySeat":{
-                      "allowed":true,
-                      "availability":"CHARGE"
-                    },
-                    "changeBefore":{
-                      "allowed":true,
-                      "availability":"CHARGE",
-                      "price":{
-                        "amount":68.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "refund":{
-                      "allowed":false,
-                      "availability":"DISPLAYED-BUT-NOT-OFFERED"
-                    },
-                    "accumulation":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "accumulationRules":{
-                        "amount":172,
-                        "currency":"PTS",
-                        "multiplier":2.5,
-                        "applyOnCurrency":"BRL"
-                      }
-                    }
-                  }
                 },
                 {
                   "code":"SE",
@@ -329,126 +190,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
                       "total":156.03
                     }
                   },
-                  "pricesPerPassenger":{
-                    "adult":{
-                      "currency":"BRL",
-                      "slice":{
-                        "base":123.9,
-                        "tax":32.13,
-                        "total":156.03
-                      },
-                      "wholeTrip":{
-                        "base":123.9,
-                        "tax":32.13,
-                        "total":156.03
-                      }
-                    }
-                  },
-                  "fareAttributes":{
-                    "changeBefore":{
-                      "allowed":true,
-                      "price":{
-                        "amount":123.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "changeAfter":{
-                      "allowed":true,
-                      "price":{
-                        "amount":123.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "refund":{
-                      "allowed":true,
-                      "price":{
-                        "amount":74.34,
-                        "currency":"BRL"
-                      },
-                      "percentage":40
-                    },
-                    "carryOnBaggage":{
-                      "pieces":1,
-                      "allowed":true
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "pieces":1
-                    },
-                    "features":[
-                      {
-                        "code":"050",
-                        "value":"FREE"
-                      },
-                      {
-                        "code":"05Z",
-                        "value":"CHARGE"
-                      },
-                      {
-                        "code":"06X",
-                        "value":"FREE"
-                      }
-                    ]
-                  },
-                  "branded":true,
-                  "visibility":"UNRESTRICTED",
-                  "accountCode":"",
-                  "availabilityCount":18,
-                  "_links":{
-                    "bookingDetails":{
-                      "href":"/itinerary/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/solution/YOQrcDNWLPERAtEBLYqieN009/booking"
-                    },
-                    "orderCreation":{
-                      "href":"/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/recommendation/YOQrcDNWLPERAtEBLYqieN009/order"
-                    }
-                  },
-                  "normalizedFareAttributes":{
-                    "carryOnBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":1
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":1
-                    },
-                    "seatSelection":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "prioritySeat":{
-                      "allowed":true,
-                      "availability":"CHARGE"
-                    },
-                    "changeBefore":{
-                      "allowed":true,
-                      "availability":"CHARGE",
-                      "price":{
-                        "amount":123.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "refund":{
-                      "allowed":true,
-                      "availability":"CHARGE",
-                      "price":{
-                        "amount":74.34,
-                        "currency":"BRL"
-                      },
-                      "percentage":40
-                    },
-                    "accumulation":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "accumulationRules":{
-                        "amount":309,
-                        "currency":"PTS",
-                        "multiplier":2.5,
-                        "applyOnCurrency":"BRL"
-                      }
-                    }
-                  }
+                  "availabilityCount":18
                 },
                 {
                   "code":"SF",
@@ -461,115 +203,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
                       "total":226.03
                     }
                   },
-                  "pricesPerPassenger":{
-                    "adult":{
-                      "currency":"BRL",
-                      "slice":{
-                        "base":193.9,
-                        "tax":32.13,
-                        "total":226.03
-                      },
-                      "wholeTrip":{
-                        "base":193.9,
-                        "tax":32.13,
-                        "total":226.03
-                      }
-                    }
-                  },
-                  "fareAttributes":{
-                    "changeBefore":{
-                      "allowed":true,
-                      "price":{
-                        "amount":0
-                      }
-                    },
-                    "changeAfter":{
-                      "allowed":true,
-                      "price":{
-                        "amount":0
-                      }
-                    },
-                    "refund":{
-                      "allowed":true,
-                      "price":{
-                        "amount":0
-                      },
-                      "percentage":100
-                    },
-                    "carryOnBaggage":{
-                      "pieces":1,
-                      "allowed":true
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "pieces":2
-                    },
-                    "features":[
-                      {
-                        "code":"050",
-                        "value":"FREE"
-                      },
-                      {
-                        "code":"05Z",
-                        "value":"FREE"
-                      },
-                      {
-                        "code":"06X",
-                        "value":"FREE"
-                      }
-                    ]
-                  },
-                  "branded":true,
-                  "visibility":"UNRESTRICTED",
-                  "accountCode":"",
-                  "availabilityCount":18,
-                  "_links":{
-                    "bookingDetails":{
-                      "href":"/itinerary/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/solution/YOQrcDNWLPERAtEBLYqieN00C/booking"
-                    },
-                    "orderCreation":{
-                      "href":"/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/recommendation/YOQrcDNWLPERAtEBLYqieN00C/order"
-                    }
-                  },
-                  "normalizedFareAttributes":{
-                    "carryOnBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":1
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":2
-                    },
-                    "seatSelection":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "prioritySeat":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "changeBefore":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "refund":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "percentage":100
-                    },
-                    "accumulation":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "accumulationRules":{
-                        "amount":484,
-                        "currency":"PTS",
-                        "multiplier":2.5,
-                        "applyOnCurrency":"BRL"
-                      }
-                    }
-                  }
+                  "availabilityCount":18
                 }
               ]
             },
@@ -595,126 +229,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
                       "total":247.03
                     }
                   },
-                  "pricesPerPassenger":{
-                    "adult":{
-                      "currency":"BRL",
-                      "slice":{
-                        "base":214.9,
-                        "tax":32.13,
-                        "total":247.03
-                      },
-                      "wholeTrip":{
-                        "base":214.9,
-                        "tax":32.13,
-                        "total":247.03
-                      }
-                    }
-                  },
-                  "fareAttributes":{
-                    "changeBefore":{
-                      "allowed":true,
-                      "price":{
-                        "amount":214.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "changeAfter":{
-                      "allowed":true,
-                      "price":{
-                        "amount":214.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "refund":{
-                      "allowed":true,
-                      "price":{
-                        "amount":128.94,
-                        "currency":"BRL"
-                      },
-                      "percentage":40
-                    },
-                    "carryOnBaggage":{
-                      "pieces":1,
-                      "allowed":true
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "pieces":1
-                    },
-                    "features":[
-                      {
-                        "code":"050",
-                        "value":"FREE"
-                      },
-                      {
-                        "code":"05Z",
-                        "value":"FREE"
-                      },
-                      {
-                        "code":"06X",
-                        "value":"FREE"
-                      }
-                    ]
-                  },
-                  "branded":true,
-                  "visibility":"UNRESTRICTED",
-                  "accountCode":"",
                   "availabilityCount":9,
-                  "_links":{
-                    "bookingDetails":{
-                      "href":"/itinerary/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/solution/YOQrcDNWLPERAtEBLYqieN00F/booking"
-                    },
-                    "orderCreation":{
-                      "href":"/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/recommendation/YOQrcDNWLPERAtEBLYqieN00F/order"
-                    }
-                  },
-                  "normalizedFareAttributes":{
-                    "carryOnBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":1
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":1
-                    },
-                    "seatSelection":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "prioritySeat":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "changeBefore":{
-                      "allowed":true,
-                      "availability":"CHARGE",
-                      "price":{
-                        "amount":214.9,
-                        "currency":"BRL"
-                      }
-                    },
-                    "refund":{
-                      "allowed":true,
-                      "availability":"CHARGE",
-                      "price":{
-                        "amount":128.94,
-                        "currency":"BRL"
-                      },
-                      "percentage":40
-                    },
-                    "accumulation":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "accumulationRules":{
-                        "amount":537,
-                        "currency":"PTS",
-                        "multiplier":2.5,
-                        "applyOnCurrency":"BRL"
-                      }
-                    }
-                  }
                 },
                 {
                   "code":"RY",
@@ -727,115 +242,7 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
                       "total":706.03
                     }
                   },
-                  "pricesPerPassenger":{
-                    "adult":{
-                      "currency":"BRL",
-                      "slice":{
-                        "base":673.9,
-                        "tax":32.13,
-                        "total":706.03
-                      },
-                      "wholeTrip":{
-                        "base":673.9,
-                        "tax":32.13,
-                        "total":706.03
-                      }
-                    }
-                  },
-                  "fareAttributes":{
-                    "changeBefore":{
-                      "allowed":true,
-                      "price":{
-                        "amount":0
-                      }
-                    },
-                    "changeAfter":{
-                      "allowed":true,
-                      "price":{
-                        "amount":0
-                      }
-                    },
-                    "refund":{
-                      "allowed":true,
-                      "price":{
-                        "amount":0
-                      },
-                      "percentage":100
-                    },
-                    "carryOnBaggage":{
-                      "pieces":1,
-                      "allowed":true
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "pieces":3
-                    },
-                    "features":[
-                      {
-                        "code":"050",
-                        "value":"FREE"
-                      },
-                      {
-                        "code":"05Z",
-                        "value":"FREE"
-                      },
-                      {
-                        "code":"06X",
-                        "value":"FREE"
-                      }
-                    ]
-                  },
-                  "branded":true,
-                  "visibility":"UNRESTRICTED",
-                  "accountCode":"",
                   "availabilityCount":12,
-                  "_links":{
-                    "bookingDetails":{
-                      "href":"/itinerary/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/solution/YOQrcDNWLPERAtEBLYqieN00K/booking"
-                    },
-                    "orderCreation":{
-                      "href":"/search/MTswOzA7UFRfQlI7WTs7O1BPQUdSVTIwMjAwNzIx/result/QmRDMFhMTnJwM0gzMzN6cUlxbUpKcE5PT3wwNUQ4TndCNXpjakhWTm5reWw0R2pxUg==/recommendation/YOQrcDNWLPERAtEBLYqieN00K/order"
-                    }
-                  },
-                  "normalizedFareAttributes":{
-                    "carryOnBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":1
-                    },
-                    "checkedBaggage":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "pieces":3
-                    },
-                    "seatSelection":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "prioritySeat":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "changeBefore":{
-                      "allowed":true,
-                      "availability":"FREE"
-                    },
-                    "refund":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "percentage":100
-                    },
-                    "accumulation":{
-                      "allowed":true,
-                      "availability":"FREE",
-                      "accumulationRules":{
-                        "amount":1684,
-                        "currency":"PTS",
-                        "multiplier":2.5,
-                        "applyOnCurrency":"BRL"
-                      }
-                    }
-                  }
                 }
               ]
             }
@@ -844,13 +251,199 @@ Consultando o endpoint de `recommendations` para data `"2020-07-21"`, para orige
         ...Mais recomendações aqui
       ],
       "currency":"BRL",
-      "recommendedFlightCode":"LA4596",
-      "type":"revenue-oneway"
+      "recommendedFlightCode":"LA4596"
     }
   ],
   "status":{
     "code":200,
     "message":""
   }
+}
+```
+
+Com esse Json podemos começar a modelar a resposta de recommendations, conforme fizemos com `BestPrices`.
+
+### Modelando `Recommendations`
+
+Para modelar recomendarions precisamos fazer uma pequena refatoração em `BestPrices`, para evitarmos a que `Recommendations` e `BestPrices` fiquem misturados no mesmo módulo. Podemos criar um novo arquivo para cada um dos módulos, como temos feito, ou criar módulos internos dentro de `schema/model/web.rs`:
+
+```rust
+pub mod best_prices {
+    use juniper::GraphQLObject;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+    #[serde(rename_all = "camelCase")]
+    pub struct BestPrices {
+        itinerary: Itinerary,
+        best_prices: Vec<BestPrice>,
+    }
+
+    //...
+}
+```
+
+Agora podemos criar o módulo `recommendations` com:
+
+```rust
+pub mod recommendations {
+    use juniper::GraphQLObject;
+    use serde::{Deserialize, Serialize};
+    //...
+}
+```
+
+Nossa estrutura de `Recommendations` contém 2 campos principais `data` e `status`. `status` é uma struct com os campos `code` do tipo `i32` e `message` do tipo `String`. Já `data` é um vetor de uma struct que contrém os campos `flight`, `currency`, `recommendedFlightCode`, resultando em algo assim:
+
+```rust
+pub mod recommendations {
+    use juniper::GraphQLObject;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+    pub struct Recommendations {
+        data: Vec<Data>,
+        status: Status,
+    }
+
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+    pub struct Status {
+        code: i32,
+        message: String,
+    }
+
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Data {
+        flights: Vec<Flight>,
+        recommended_flight_code: String,
+        currency: String,
+    }
+}
+```
+
+Agora precisamos implementar as struct `Flight` derivada do seguinte Json:
+
+```json
+{
+    "flightCode":"LA4596",
+    "arrival":{ ... },
+    "departure":{ ... },
+    "stops":0,
+    "segments":[ ... ],
+    "flightDuration":"PT1H35M",
+    "cabins":[ ... ]
+}
+```
+
+Assim, os campos são as strings `flightDuration` e `flightCode`, o campo `stops` do tipo `i32`, as duas structs de `arrival` e `departure`, os vetores de `segments` e de `cabins`: 
+
+```rust
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct Flight {
+    flight_code: String,
+    arrival: Location,
+    departure: Location,
+    stops: i32,
+    segments: Vec<Segment>,
+    flight_duration: String,
+    cabins: Vec<Cabin>
+}
+```
+
+Note que `arrival` e `departure` estão com o mesmo tipo, `Location`, pois possuem a mesma estrutura:
+
+```json
+{
+    "airportCode":"POA",
+    "airportName":"Salgado Filho",
+    "cityCode":"POA",
+    "cityName":"Porto Alegre",
+    "countryCode":"BR",
+    "date":"2020-07-21",
+    "dateTime":"2020-07-21T09:15-03:00",
+    "time":{ "stamp":"09:15", "hours":"09", "minutes":"15" }
+}
+```
+
+Que se torna a struct `Location`, na qual quase todos os campos são Strings exceto por `time` que será a struct `Time`:
+
+```rust
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct Location {
+    airport_code: String,
+    airport_name: String,
+    city_code: String,
+    city_name:String,
+    country_code: String,
+    date: String,
+    date_time: String,
+    time: Time,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub  struct Time {
+    stamp: String, 
+    hours: String, 
+    minutes: String, 
+}
+```
+
+Para implementarmos `Segment` precisamos nos basear no seguinte json:
+
+```json
+{
+    "flightCode":"LA4596",
+    "flightNumber":"4596",
+    "equipment":{ "name":"Airbus 321", "code":"321" },
+
+    "airline":{
+        "marketing":{ "code":"LA", "name":"LATAM Airlines" },
+    },
+    "duration":"PT1H35M",
+    "departure": Location,
+    "arrival": Location,
+}
+```
+
+```rust
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct Segment {
+    flight_code: String,
+    flight_number: String,
+    equipment: Info,
+    airline: Airline,
+    duration: String,
+    departure: Location,
+    arrival: Location,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct Info {
+    name: String,
+    code: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct Airline {
+    marketing: Info,
+}
+```
+
+Por último, podemos implementarmos `Cabin` e vamos nos basear no json:
+
+```json
+{
+    "code":"Y",
+    "displayPrice":101.03,
+    "availabilityCount":18,
+    "displayPrices":{
+        "slice":101.03,
+        "wholeTrip":101.03,
+    },
+    "fares":[...]
 }
 ```
