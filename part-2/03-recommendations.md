@@ -447,3 +447,69 @@ Por último, podemos implementarmos `Cabin` e vamos nos basear no json:
     "fares":[...]
 }
 ```
+
+```rust
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct Cabin {
+    code: String,
+    display_price: f64,
+    availability_count: i32,
+    display_prices: DisplayPrice,
+    fares: Vec<Fare>
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct DisplayPrice {
+    slice: f64,
+    whole_trip: f64,
+}
+```
+
+Por último precisamos modelar `Fare` cujo Json é:
+
+```json
+{
+    "code":"SL",
+    "category":"LIGHT",
+    "fareId":"250/BdC0XLNrp3H333zqIqmJJpNOO/05D8NwB5zcjHVNnkyl4GjqR/YOQrcDNWLPERAtEBLYqieN002",
+    "availabilityCount":18,
+    "price":{
+        "adult":{
+            "amountWithoutTax":68.9,
+            "taxAndFees":32.13,
+            "total":101.03
+        }
+    }
+},
+```
+
+```rust
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct Fare {
+    code: String,
+    category: String,
+    fare_id: String,
+    availability_count: i32,
+    price: Price
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct Price {
+    adult: PriceInfo
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = "camelCase")]
+pub struct PriceInfo {
+    amount_without_tax: f64, 
+    tax_and_fees: f64, 
+    total: f64, 
+}
+```
+
+Com a modelagem pronta, podemos finalizar a implementação da query `recommendations`.
+
+## Implementando a Query `recommendations`
