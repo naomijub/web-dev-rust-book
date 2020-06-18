@@ -47,7 +47,7 @@ impl QueryRoot {
     ) -> Result<Recommendations, GenericError> {
         error::iata_format(&origin, &destination)?;
         error::departure_date_format(&departure)?;
-        ...
+        // ...
     }
 }
 ```
@@ -279,7 +279,7 @@ pub mod best_prices {
         best_prices: Vec<BestPrice>,
     }
 
-    //...
+    // ...
 }
 ```
 
@@ -289,7 +289,7 @@ Agora podemos criar o módulo `recommendations` com:
 pub mod recommendations {
     use juniper::GraphQLObject;
     use serde::{Deserialize, Serialize};
-    //...
+    // ...
 }
 ```
 
@@ -513,3 +513,254 @@ pub struct PriceInfo {
 Com a modelagem pronta, podemos finalizar a implementação da query `recommendations`.
 
 ## Implementando a Query `recommendations`
+
+Como a estrutura de `recommendations` será praticamente igual a de `best_prices`, podemos nos antecipar e adicionar o resolver de `recommendations` na implementação de `QueryRoot`:
+
+```rust
+use crate::resolvers::internal::{best_prices_info, recommendations_info};
+use crate::schema::{errors::{GenericError}, model::web::{best_prices::BestPrices, recommendations::Recommendations}};
+// ...
+
+#[juniper::object]
+impl QueryRoot {
+    // ...
+
+    fn recommendations(
+        departure: String,
+        origin: String,
+        destination: String,
+    ) -> Result<Recommendations, GenericError> {
+        error::iata_format(&origin, &destination)?;
+        error::departure_date_format(&departure)?;
+        let recommendations = recommendations_info(departure, origin, destination)?;
+        Ok(recommendations)
+    }
+}
+```
+
+Vamos receber um erro indicando que `recommendations_info` não foi implementada ainda, e, assim, podemos partir para sua implementação, que seráexatamente igual a `best_prices_info`, apenas renomeando os campos de `best_prices` para `recommendations`:
+
+```rust
+use crate::boundaries::http_out::{best_prices, recommendations};
+use crate::schema::{errors::GenericError, model::web::{best_prices::BestPrices, recommendations::Recommendations}};
+
+/// ...
+
+pub fn recommendations_info(
+    departure: String,
+    origin: String,
+    destination: String,
+) -> Result<Recommendations, GenericError> {
+    let recommendations_text = recommendations(departure, origin, destination)?.text()?;
+    let recommendations: Recommendations = serde_json::from_str(&recommendations_text)?;
+
+    Ok(recommendations)
+}
+```
+
+Agora precisamos implementar a função `http_out::recommendations` que também é parecida com a função `http_out::best_prices` pois possui apenas a `url` de request diferente:
+
+```rust
+// boundaries/http_out.rs
+use reqwest::{blocking::Response, Result};
+// ...
+
+pub fn recommendations(departure: String, origin: String, destination: String) -> Result<Response> {
+    let url =
+        format!("https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/recommendations/oneway?departure={}&origin={}&destination={}&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=",
+                departure, origin, destination);
+    reqwest::blocking::get(&url)
+}
+```
+
+Agora podemos executar `cargo run` e brincar com a interface gráfica de nosso serviço em `localhost:4000/graphiql`. Um exemplo de request que podemos utilizar é:
+
+```
+{
+  bestPrices(departure: "2020-07-21", 
+    origin: "POA", 
+    destination: "GRU") {
+    bestPrices {
+      date
+      available
+      price {amount}
+    }
+  }
+  
+  recommendations(departure: "2020-07-21", 
+    origin: "POA", 
+    destination: "GRU") {
+    data {
+      recommendedFlightCode 
+      flights {
+        flightCode
+        flightDuration
+        arrival {
+          airportCode
+          airportName
+          dateTime
+        }
+        departure {
+          airportCode
+          airportName
+          dateTime
+        }
+      }
+    }
+  }
+}
+```
+
+* Lembre de atualizar as datas, quando este livro foi escrito elas estavam distantes.
+
+A resposta parcial desta query é:
+
+```json
+{
+  "data": {
+    "bestPrices": {
+      "bestPrices": [...]},
+    "recommendations": {
+      "data": [
+        {
+          "recommendedFlightCode": "LA4596",
+          "flights": [
+            {
+              "flightCode": "LA4596",
+              "flightDuration": "PT1H35M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T10:50-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T09:15-03:00"
+              }
+            },
+            {
+              "flightCode": "LA4629",
+              "flightDuration": "PT1H35M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T22:20-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T20:45-03:00"
+              }
+            },
+            {
+              "flightCode": "LA3287",
+              "flightDuration": "PT1H40M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T16:55-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T15:15-03:00"
+              }
+            },
+            {
+              "flightCode": "LA3152LA3633",
+              "flightDuration": "PT4H55M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T13:40-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T08:45-03:00"
+              }
+            },
+            {
+              "flightCode": "LA3152LA3613",
+              "flightDuration": "PT8H30M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T17:15-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T08:45-03:00"
+              }
+            },
+            {
+              "flightCode": "LA3090LA3029LA3296",
+              "flightDuration": "PT12H45M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T22:10-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T09:25-03:00"
+              }
+            },
+            {
+              "flightCode": "LA3090LA3151LA3687",
+              "flightDuration": "PT12H50M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T22:15-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T09:25-03:00"
+              }
+            },
+            {
+              "flightCode": "LA3152LA3175LA3687",
+              "flightDuration": "PT13H30M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T22:15-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T08:45-03:00"
+              }
+            },
+            {
+              "flightCode": "LA3152LA3028LA3381",
+              "flightDuration": "PT13H35M",
+              "arrival": {
+                "airportCode": "GRU",
+                "airportName": "Guarulhos Intl.",
+                "dateTime": "2020-07-21T22:20-03:00"
+              },
+              "departure": {
+                "airportCode": "POA",
+                "airportName": "Salgado Filho",
+                "dateTime": "2020-07-21T08:45-03:00"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+Um exemplo utilizando `variables` pelo `Postman` pode ser a foto a seguir. A mesma estratégia poderá ser utilizada via `curl`.
+
+![Usando `variables` com o Postman](../imagens/postmanVariables.png)
+
+Nosso próximo passo é implementar um sistema de caching com redis, para evitar múltiplos requests para a API da Latam.
