@@ -274,3 +274,220 @@ pub fn fetch_gql() -> Value {
     })
 }
 ```
+
+Em seguida, encontramos `self.link`, um novo tipo a ser adicionado a nossa struct `Airline`, que é do tipo `ComponentLink<Self>`, cuja principal função é fazer callback. No nosso caso, esses callback processam a resposta da requisição, `response`, separam a resposta através da funçnao `into_parts` em metadados, `meta`, e em corpo, `data` para executar um pattern matching dos valores. Se a requisição retornou `2xx`, através da função `meta.status.is_success()`, enviamos a mensagem `Msg::FetchGql(Some(data))`, senão enviamos a mensagem `Msg::FetchGql(None)`.
+
+O próximo passo é montar a requisição com `yew::services::fetch::Request::builder()`, na qual definimos o método com `method("POST")`, os `headers`, a `url` já salva em `self.graphql_url` e o corpo do request em `body`, que é o tipo `Value` retornado em `let request = fetch_gql();` transformado em Json através da função `Json()`. Por último definimos o `fetch` com seu `request` e seu `callback`, `fetch(request, callback)` e passamos seu resultado para `FetchTask` definida em `self.fetch_task`, que executará o fetch:
+
+```rust
+let task = self.fetch.fetch(request, callback).unwrap();
+self.fetch_task = Some(task);
+```
+
+Para então definirmos que `fetching` é false em `Msg::Fetching(false)`. Agora precisamos adicionar os novos tipos de dados presentes em nossa struct `Airline`:
+
+```rust
+use yew::prelude::*;
+use yew::services::{
+    fetch::{FetchService, FetchTask, Request, Response}
+};
+use yew::format::{Text, Json};
+use crate::gql::fetch_gql;
+
+
+pub struct Airline {
+    fetch: FetchService,
+    link: ComponentLink<Self>,
+    fetch_task: Option<FetchTask>,
+    fetching: bool,
+    graphql_url: String,
+    graphql_response: Option<String>
+}
+
+
+impl Airline {
+    pub fn fetch_data(&mut self) {
+        // ...    
+    }
+}
+
+pub enum Msg {
+    FetchGql(Option<Text>),
+    Fetching(bool)
+}
+
+impl Component for Airline {
+    type Message = Msg;
+    type Properties = ();
+
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Airline {
+            fetch: FetchService::new(),
+            link: link,
+            fetch_task: None,
+            fetching: true,
+            graphql_url: "http://localhost:4000/graphql".to_string(),
+            graphql_response: None
+        }
+    }
+    // ...
+}
+```
+
+Para cada um dos campos:
+* `fetch: FetchService`: `FetchService` é a struct com conhecimentos de como realizar um Fetch via WebAssembly, algo como o `fetch` em JavaScript. Para inicializar este valor basta executar `FetchService::new()`.
+* `link: ComponentLink<Self>`: como já falamos é responsável por fazer as conexões do `Component` com `callbacks`. É inicializado com pelo próprio `Component`.
+* `fetch_task: Option<FetchTask>`: é basicamente um handler para os request. Se seu estado é `None` nada é executado, se seu estado é `Some` com alguma `FetchTask` ele a executa. Inicializado com `None`.
+* `fetching: true,`: Indica se a aplicação está fazendo um request. Inicializado com `true` pois é a primeira coisa que o sertviço executa.
+* `graphql_url: String,`: Url na qual faremos o request, neste caso o nosso endpoint local `/graphql`, `"http://localhost:4000/graphql"`.
+* `graphql_response: Option<String>`: Por enquanto um tipo String que contém os dados da resposta do Graphql. Logo transformaremos em uma struct com domínio próprio.
+
+## Modelando a response de BestPrices
+
+Nosso Json de resposta é o seguinte:
+
+```json
+{
+  "data":{
+    "bestPrices":{
+      "bestPrices":[
+        {
+          "date":"2020-07-18",
+          "available":true,
+          "price":{
+            "amount":110.03
+          }
+        },
+        {
+          "date":"2020-07-19",
+          "available":true,
+          "price":{
+            "amount":110.03
+          }
+        },
+        {
+          "date":"2020-07-20",
+          "available":true,
+          "price":{
+            "amount":110.03
+          }
+        },
+        {
+          "date":"2020-07-21",
+          "available":true,
+          "price":{
+            "amount":110.03
+          }
+        },
+        {
+          "date":"2020-07-22",
+          "available":true,
+          "price":{
+            "amount":110.03
+          }
+        },
+        {
+          "date":"2020-07-23",
+          "available":true,
+          "price":{
+            "amount":110.03
+          }
+        },
+        {
+          "date":"2020-07-24",
+          "available":true,
+          "price":{
+            "amount":99.03
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+Assim, resumidamente, nosso tipo `bestPrices` é um vetor de `date`, `available` e `price`:
+
+```json
+{
+    "date":"2020-07-24",
+    "available":true,
+    "price":{
+        "amount":99.03
+    }
+}
+```
+
+Para este Json vamos precisar da crate `serde`, basta adicionar ela no `Cargo.toml`, pois vamos precisar Serializar e Deserializar as informações do response neste momento. Depois, precisamos adicionar as informações básicas da response `{"data":{ "bestPrices":{ ... }}}`, faremos isso com as seguintes structs no módulo `gql`:
+
+```rust
+use crate::best_prices::BestPrices;
+// ...
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct GqlResponse {
+    data: GqlFields
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct GqlFields {
+    best_prices: BestPrices
+}
+```
+
+Como já expliquei Serde na parte anterior, não vou entrar em detalhes de novo. Agora, precisamos implementar a struct `BestPrices` no novo módulo `best_prices`, que conterá as seguintes structs:
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct BestPrices {
+    best_prices: Vec<BestPrice>
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct BestPrice {
+    date: String,
+    available: bool,
+    price: Price
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Price {
+    amount: f64
+}
+```
+
+Por último, precisamos modificar `Airline` para converter o tipo `graphql_response` em `Option<GqlResponse>` e atualizar o update para que ele faça a transformação de `String` para `GqlResponse` através da função `serde_json::from_str(&val).unwrap()`:
+
+```rust
+fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    Msg::FetchGql(data) => {
+        self.graphql_response = match data {
+            Some(Ok(val)) => {
+                self.fetching = false;
+                let resp: GqlResponse = from_str(&val).unwrap();
+                Some(resp)
+            },
+            _ => {
+                self.fetching = false;
+                None
+            }
+        }
+    },
+    // ...
+}
+```
+
+Nossa view reclará de tipos incompatíveis agora, para isso, vamos apenas utilizar a função `serde_json::to_string`:
+
+```rust
+if let Some(data) = &self.graphql_response {
+    serde_json::to_string(data).unwrap()
+} else {
+    "Failed to fetch".to_string()
+}
+```
+
+## Construindo a `view` de `BestPrices`
