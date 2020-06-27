@@ -102,4 +102,4 @@ fn view(&self) -> Html {
 }
 ```
 
-Podemos recompilar apenas executando `make build` e recarregar a página. No próximo capítlu vamos iniciar carregando os dados de `BestPrices`.
+Podemos recompilar apenas executando `make build` e recarregar a página. No próximo capítulo vamos iniciar carregando os dados de `BestPrices`.

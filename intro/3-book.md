@@ -62,4 +62,6 @@ todo_api
 
 * Qual nomenclatura ou quais nomes específicos você vai dar para seus módulos é menos relevante do que a forma como as coisas estarão organizadas, a única coisa importante de lembrar é a necessidade de seu código e sua orgsanização ser inteligivel para todas as pessoas.
 
-* Este livro utiliza apenas o framework Actix para servidores web, mas exemplos com outros frameworks podem ser encontrados no livro `Programação Funcional e Concorrente em Rust`. Actix é o framework de `actors` do rust, e tem como framework web o `actix-web`. Além disso, a versão de rust utilizada neste livro é a 1.40 da edição 2018.
+* Este livro utiliza apenas o framework Actix para servidores web, mas exemplos com outros frameworks podem ser encontrados no livro `Programação Funcional e Concorrente em Rust`. Actix é o framework de `actors` do rust, e tem como framework web o `actix-web`. 
+
+* A versão de rust utilizada neste livro é a 1.40 da edição 2018, assim, caso a linguagem evolua mais rápido que o livro, você pode fazer Pull Request nos repositórios do livro. Só peço que explique no Pull Request a que parte esse Pull Reuqest se refere, qual a modificação, o porquê da modificação e caso ela derive de um erro pré existente, salientar o motivo.

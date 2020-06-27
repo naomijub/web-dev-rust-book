@@ -450,7 +450,7 @@ pub struct BestPrices {
 pub struct BestPrice {
     date: String,
     available: bool,
-    price: Price
+    price: Option<Price>
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -491,3 +491,191 @@ if let Some(data) = &self.graphql_response {
 ```
 
 ## Construindo a `view` de `BestPrices`
+
+A primeira mudança que vamos fazer é adicionar uma animação de `loading` no lugar do texto, para isso vamos adicionar um css no caminho `static/styles.css` e incluir isso no `index.html`:
+
+```html
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="./styles.css">
+        <title>Yew Sample App</title>
+        <script type="module">
+            import init from "./wasm.js"
+            init()
+        </script>
+    </head>
+    <body></body>
+</html>
+```
+
+```css
+.loading-margin {
+    margin: 25rem;
+}
+
+.loader {
+    border: 1.25rem solid #f3f3f3; /* Light grey */
+    border-top: 1.25rem solid #03253b; /* Blue */
+    border-radius: 50%;
+    width: 12.5rem;
+    height: 12.5rem;
+    animation: spin 2s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  ```
+
+E adicionar os estilos no `view`:
+
+```rust
+fn view(&self) -> Html {
+    if self.fetching {
+        html! {
+            <div class="loading-margin">
+                <div class="loader"></div>
+            </div>
+        } 
+    } // ...
+}
+```
+
+Agora podemos implementar a função `view` para `BestPrices`, que será basicamente um carrousel com várias células centralizadas, conforme a imagem a seguir e seu css correspondente:
+
+![Carrosel de Best Prices](../imagens/carrousel.png)
+
+```css
+/* ... */
+.body {
+    width: 80%;
+    text-align: center;
+  }
+
+  .carrousel {
+    transform: translate(10%, 50%);
+    display: table-row;
+}
+
+.cell {
+    text-align: center;
+    vertical-align: middle;
+    font-size: medium;
+    height: 100%;
+    width: 15rem;
+    display: table-cell;
+    border: 1px solid lightgrey;
+}
+
+.empty-cell {
+    padding: 2rem 1rem;
+    background-color: #e1e1e1;
+}
+
+.full-cell {
+    padding: 2rem 1rem;
+    background-color: #f1f0f0;
+}
+```
+
+A função `view` será uma implementação da struct `BestPrices` e fará uma iteração sob cada um dos 7 elementos do vetor. Note que os dias que vierem com `available = false`, também virão com `price = None` e precisamos tratar este caso também. Começamos com algo bem simples como:
+
+```rust
+impl BestPrices {
+    pub fn view(&self) -> VNode {
+        let carrousel = format!("De frente para este {:?}", "carrosel");
+
+        html!{
+            <div class="carrousel"> 
+                {carrousel}
+            </div>
+        }
+    }
+}
+```
+
+Neste caso, o que fizemos foi criar uma implementação pública de `BestPrices` da função `view` que retorna um `VNode`, que é basicamente um nodo virtual deste HTML que está sendo gerado. a variável `carrousel` está englobada por uma classe css chamada `.carrousel` que translada o carrosel para baixo e para o meio e transforma-se em uma linha de tabela, `table-row`. Depois disso, podemos chamar esta função no nosso `app` com:
+
+```rust
+fn view(&self) -> Html {
+    if self.fetching {
+        html! {
+            <div class="loading-margin">
+                <div class="loader"></div>
+            </div>
+        } 
+    } else {
+        html! {
+            <div class="body">
+                { 
+                    if let Some(data) = &self.graphql_response {
+                        data.clone().best_prices().view()
+                    } else {
+                        html!{
+                            <p class="failed-fetch">
+                                {"Failed to fetch"}
+                            </p>
+                        }
+                    }
+                }
+            </div>
+        }
+    }
+}
+```
+
+Antecedendo a chamada da `view` criei uma função que encurta o retorno do campo `best_prices`, do tipo `BestPrices`, e evita que ele seja público. Essa fução pode ser encontrada no módulo `gql` da seguinte forma:
+
+```rust
+impl GqlResponse {
+    pub fn best_prices(self) -> BestPrices {
+        self.data.best_prices
+    }
+}
+```
+
+O próximo passo é é transforma a variável `carrousel` em uma lista de `Vec<HTML>` para podermos renderizá-la conforme o exercício. Para isso, vamos pegar o valor de `self.best_prices` e iterar sobre ele aplicando um map que transforma cada `Best_rice` em um `Html` da seguinte forma `self.best_prices.into_iter().map(|bp| html!{...}).collect::<Html>()`. Quanto ao `map` precisamos definir qual tipo de célula utilizar, especialmente por conta do campo `price` que é `Option`, faremos isso com a propriedade `bp.available`. Se `bp.available` for `true`, criamos uma célula cheia com as propriedades de data e preço, se for `false` criamos uma célula vazia com a propriedade de data e uma indição de preço indisponível como `N/A`:
+
+```rust
+.map(|bp| html!{
+    <div class="cell">
+        {
+            if bp.available {
+                html!{
+                    <div class="full-cell">
+                        {
+                            {
+                                let date = Utc.datetime_from_str(&format!("{} 00:00:00", bp.date), "%Y-%m-%d %H:%M:%S");
+                                date.unwrap().format("%a %e %b").to_string()
+                            }
+                        } <br/>
+                        {format!("R$ {}", bp.price.unwrap().amount).replace(".", ",")}
+                    </div>
+                }
+            } else {
+                html!{
+                    <div class="empty-cell">
+                        { 
+                            {
+                                let date = Utc.datetime_from_str(&format!("{} 00:00:00", bp.date), "%Y-%m-%d %H:%M:%S");
+                                date.unwrap().format("%a %e %b").to_string()
+                            }
+                         } <br/>
+                        {"N/A"}
+                    </div>
+                }
+            }
+        }
+    </div>
+})
+```
+
+Nosso `map` tem a seguinte aparência, uma célula externa que possui as configurações globais pra todas as células, classe `.cell`, que define tamanho, alinhamento e comportamento de display do tipo célula de tabela, `table-cell`. Dentro da célula aplicamos um `if/else` dependendo se o `BestPrice` está available ou não. Para o casa de `available = false` retornamos uma célula somente com a data, formatada, e um valor indicando a ausência de preços, `N/A`, ambos separados por uma quebra de linha `<br/>`. O estilo desta célula será `empty-cell`, que é basicamente uma célula mais escura que a célula padrão.
+
+O padrão de data que estamos utilizando é o mesmo do site, que indica o dia da semana seguido pelo dia do mês e o mês correspondente. Para podermos fazer essa modificação vamos utilizar a crate `chrono = "0.4.11"` importando ela no módulo `best_prices` com `use chrono::prelude::*;`. A data que recebemos do `best_prices` está no formato `ano-mes-dia` e para fazermos o `parse` para o `Utc` precisamos dp formato `ano-mes-dia hora:min:seg`, e fazemos esta modificação utilizando a macro `format!`, `format!("{} 00:00:00", bp.date)`. Com isso, teremos o formato `"%Y-%m-%d %H:%M:%S"` que nos permitirá utilizar a função `Utc.datetime_from_str` para executar o `parse` da nossa data, `bp.date`. Com o resultado desta transformação podemos formatar a `date` no padrão `dia-da-semana dia-do-mes mes`, `"%a %e %b"`.
+
+Para o caso `available = true` utilizamos o mesmo padrão de formatação de data, mas em vez de utilizar `N/A` vamos formatar o valor de `bp.price` para incluir `R$` e trocar `.` por `,`, `format!("R$ {}", bp.price.unwrap().amount).replace(".", ",")`.
+
+Nosso próximo passo é compor todas as recomendações.
