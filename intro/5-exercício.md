@@ -1,6 +1,6 @@
 # Exercício Maior Produto de uma Série
 
-Esté exercício é retirado do site exercism.io da trackd e rust, e em inglês é chamado de `Largest Series Product`. Consiste no seguinte problema:
+Esté exercício é retirado do site exercism.io da track de Rust, e em inglês é chamado de `Largest Series Product`. Consiste no seguinte problema:
 
 > Dada uma string de dígitos, calcular o maior produto contínuo de uma substring de tamanho `n`. Por exemplo, para a string `"1027839564"` o maior produto com `n = 3` seria `9 * 5 * 6 = 270`, e o maior produto para `n = 5` seria `7 * 8 * 3 * 9 * 5 = 7560`.
 
@@ -8,7 +8,7 @@ Você pode utilizar a ferramenta do exercism.io para realizar as configuraçnoes
 
 ![Projeto de pacote básico do Cargo](../imagens/cargoproj.png)
 
-Agora, precisamos criar uma pasta para conter todos os testes, a pasta `tests`. O padrão em Rust é que os testes de integração fiquem na pasta `tests` enquanto os testes unitários fiquem junto ao arquivo. Como o exercism já nos dispõe um conjunto bomde testes, podemos simplesmente colar eles no caminho `tests/largest-series-product.rs`, os testes são:
+Agora, precisamos criar uma pasta para conter todos os testes, a pasta `tests`. O padrão em Rust é que os testes de integração fiquem na pasta `tests` enquanto os testes unitários fiquem junto ao arquivo. Como o exercism já nos dispõe um conjunto bom de testes, podemos simplesmente colar eles no caminho `tests/largest-series-product.rs`, os testes são:
 
 ```rust
 use largest_series_product::*;
@@ -118,7 +118,7 @@ fn a_string_with_non_digits_is_an_error() {
 }
 ```
 
-Vamos explicar rapidamente o que estamos vendo aqui. A primeira linha contém `use largest_series_product::*;`, isso corresponde a uma diretiva de importar todas as funcionalidades (`::*`) do pacote `largest_series_product`. poderiamos importar somente a diretiva `lsp` com `use largest_series_product::lsp;` ou mais de uma diretiva com `use largest_series_product::{lsp, db::xps}`, note que a diretiva `xps` vem de um pacote interno chamado `db`. Nas linhas seguintes percebemos duas anotações `#[test]` e `#[ignore]`, estes são considerados atributos que indicam como está função deve se comportar, no caso do atributo `#[test]`, a funçnao descrita a baixo somente irá executar com a execução de testes no `cargo test`, enquanto o atributo `#[ignore]`, ira pular este teste. Depois disso temos a declaração de uma função com o seguinte formato:
+Vamos explicar rapidamente o que estamos vendo aqui. A primeira linha contém `use largest_series_product::*;`, isso corresponde a uma diretiva de importar todas as funcionalidades (`::*`) do pacote `largest_series_product`. Poderíamos importar somente a diretiva `lsp` com `use largest_series_product::lsp;` ou mais de uma diretiva com `use largest_series_product::{lsp, db::xps}`, note que a diretiva `xps` vem de um pacote interno chamado `db`. Nas linhas seguintes percebemos duas anotações `#[test]` e `#[ignore]`, estes são considerados atributos que indicam como esta função deve se comportar, no caso do atributo `#[test]`, a função descrita a baixo somente irá executar com a execução de testes no `cargo test`, enquanto o atributo `#[ignore]`, ira pular este teste. Depois disso temos a declaração de uma função com o seguinte formato:
 
 ```rust
 fn nome_da_funcao_em_snake_case() {
@@ -131,11 +131,11 @@ fn nome_da_funcao_em_snake_case() {
  }
  ```
 
- Em rust a declaração de uma função começa com a chave `fn` seguida pelo nome da função em snake_case. Caso existam, os argumentos são separados como `argumento: TipoDoArgument`, e caso a função retorne algum tipo, se adiciona a linha `-> TipoDeRetorno`. A última linha da função, caso não tenha `;` no final é sempre retornada. Agora para o corpo da função de teste vemos `assert!(lsp("29", 2).is_ok());`. `assert!` e `assert_eq!` são macros de teste de assertividade, isso quer dizer que `assert!` retorna verdade caso o argumento dentro de seu corpo seja verdadeiro, como lsp de 29 e duas casas é do tipo `Ok` (`lsp("29", 2).is_ok()`), e `assert_eq!` recebe dois argumentos, separados por vírgula e procura igualdade e identidade entre eles.
+ Em Rust a declaração de uma função começa com a palavra chave `fn` seguida pelo nome da função em snake_case. Caso existam, os argumentos são separados como `argumento: TipoDoArgument`, e caso a função retorne algum tipo, se adiciona a linha `-> TipoDeRetorno`. A última linha da função, caso não tenha `;` no final é sempre retornada. Agora para o corpo da função de teste vemos `assert!(lsp("29", 2).is_ok());`. `assert!` e `assert_eq!` são macros de teste de assertividade, isso quer dizer que `assert!` retorna verdade caso o argumento dentro de seu corpo seja verdadeiro, como lsp de 29 e duas casas é do tipo `Ok` (`lsp("29", 2).is_ok()`), e `assert_eq!` recebe dois argumentos, separados por vírgula e procura igualdade e identidade entre eles.
 
  ## Resolvendo o primeiro teste
 
- Agora vamos para a primeira funçnao que temos e vamos tentar dissecar ela:
+ Agora vamos para a primeira função que temos e vamos tentar dissecar ela:
 
  ```rust
 #[test]
@@ -167,7 +167,7 @@ fn find_the_largest_product_when_span_equals_length() {
 }
 ```
 
-O próximo teste nos exite um pouco mais:
+O próximo teste nos exige um pouco mais:
 
 ```rust
 #[test]
@@ -181,14 +181,14 @@ Para este teste podemos pegar os 2 últimos números da string e multiplicar ele
 ```rust
 pub fn lsp(string_digits: &str, _: usize) -> Result<u64, Error> {
     let mut digits: Vec<u64> = string_digits
-            .split("")
-            .map(|s| s.parse())
-            .filter(|s| match s {
-                Ok(_) => true,
-                Err(_) => false,
-            })
-            .map(|s| s.unwrap())
-            .collect();
+        .split("")
+        .map(|s| s.parse())
+        .filter(|s| match s {
+            Ok(_) => true,
+            Err(_) => false,
+        })
+        .map(|s| s.unwrap())
+        .collect();
     digits.reverse();
     Ok(digits.iter().take(2).fold(1u64, |acc, i| acc * i))
 }
@@ -210,14 +210,14 @@ Felizmente, parte de nossa solução, a variável digits já é bastante útil, 
 ```rust
 pub fn lsp(string_digits: &str, _: usize) -> Result<u64, Error> {
     let digits: Vec<u64> = string_digits
-            .split("")
-            .map(|s| s.parse())
-            .filter(|s| match s {
-                Ok(_) => true,
-                Err(_) => false,
-            })
-            .map(|s| s.unwrap())
-            .collect();
+        .split("")
+        .map(|s| s.parse())
+        .filter(|s| match s {
+            Ok(_) => true,
+            Err(_) => false,
+        })
+        .map(|s| s.unwrap())
+        .collect();
             
     Ok(window_values(digits)
         .first()
@@ -237,7 +237,7 @@ fn window_values(digits: Vec<u64>) -> Vec<u64> {
 }
 ```
 
-Note que a função `lsp` não mudou muito, o que mudou nela é que chamamos a função `window_values` com o digits, que deixou de ser mutável. Na função `window_values` estamos criando windows de tamanho `2usize`, depois aplicando `map` para converter o tipo `&[T;usize]` em vetor, no `map` seguinte tranforamos esse vetor gerado em um iterável que consome eles em um fold de multiplicação. Depois ordenamos a lista de maior para menor, e depois revertemos para termos o maior produto como primeiro elemento (podiamos deixar sem o reverse e aplicar um `last` em vez de `first` à solução da função). a chamada de função `to_owned` ocorre porque o resultado do first é um *borrow*, ou seja `&u64` e precisamos de um `u64`.
+Note que a função `lsp` não mudou muito, o que mudou nela é que chamamos a função `window_values` com o digits, que deixou de ser mutável. Na função `window_values` estamos criando windows de tamanho `2usize`, depois aplicando `map` para converter o tipo `&[T;usize]` em vetor, no `map` seguinte transformamos esse vetor gerado em um iterável que consome eles em um fold de multiplicação. Depois ordenamos a lista de maior para menor, e depois revertemos para termos o maior produto como primeiro elemento (podiamos deixar sem o reverse e aplicar um `last` em vez de `first` à solução da função). A chamada de função `to_owned` ocorre porque o resultado do first é um *borrow*, ou seja `&u64` e precisamos de um `u64`.
 
 O próximo teste inclui apenas uma diferença, que é o valor de `span` deixa de ser `2` e passa a ser `3`. Para isso, precisamos passar span como argumento para `window_values`.
 
@@ -316,7 +316,7 @@ fn returns_zero_if_all_products_are_zero() {
 }
 ```
 
-Agora, o próximo teste já falha, pois apesar de termos a implementação do tipo `Error`, não estamos usando. Note que o teste consiste em retornar um Result<Err> por conta do tamanho da `window` ser amior que o tamanho total das string:
+Agora, o próximo teste já falha, pois apesar de termos a implementação do tipo `Error`, não estamos usando. Note que o teste consiste em retornar um Result<Err> por conta do tamanho da `window` ser maior que o tamanho total das string:
 
 ```rust
 #[test]
@@ -411,7 +411,7 @@ fn a_string_with_non_digits_is_an_error() {
 }
 ```
 
-para resolver este teste precisamos fazer um `match` por tipos alfabéticos e retornar o primeiro que falha. O `if` que garante que existe uma falha é `if string_digits.matches(char::is_alphabetic).collect::<Vec<&str>>().len() > 0` e assim bastaria adicionar o seguinte código a `lsp`:
+Para resolver este teste precisamos fazer um `match` por tipos alfabéticos e retornar o primeiro que falha. O `if` que garante que existe uma falha é `if string_digits.matches(char::is_alphabetic).collect::<Vec<&str>>().len() > 0` e assim bastaria adicionar o seguinte código a `lsp`:
 
 ```rust
 pub fn lsp(string_digits: &str, span: usize) -> Result<u64, Error> {
@@ -427,14 +427,14 @@ pub fn lsp(string_digits: &str, span: usize) -> Result<u64, Error> {
     }
 
     let digits: Vec<u64> = string_digits
-            .split("")
-            .map(|s| s.parse())
-            .filter(|s| match s {
-                Ok(_) => true,
-                Err(_) => false,
-            })
-            .map(|s| s.unwrap())
-            .collect();
+        .split("")
+        .map(|s| s.parse())
+        .filter(|s| match s {
+            Ok(_) => true,
+            Err(_) => false,
+        })
+        .map(|s| s.unwrap())
+        .collect();
             
     Ok(window_values(digits, span)
         .first()
@@ -443,7 +443,7 @@ pub fn lsp(string_digits: &str, span: usize) -> Result<u64, Error> {
 }
 ```
 
-Assim, com o resultado de `string_digits.matches(char::is_alphabetic).collect::<Vec<&str>>()` podemos obter o primeiro com `first`, e depois aplicar o `pop` para retirar o valor de char. Além disso, podemos eprceber que a conta `string_digits.matches(char::is_alphabetic).collect::<Vec<&str>>()` está sendoe xecutada duas vezes, assim podemos extrair para um valor, `v_alphanumeric`, antes dos if/elses:
+Assim, com o resultado de `string_digits.matches(char::is_alphabetic).collect::<Vec<&str>>()` podemos obter o primeiro com `first`, e depois aplicar o `pop` para retirar o valor de char. Além disso, podemos perceber que a conta `string_digits.matches(char::is_alphabetic).collect::<Vec<&str>>()` está sendo executada duas vezes, assim podemos extrair para um valor, `v_alphanumeric`, antes dos if/elses:
 
 ```rust
 pub fn lsp(string_digits: &str, span: usize) -> Result<u64, Error> {
