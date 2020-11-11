@@ -345,7 +345,29 @@ COPY . /usr/src/app
 CMD ["cargo", "build", "-q"]
 ```
 
-A primeira diretiva é a `FROM`  seu objetivo é definir qual a imagem base para nosso container, neste caso estamos utilizando uma versão `nightly` do Rust pois a versão stable não estava compatível com a versão da minha máquina quando criei este livro. Depois disso, temos a diretiva `RUN`, que executa algum comando, no nosso caso a criação da pasta `/usr/src/app` e já definimos esta pasta como diretório que vamos utilizar com `WORKDIR`. Depois disso copiamos todo nosso código para nosso diretório com `COPY` e executamos um comando do cargo para construir, `build`, nossa aplicação, `cargo build -q` com  `CMD`.
+A primeira diretiva é a `FROM`  seu objetivo é definir qual a imagem base para nosso container, neste caso estamos utilizando uma versão `nightly` do Rust pois a versão stable não estava compatível com a versão da minha máquina quando criei este livro. Depois disso, temos a diretiva `RUN`, que executa algum comando, no nosso caso a criação da pasta `/usr/src/app` e já definimos esta pasta como diretório que vamos utilizar com `WORKDIR`. Depois disso copiamos todo nosso código para nosso diretório com `COPY` e executamos um comando do cargo para construir, `build`, nossa aplicação, `cargo build -q` com  `CMD`. Outra opção de dockerfile com otimização para builds repetidos é:
+
+```Dockerfile
+FROM rust:latest
+
+RUN mkdir -p /usr/src/
+WORKDIR /usr/src/
+RUN USER=root cargo new --bin app
+WORKDIR /app
+
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
+COPY ./tests ./tests
+
+RUN cargo build --release
+RUN rm src/*.rs
+
+COPY ./src ./src
+
+CMD ["cargo", "build", "--release"]
+```
+
+O objetivo deste segundo `Dockerfile` é diminuir o tempo de execução do container ao cachear as dependências do app e somente atualizar o cache a partir do `COPY ./src ./src`.
 
 Com este container pronto, podemos começar a pensar em como utilizar os dois containers (DynamoDB e `todo_server`) em conjunto. Faremos isso com `docker-compose.yml`:
 
