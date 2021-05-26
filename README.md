@@ -3,6 +3,8 @@
 **Livro sobre desenvolvimento web em Rust**
 
 Autora: Julia Naomi Boeira
+<!-- -->
+[Livro](./book.md)
 
 TODOs:
 - [ ] Revisão de Português
