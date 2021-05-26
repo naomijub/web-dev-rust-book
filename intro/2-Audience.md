@@ -1,4 +1,4 @@
-[Anterior](./1-about.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./1-book.md)
+[Anterior](./1-about.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./3-book.md)
 
 # Audiência
 
@@ -12,5 +12,3 @@ Existem alguns grandes casos de uso de Rust em produção, tirando a Mozilla, em
 * **Discord** - Quando o Elixir para de performar bem para a quantidade de dados que você precisa processar, está na hora de delegar esse processamento para quem é bom nisso. No caso do Discord foi o Rust.
 
 Ou seja, Rust é ideal para quem quer produzir serviços com performance excepcional, uma linguagem simples, pouco consumo de memória e muita felicidade. Acredito que seja um livro para pessoas que pelo menos já brincaram um ou dois dias com Rust, mas caso seja necessário, recomendo conferir os livros da documentação oficial e os maravilhosos livros que a Casa do Código possui sobre Rust antes de ler este.
-
-[Anterior](./1-about.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./1-book.md)
