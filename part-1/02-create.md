@@ -1,6 +1,6 @@
 # Criando tarefas
 
-Primeiro passo para criar nossa tarefa será entender o que é uma tarefa. Acho que a ideia de uma tarefa é conter informações sobre ela e que outras pessoas do time tenham visibilidade do que se trata a tarefa, assim vamos começar por modelar o domínio de entrada e saída. Usaremos a `struct` do Rust para modelar:
+O primeiro passo para criar nossa tarefa será entender o que é uma tarefa. A ideia de uma tarefa é conter informações sobre ela e que outras pessoas do time tenham visibilidade do que se trata a tarefa. Assim vamos começar por modelar o domínio de entrada e saída. Usaremos a `struct` do Rust para modelar:
 
 ```rust
 struct Task {
@@ -23,7 +23,7 @@ struct TodoCard {
 }
 ```
 
-Assim, nossa struct principal é a `TodoCard`, que possui os campos `String` `title` e `description`, correspondentes ao título da tarefa e a sua descrição. Depois disso, podemos ver que existe um campo do tipo `Uuid` (inclua a crate `uuid` com as `features` `serde` e `v4` ativadas em seu Cargo.toml), que é um `owner`, ou seja, a pessoa dona da tarefa. Cada tarefa possui um conjunto de subtarefas a fazer, que podem estar completas ou não, essas subtarefas chamamos de `Task`, e é uma struct que possui um título, `title`, e um estado booleano que chamamos de `is_done`. Seguido disso temos o estado da tarefa no fluxo de cards, `state`, que corresponde ao enum `State`, com os campos `Todo`, `Doing`, `Done`. O primeiro passo do serviço será algo bastate simples, receber um `POST` json com o `TodoCard` e respondermos um `TodoCardId`:
+Assim, nossa struct principal é a `TodoCard`, que possui os campos `String` `title` e `description`, correspondentes ao título da tarefa e a sua descrição. Depois disso, podemos ver que existe um campo do tipo `Uuid` (inclua a crate `uuid` com as `features` `serde` e `v4` ativadas em seu `Cargo.toml`), que é um `owner`, ou seja, a pessoa dona da tarefa. Cada tarefa possui um conjunto de subtarefas a fazer, que podem estar completas ou não. Essas subtarefas são chamadas de `Task`, e é uma struct que possui um título, `title`, e um estado booleano que chamamos de `is_done`. Em seguida temos o estado da tarefa no fluxo de cards, `state`, que corresponde ao enum `State`, com os campos `Todo`, `Doing` e `Done`. O primeiro passo do serviço será algo bastante simples, receber um `POST` JSON com o `TodoCard` e respondermos um `TodoCardId`:
 
 ```rust
 struct TodoCardId {
@@ -33,7 +33,7 @@ struct TodoCardId {
 
 > **Uuid**
 >
-> A crate Uuid possui várias configurações, mas para o que vamos utilizar precisamos de compatibilidade com `Serde` e a versão 4. `serde` para garantir que ela é serializável e desserializável para json, e versão 4 pois é o formato que vamos utilizar. Assim, essas configurações são adicionadas ao `[dependencies]` do Cargo.toml como `uuid = { version = "0.7", features = ["serde", "v4"] }`.
+> A crate Uuid possui várias configurações, mas para o que vamos utilizar precisamos de compatibilidade com `Serde` e a versão 4. Serde para garantir que ela é serializável e desserializável para JSON, e versão 4, pois é o formato que vamos utilizar. Assim, essas configurações são adicionadas ao `[dependencies]` do `Cargo.toml` como `uuid = { version = "0.7", features = ["serde", "v4"] }`.
 
 Um exemplo de `POST` em json de uma `TodoCard` seria:
 
@@ -64,7 +64,7 @@ Agora que modelamos nosso `TodoCard` podemos começar sua implementação com te
 
 ## Criando o primeiro teste de `TodoCard`
 
-O novo teste envolve uma série de alterações no código, como criar um novo `scope` para rotas de `api`, enviar `payloads` e responder objetos Json. Assim, a estratégia desse teste vai envolver enviar um `TodoCard` para ser ser criado e termos como resposta um Json contendo o Id deste `TodoCard`. Lembrando que agora que vamos manipular Json, precisamos poder serializar e deserializar eles, e para isso devemos incluir a biblioteca `serde` no Cargo.toml:
+O novo teste envolve uma série de alterações no código, como criar um novo `scope` para rotas de `api`, enviar `payloads` e responder objetos JSON. Assim, a estratégia desse teste vai envolver enviar um `TodoCard` para ser criado e termos como resposta um JSON contendo o id desse `TodoCard`. Lembrando que agora que vamos manipular JSON, precisamos poder serializar e desserializar eles, e para isso devemos incluir a biblioteca `serde` no Cargo.toml:
 
 ```toml
 // ...
@@ -154,11 +154,11 @@ pub struct TodoIdResponse {
 }
 ```
 
-Perceba que utilizamos as macros de `Serialize, Deserialize` para sua fácil conversão entre Json e String. Além disso, `TodoIdResponse` possui um campo `id` que é do tipo `Uuid`, um `Uuid` do tipo `v4`, conforme definimos no Cargo.toml. Agora temos também o controller `create_todo`, que receberá um `POST` do tipo Json, fará sua inserçnao no banco de dados e retornará seu id. Felizmente, para este primeiro momento, não precisamos fazer a inserção no banco, pois o teste somente espera um tipo de retorno `id`. 
+Perceba que utilizamos as macros de `Serialize, Deserialize` para sua fácil conversão entre JSON e String. Além disso, `TodoIdResponse` possui um campo `id` que é do tipo `Uuid`, um `Uuid` do tipo `v4`, conforme definimos no `Cargo.toml`. Agora temos também o controller `create_todo`, que receberá um `POST` do tipo JSON, fará sua inserção no banco de dados e retornará seu id. Felizmente, para este primeiro momento, não precisamos fazer a inserção no banco, pois o teste espera somente um tipo de retorno `id`. 
 
-Outro ponto importante é o uso da biblioteca `use serde_json::from_str;`, está função em especial serve para converter uma `&str` em uma das Structs serializáveis, conforme a linha `let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();`. Note que como a função não sabe para qual struct deve converter a resposta `resp`, tivemos de definir seu tipo na declaração do valor id, `id: TodoIdResponse`. O Json do `payload` do `POST` está definido como uma String na função auxiliar de teste `post_todo`.
+Outro ponto importante é o uso da biblioteca `use serde_json::from_str;`. Essa função em especial serve para converter uma `&str` em uma das structs serializáveis, conforme a linha `let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();`. Note que como a função não sabe para qual struct deve converter a resposta `resp`, tivemos de definir seu tipo na declaração do valor id, `id: TodoIdResponse`. O JSON do `payload` do `POST` está definido como uma string na função auxiliar de teste `post_todo`.
 
-A seguir possuímos a definição do teste e o uso do runtime do actix, seguidos da definiçnao do `App` que vamos utilizar para mockar o serviço e suas rotas:
+A seguir possuímos a definição do teste e o uso do runtime do actix, seguidos da definição do `App`, que vamos utilizar para mockar o serviço e suas rotas:
 
 ```rust
 //definição do teste
@@ -177,7 +177,7 @@ let mut app = test::init_service(
 ).await;
 ```
 
-Note duas mudanças na definição do App, agora nossa rota possui um padrão diferente `/api/create` e o controller `create_todo` está sendo passado para um método `post()`. Outro detalhe é que estamos utilizando mais recursos na criação do Request:
+Note duas mudanças na definição do `App`: nossa rota possui um padrão diferente `/api/create` e o controller `create_todo` está sendo passado para um método `post()`. Outro detalhe é que estamos utilizando mais recursos na criação do request:
 
 ```rust
 let req = test::TestRequest::post()
@@ -187,9 +187,9 @@ let req = test::TestRequest::post()
     .to_request();
 ```
 
-Veja que `TestRequest` agora instancia um tipo `POST` antes de adicionar informações ao seu builder, `TestRequest::post()`. As duas outras mudanças são a adição das funções `header` e `set_payload`, `.header("Content-Type", "application/json").set_payload(post_todo().as_bytes().to_owned())`. `header` define o tipo de conteúdo que estamos enviando, sua ausência neste caso pode implicar em uma resposta cpom o status `400`, e `set_payload` recebe um array de bytes com o conteúdo do `payload`, ou seja `post_todo`.
+Veja que `TestRequest` agora instancia um tipo `POST` antes de adicionar informações ao seu builder, `TestRequest::post()`. As duas outras mudanças são a adição das funções `header` e `set_payload`, `.header("Content-Type", "application/json").set_payload(post_todo().as_bytes().to_owned())`. `header` define o tipo de conteúdo que estamos enviando e sua ausência nesse caso pode implicar em uma resposta com o status `400`. `set_payload` recebe um array de bytes com o conteúdo do `payload`, ou seja `post_todo`.
 
-Depois podemos ler a resposta normalmente, `let resp = test::read_response(&mut app, req).await;`, e transformar está resposta em uma struct conhecida pelo servico, `let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();`. O último passo é garantir que a resposta contendo o TodoIdResponse seja de fato um id válido, para isso utilizamos a macro `assert!` em `assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());`. Note a função auxiliar `get_id`, se nosso teste estivesse dentro do nosso módulo em vez de na pasta de testes de integração, seria possível possivel anotar ela com `#[cfg(test)]` e economizar espaço no executável e tempo de compilação. Eu optei por deixar ela visível e testar o controller nos testes de integração, mas a escolha é sua:
+Depois podemos ler a resposta normalmente, `let resp = test::read_response(&mut app, req).await;`, e transformar essa resposta em uma struct conhecida pelo serviço, `let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();`. O último passo é garantir que a resposta contendo o `TodoIdResponse` seja de fato um id válido e para isso utilizamos a macro `assert!` em `assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());`. Note a função auxiliar `get_id`, se nosso teste estivesse dentro do nosso módulo em vez de na pasta de testes de integração, seria possível anotar ela com `#[cfg(test)]` e economizar espaço no executável e tempo de compilação. Eu optei por deixá-la visível e testar o controller nos testes de integração, mas a escolha é sua:
 
 ```rust
 impl TodoIdResponse {
@@ -202,14 +202,15 @@ impl TodoIdResponse {
 
 ### Implementando o controller do teste anterior
 
-Agora com o teste implementado precisamos entender quais são as coisas que necessitamos implementar:
+Agora, com o teste implementado, precisamos entender quais são as coisas que necessitamos implementar:
+
 1. Controller `create_todo`.
 2. O controller recebe um Json do tipo `TodoCard` , que precisa ser deserializável com a macro `#[derive(Deserialize)]`.
 3. Um struct `TodoIdResponse` que precisa ser serializável com `#[derive(Serialize)]`.
 
-Como os itens `2` e `3` já mencionamos na seção anterior, vou mostrar como eles ficaram com as macros de serialização e deserialização. Além disso, inclui a macro de `Debug` pois é pode ser útil durante ambiente de desenvolvimento, se você achar necessário retirá-la no futuro pode ajudar a economizar espaço do binário.
+Como os itens 2 e 3 já foram mencionados na seção anterior, vou mostrar como eles ficaram com as macros de serialização e desserialização. Além disso, inclui a macro de `Debug`, pois pode ser útil durante o desenvolvimento, se você achar necessário retirá-la no futuro pode ajudar a economizar espaço do binário.
 
-* para utilizar as macros de serde lembre-se de incluir `#[macro_use] extern crate serde;` em `lib.rs` e em `main.rs`.
+* Para utilizar as macros de serde, lembre-se de incluir `#[macro_use] extern crate serde;` em `lib.rs` e em `main.rs` (versões mais antigas do Rust).
 
 ```rust
 // src/todo_api_web/model/mod.rs
@@ -250,7 +251,7 @@ impl TodoIdResponse {
 }
 ```
 
-Para o item `1`, `create_todo` controller, devemos novamente criar uma funçnao `async` que tem como tipo de resposta uma implementação da trait `Responder`, `impl Responder`, como fizemos com `pong` e `readiness`:
+Para o item 1, `create_todo` controller, devemos novamente criar uma função `async`, que tem como tipo de resposta uma implementação da trait `Responder`, a `impl Responder`, como fizemos com `pong` e `readiness`:
 
 ```rust
 // src/todo_api_web/conytoller/todo.rs
@@ -267,7 +268,7 @@ pub async fn create_todo(_info: web::Json<TodoCard>) -> impl Responder {
 }
 ```
 
-As primeiras coisas que podemos perceber são a create de `Uuid` para gerar novos `uuids` com `Uuid::new_v4()`, e os tipos de entrada e de saída, `TodoCard, TodoIdResponse`, respectivamente. O actix possui uma forma interna de deserializar objetos Json que é definido no módulo `web` com `web::Json<T>`, é em T que vamos incluir nossa struct `TodoCard`. Veja que o tipo de retorno `TodoIdResponse` está sendo serializado pelo `serde_json` e retornado ao `body`, caso algo der errado vamos obter um erro do tipo `"failed to serialize ContactsBatchResponseId"`. Note também que adicionamos o header `Content-type` através da função `content_type("application/json")`. Assim já seria suficiente para nosso teste passar, mas se quisermos testar essa rota com um `curl` é preciso adicionar ao `App` de `main.rs`:
+As primeiras coisas que podemos perceber são a create de `Uuid` para gerar novos `uuids` com `Uuid::new_v4()`, e os tipos de entrada e de saída, `TodoCard, TodoIdResponse`, respectivamente. O actix possui uma forma interna de desserializar objetos JSON que é definido no módulo `web` com `web::Json<T>` e é em `T` que vamos incluir nossa struct `TodoCard`. Veja que o tipo de retorno `TodoIdResponse` está sendo serializado pelo `serde_json` e retornado ao `body`. Caso algo dê errado, obteremos um erro do tipo `"failed to serialize ContactsBatchResponseId"`. Note também que adicionamos o header `Content-type` através da função `content_type("application/json")`. Assim já seria suficiente para nosso teste passar, mas se quisermos testar essa rota com um `curl` é preciso adicionar ao `App` de `main.rs`:
 
 ```rust
 HttpServer::new(|| {
@@ -286,7 +287,7 @@ HttpServer::new(|| {
 
 ### Refatorando as rotas
 
-No nosso teste anterior percebemos que nossas rotas da `main.rs` são desconexas das rotas do teste (`tests/todo_api_web/controller`), pois iniciamos um servidor de teste (`test::init_service`) que pode possuir uma rota aleatória, já que iniciamos um novo `App` dentro dele. Assim, basta direcionarmos a rota a um controller correto e fazer o request ser direcionado a está rota que tudo ocorrerá bem. Para resolver isso, a sugestão é refatorarmos o `App` de forma que suas rotas sejam configuradas em um único lugar e possam ser utilizada tanto na `main.rs`, quanto nos testes. Para isso, vamos refatorar nosso `main` para extrair todo o `web::scope` de forma que as configurações venham de um módulo de rotas. Assim, devemos criar um módulo de rotas em `src/todo_api_web/routes.rs` e adicionar o seguinte código:
+No nosso teste anterior, percebemos que nossas rotas da `main.rs` são desconectadas das rotas do teste (`tests/todo_api_web/controller`), pois iniciamos um servidor de teste (`test::init_service`) que pode possuir uma rota aleatória, já que iniciamos um novo `App` dentro dele. Assim, basta direcionarmos a rota a um controller correto e fazer o request ser direcionado para essa rota que tudo ocorrerá bem. Para resolver isso, a sugestão é refatorarmos o `App` de forma que suas rotas sejam configuradas em um único lugar e possam ser utilizadas tanto na `main.rs` quanto nos testes. Para isso, vamos refatorar nosso `main` para extrair todo o `web::scope` de forma que as configurações venham de um módulo de rotas. Assim, devemos criar um módulo de rotas em `src/todo_api_web/routes.rs` e adicionar o seguinte código:
 
 ```rust
 use actix_web::{web, HttpResponse};
@@ -453,11 +454,11 @@ async fn test_readiness_ok() {
 }
 ```
 
-Nosso próximo passo agora é incluir nosso `TodoCard` em nossa base de dados.
+Nosso próximo passo é incluir nosso `TodoCard` em nossa base de dados.
 
 ## Configurando a base de dados
 
-A base de dados que vamos utilizar agora é o DyanmoDB. O objetivo de utilizar essa base de dados é salvar as `TodoCards` para podermos buscar elas no futuro, assim o primeiro passo é configurar e modelar a base de dados para que nosso servidor a reconheça. A instância que vamos utilizar é derivada de um container docker cuja imagem é `amazon/dynamodb-local` e pode ser executada com `docker run -p 8000:8000 amazon/dynamodb-local`. Observe que a porta que o DynamoDB está expondo é a `8000`. Eu gosto muito de utilziar Makefiles, pois acredito que eles facilitem a vida quando precisamos rodar vários comandos, especialmente em serviços diferentes. Assim, criei o seguinte Makefile para executar o DynamoDB:
+A base de dados que vamos utilizar agora é o DyanmoDB. O objetivo de utilizar essa base de dados é salvar as `TodoCards` para podermos buscá-las no futuro, assim o primeiro passo é configurar e modelar a base de dados para que nosso servidor a reconheça. A instância que vamos utilizar é derivada de um contêiner docker cuja imagem é `amazon/dynamodb-local` e pode ser executada com `docker run -p 8000:8000 amazon/dynamodb-local`. Observe que a porta que o DynamoDB está expondo é a `8000`. Eu gosto muito de utilizar Makefiles, pois eles facilitam a vida quando precisamos rodar vários comandos, especialmente em serviços diferentes. Assim, criei o seguinte Makefile para executar o DynamoDB:
 
 ```sh
 db:
@@ -467,9 +468,9 @@ db:
 
 ### Escrevendo no banco de dados
 
-Como esta primeira feature envolve exploração, vou primeiro apresentar a lógica de como fazemos para depois escrever os testes e generalizações. O próximo passo para termos a lógica do banco de dados é criar um novo módulo em `lib.rs` (e no `main.rs`) chamado `todo_api`, que por sua vez possuirá o módulo `db`, que vai gerenciar todas as relações com o DynamoDB. Antes de seguir com o servidor em si, vou comentar a atual função `main` e substituir por outra simples `fn main() {// ...}` que utilize somente o módulo `todo_api` para executar a criação de uma `TodoCard` no banco de dados, depois disso podemos conectar as partes novamente.
+Como essa primeira feature envolve exploração, primeiro vou apresentar a lógica de como fazemos para depois escrever os testes e generalizações. O próximo passo para termos a lógica do banco de dados é criar um novo módulo em `lib.rs` (e no `main.rs`) chamado `todo_api`, que por sua vez possuirá o módulo `db`, que vai gerenciar todas as relações com o DynamoDB. Antes de seguir com o servidor em si, vou comentar a atual função `main` e substituir por outra simples, `fn main() {// ...}`, que utiliza somente o módulo `todo_api` para executar a criação de uma `TodoCard` no banco de dados, depois disso podemos conectar as partes novamente.
 
-Para podermos comunicar facilmente com o DynamoDB em Rust existe uma ótima biblioteca que relaciona todos os serviços da AWS chamada de `rusoto_core` e sua biblioteca voltada ao DynamoDB chamada `rusoto_dynamodb`, basta adicioná-las as dependências no Cargo.toml:
+Para podermos nos comunicar facilmente com o DynamoDB em Rust, existem duas bibliotecas. Uma que relaciona todos os serviços da AWS chamada `rusoto_core` e outra, a `rusoto_dynamodb`, voltada ao DynamoDB. Basta adicioná-las às dependências no `Cargo.toml`. (Atualmente a rusoto está sem novos desenvolvimentos em prol da sdk Rust da AWS que está em Beta)
 
 ```toml
 [dependencies]
@@ -489,7 +490,7 @@ bytes = "0.5.3"
 actix-service = "1.0.5"
 ```
 
-Com a biblioteca `rusoto_dynamodb` disponível podemos começar a pensar em como comunicar com o DynamoDB. Podemos fazer isso adicionando um módulo `helpers` dentro de `todo_api/db` e criando uma funcão que retorna o cliente:
+Com a biblioteca `rusoto_dynamodb` disponível, podemos começar a pensar em como nos comunicar com o DynamoDB. Podemos fazer isso adicionando um módulo `helpers` dentro de `todo_api/db` e criando uma função que retorna o cliente:
 
 ```rust
 use rusoto_core::Region;
@@ -555,7 +556,7 @@ fn main() {
 }
 ```
 
-Executando esta sequência de comandos recebemos o seguinte output:
+Executando esta sequência de comandos, recebemos o seguinte output:
 
 ```rust
 CreateTableOutput { 
@@ -596,7 +597,7 @@ Tabela criada! Mas se executarmos `cargo run` de novo, receberemos um erro dizen
 Error: Service(ResourceInUse("Cannot create preexisting table"))
 ```
 
-Para corrigir este erro sugiro modificar o método `create_table` para verificar se existem tabelas com a função `client.list_tables(list_tables_input).sync()`. Para isso fazemos a seguinte modificação:
+Para corrigir esse erro, sugiro modificar o método `create_table` para verificar se existem tabelas com a função `client.list_tables(list_tables_input).sync()`. Para isso, fazemos a seguinte modificação:
 
 ```rust
 use rusoto_dynamodb::{
@@ -660,11 +661,11 @@ fn create_table_input() {
 
 ```
 
-Note que quando verificamos as listas existentes na tabela surgiram várias situações possíveis e para faciltiar a criação da tabela, extraimos sua lógica para `create_table_input`. A primeira situação é `Err`, que possivelmente representa algum problema de listagem de tabelas na base, indicando ausência de tabelas, que nos permite criar tabelas. O segundo caso, dentro do `Ok` é um `None`, que pode significar os mais diversos problemas. Depois disso obtemos a listagem em `Some`, mas está listagem pode estar vazia, sendo um caso para criar tabela, o `else`, e se a listagem for maior que zero, não criamos a tabela.
+Note que, quando verificamos as listas existentes na tabela, surgiram várias situações possíveis e para facilitar a criação da tabela, extraímos sua lógica para `create_table_input`. A primeira situação é `Err`, que possivelmente representa algum problema de listagem de tabelas na base, indicando ausência de tabelas, que nos permite criar tabelas. O segundo caso, dentro do `Ok` é um `None`, que pode significar os mais diversos problemas. Depois disso obtemos a listagem em `Some`, mas esta listagem pode estar vazia, sendo um caso para criar tabela, o `else`, e se a listagem for maior que zero, não criamos a tabela.
 
 ### Inserindo conteúdo na tabela
 
-Para inserirmos a tabela vamos precisar de uma struct de `rusoto_dynamo` chamada `PutItemInput`, que nos permitirá inserir o Json que recebemos na tabela, porém o Json que recebemos em `TodoCard` não possui o id da card. Para podermos utilizar o `PutItemInput` como definimos na tabela vamos criar um `model` que possua um id.
+Para inserirmos a tabela, vamos precisar de uma struct de `rusoto_dynamo` chamada `PutItemInput`, que nos permitirá inserir o JSON que recebemos na tabela, porém o JSON que recebemos em `TodoCard` não possui o id do card. Para podermos utilizar o `PutItemInput` como definimos na tabela, vamos criar um `model` que possua um id.
 
 ```rust
 // src/todo_api/model/mod.rs
@@ -773,7 +774,9 @@ pub fn put_todo(todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
 }
 ```
 
-Veja que nosso controller ficou muito mais funcional agora. Ele recebe um Json do tipo `TodoCard`, transforma esse Json em um `TodoCardDb` e envia para a função `put_todo` inserir no banco de dados. Caso ocorra algum problema com a inserção fazemos pattern matching com o None e retornamos algo como `HttpResponse::BadRequest()` ou `HttpResponse::InternalServerError()`, mas caso o retorno seja um id em `Some`, retornamos um json contendo `TodoIdResponse`. Note que foi necessário adicionar a função `body` ao `HttpResponse::BadRequest()` para garantir que os dois pattern matchings tivessem o mesmo tipo de retorno `Response`, em vez de `ResponseBuilder`. Mais a baixo na função put_todo, nos deparamos com a  struct `PutItemInput`, struct responsável por configurar como será a inserção do item via função `put_item(item).sync`, mas ao mesmo tempo, se você estiver utilizando o `rls` do rust, vai perceber que o `into` de `item: todo_card.clone().into(),` está destacado, isso se defe ao fato de que precisamos implementar a função into para o tipo `TodoCardDB` de forma que retorne `HashMap<String, AttributeValue>`, para isso, utilizamos a seguinte declaração `impl Into<HashMap<String, AttributeValue>> for TodoCardDb`. Com a seguinte implementação:
+Veja que nosso controller ficou muito mais funcional agora. Ele recebe um JSON do tipo `TodoCard`, transforma esse JSON em um `TodoCardDb` e envia para a função `put_todo` inserir no banco de dados. Caso ocorra algum problema com a inserção fazemos pattern matching com o `None` e retornamos algo como `HttpResponse::BadRequest()` ou `HttpResponse::InternalServerError()`, mas caso o retorno seja um id em `Some`, retornamos um JSON contendo `TodoIdResponse`. Note que foi necessário adicionar a função `body` ao `HttpResponse::BadRequest()` para garantir que os dois pattern matchings tivessem o mesmo tipo de retorno `Response`, em vez de `ResponseBuilder`. 
+
+Mais à frente, na função `put_todo`, nos deparamos com a struct `PutItemInput`, struct responsável por configurar como será a inserção do item via função `put_item(item).sync`. Ao mesmo tempo, se você estiver utilizando o `rls` do rust, vai perceber que o `into` de `item: todo_card.clone().into(),` está destacado, isso se deve ao fato de que precisamos implementar a função `into` para o tipo `TodoCardDB` de forma que retorne `HashMap<String, AttributeValue>`. Para isso, utilizamos a declaração `impl Into<HashMap<String, AttributeValue>> for TodoCardDb` com a seguinte implementação:
 
 ```rust
 // src/todo_api/model/mod.rs
@@ -794,7 +797,7 @@ impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
 }
 ```
 
-Se você está utilizando `rls` vai perceber que o `state.to_string()` e o `task_to_db_val` estão destacados como errados, assim como a macro `val!`. Vamos falar do `val!` logo, mas primeiro vamos entender como funciona a criação do tipo `AttributeValue` para ser insertido dentro do banco. A função `into` espera como retorno um tipo `HashMap<String, AttributeValue>`, na qual `AttributeValue` é uma struct com a seguinte estrutura:
+Se você está utilizando `rls` vai perceber que o `state.to_string()` e o `task_to_db_val` estão destacados como errados, assim como a macro `val!`. Vamos falar do `val!` logo, mas primeiro vamos entender como funciona a criação do tipo `AttributeValue` para ser inserido dentro do banco. A função `into` espera como retorno um tipo `HashMap<String, AttributeValue>`, no qual `AttributeValue` é uma struct com a seguinte estrutura:
 
 ```rust
 pub struct AttributeValue {
@@ -813,9 +816,9 @@ pub struct AttributeValue {
 
 > `AttributeValue`
 >
-> Os tipos `T` dentro do `Option<T>` são os tipos possíveis dentro do DynamoDB, veja que alguns tipos são bem fáceis de perceber como `bool`, `Vec<AttributeValue>` e `HashMap<String, AttributeValue>`, sendo um valor booleano, um vetor de atributos do dynamo e uma mapa com keys strings e valores como atributos, respectivamente. outros valores podem ser confusos como as chaves `s`, `ss`, `n`, `ns`. As chaves dos tipos `b` e `bs` são para valores binários como `"B": "dGhpcyB0ZXh0IGlzIGJhc2U2NC1lbmNvZGVk"`, além disso o tipo `n` serve para representar um tipo numérico, enquanto o tipo `s` serve para tipos String. Os tipos `ss` e `ns` são as versões vetores de `s` e de `n`, respectivamente.
+> Os tipos `T` dentro do `Option<T>` são os tipos possíveis dentro do DynamoDB. Veja que alguns tipos são bem fáceis de perceber como `bool`, `Vec<AttributeValue>` e `HashMap<String, AttributeValue>`, isto é, um valor booleano, um vetor de atributos do dynamo e um mapa com keys strings e valores como atributos, respectivamente. Outros valores podem ser confusos, como as chaves `s`, `ss`, `n` e `ns`. As chaves dos tipos `b` e `bs` são para valores binários como `"B": "dGhpcyB0ZXh0IGlzIGJhc2U2NC1lbmNvZGVk"`, além disso o tipo `n` serve para representar um tipo numérico, enquanto o tipo `s` serve para tipos String. Os tipos `ss` e `ns` são as versões vetores de `s` e de `n`, respectivamente.
 
-Para resovermos a falha de compilação em `state.to_string()` precisamos implementar a trait `std::fmt::Display` que nos permite transformar o valor de `state` em uma string:
+Para resovermos a falha de compilação em `state.to_string()` precisamos implementar a trait `std::fmt::Display` que nos permite transformar o valor de `state` em uma String:
 
 ```rust
 impl std::fmt::Display for StateDb {
@@ -825,7 +828,7 @@ impl std::fmt::Display for StateDb {
 }
 ```
 
-Agora vamos verificar a função `task_to_db_val`, cujo objetivo é transformar um vetor do tipo `TaskDb` em um vetor de `AttributeValue`. Essa transformação nos permite inserir as `tasks` como um único campo contendo um vetor de objetos, como se diria la linguagem Json, `TaskDB`. A função `task_to_db_val` é bastante simples, pois recebe uma `tasks` do tipo `Vec<TaskDb>` e aplica um map sobre cada `TaskDb` para substituir elas por um `AttributeValue` da chave `m`, `Option<HashMap<String, AttributeValue>>`, e depois colecionar todos esses `Option<HashMap<String, AttributeValue>>` em um vetor `Vec<AttributeValue>`:
+Agora vamos verificar a função `task_to_db_val`, cujo objetivo é transformar um vetor do tipo `TaskDb` em um vetor de `AttributeValue`. Essa transformação nos permite inserir as `tasks` como um único campo contendo um vetor de objetos, como se diria na linguagem JSON, `TaskDB`. A função `task_to_db_val` é bastante simples, pois recebe uma `tasks` do tipo `Vec<TaskDb>` e aplica um mapa sobre cada `TaskDb` para substituí-las por um `AttributeValue` da chave `m`, `Option<HashMap<String, AttributeValue>>`, e depois coleciona todos esses `Option<HashMap<String, AttributeValue>>` em um vetor `Vec<AttributeValue>`:
 
 ```rust
 fn task_to_db_val(tasks: Vec<TaskDb>) -> Vec<AttributeValue> {
@@ -841,7 +844,7 @@ fn task_to_db_val(tasks: Vec<TaskDb>) -> Vec<AttributeValue> {
 }
 ```
 
-Ainda falta falarmos do `val!`. `val!` é uma macro que criamos para transformar os valores de nossa struct em valores do DynamoDB. Inseri essa macro em um novo módulo, chamado `adapter`:
+Ainda falta falarmos da `val!`. `val!` é uma macro criada para transformar os valores de nossa struct em valores do DynamoDB. Inseri essa macro em um novo módulo chamado `adapter`:
 
 ```rust
 // src/todo_api/adapter/mod.rs
@@ -870,7 +873,7 @@ macro_rules! val {
 }
 ```
 
-Para que está macro esteja disponível dentro do modulo `todo_api` precisamos utilizar `#[macro_use]` na declaração dos módulos:
+Para que essa macro esteja disponível dentro do módulo `todo_api`, precisamos utilizar `#[macro_use]` na declaração dos módulos:
 
 ```rust
 #[macro_use]
@@ -879,7 +882,7 @@ pub mod db;
 pub mod model;
 ```
 
-Agora tudo deve estar funcionando, podemos executar `make db` e `cargo run` para fazer um curl em `http://localhost:4000/api/create` com o seguinte Json:
+Agora tudo deve estar funcionando. Podemos executar `make db` e `cargo run` para fazer um `curl` em `http://localhost:4000/api/create` com o seguinte JSON:
 
 ```json
 {
@@ -992,7 +995,7 @@ pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
 }
 ```
 
-Note que todos os módulos internos utilizei o `use crate::{// ...}` para declará-los, pois creio que ajuda na organização. Além disso, na minhs opinião, a função `new` de `TodoCardDb` é um adapter e pode estar mal localizada. Uma possível solução para isso seria mover e renomear a função `new` para o módulo adapter com nome de `todo_json_to_db`, mas isso implicaria em tornar todos os campos de `TodoCardDb` públicos, assim como de `TaskDb`. Por isso, está aprte da refatoração fica a seu critério de estilo, mas vou fazer para exemplificar:
+Note que para declarar todos os módulos internos utilizei o `use crate::{// ...}`, pois ajuda na organização. Além disso, na minha opinião, a função `new` de `TodoCardDb` é um adapter e pode estar mal localizada. Uma possível solução para isso seria mover e renomear a função `new` para o módulo adapter com nome de `todo_json_to_db`, mas isso implicaria em tornar todos os campos de `TodoCardDb` públicos, assim como de `TaskDb`. Por isso, essa parte da refatoração fica a seu critério de estilo, mas vou fazer para exemplificar:
 
 ```rust
 // src/todo_api/adapter/mod.rs
@@ -1120,7 +1123,7 @@ Agora  faltam alguns testes.
 
 ## Aplicando testes a nosso endpoint
 
-Creio que um bom approach agora seja começar pelos testes mais unitários, por isso vamos começar pelo adapter. Nosso primeiro teste será com a função `converts_json_to_db`:
+Creio que uma boa abordagem agora seja começar pelos testes mais unitários, por isso vamos começar pelo adapter. Nosso primeiro teste será com a função `converts_json_to_db`:
 
 ```rust
 
@@ -1158,7 +1161,7 @@ mod test {
 }
 ```
 
-Note que para facilitar a testabilidade mudamos a assinatura da função para receber um `id`, `todo_json_to_db(json, id)`, isso se deve ao fato de que gerar id randomicamente não ajudam os testes e testar campo a campo não parece uma boa solução, além disso, adicionamos a macro `PartialEq` nas structs `StateDb, TaskDb, TodoCardDb` para fins de comparabilidade. Agora precisamos testar a função `to_db_val` de `TaskDb`:
+Note que, para facilitar a testabilidade, mudamos a assinatura da função para receber um `id`, `todo_json_to_db(json, id)`. Isso se deve ao fato de que gerar id randomicamente não ajuda os testes e testar campo a campo não parece uma boa solução. Além disso, adicionamos a macro `PartialEq` nas structs `StateDb`, `TaskDb` e `TodoCardDb` para fins de comparabilidade. Agora precisamos testar a função `to_db_val` de `TaskDb`:
 
 ```rust
 #[cfg(test)]
@@ -1209,7 +1212,7 @@ A lógica do teste `task_db_to_db_val` é basicamente a mesma que a implementaç
     }
 ```
 
-Se executarmos `cargo test` enquanto o `make db` roda existem duas situações, a base de dados já está configurada e tudo ocorre normalmente ou ela não está configurada e o teste falha, para resolvermos este problema bastaria adicionar o `create_table` ao cenário de teste, algo como isso:
+Se executarmos `cargo test` enquanto o `make db` roda, teremos duas situações: uma em que a base de dados já está configurada e tudo ocorre normalmente e outra em que ela não está configurada e o teste falha. Para resolvermos esse problema, bastaria adicionar o `create_table` ao cenário de teste assim:
 
 ```rust
 #[actix_rt::test]
@@ -1223,7 +1226,7 @@ async fn valid_todo_post() {
 }
 ```
 
-Mas para mim, pelo menos, é bem claro que um teste que necessita de executar o container do banco de dados para passar é bastante frágil. Assim vamos precisar fazer algumas modificações para tornar o teste passavel. A mudança que vamos fazer é, na minha opinião, uma forma mais elegante de fazer mocks em rust, pois ela não necessita criar uma trait e uma structs para mockar uma função específica, basta definirmos que para modo de compilação em test, `#[cfg(test)]`, a função terá outro comportamento, geralmente evitando efeitos colaterais com base de dados. Agora, o que vai mudar é que nosso teste de controller deixará de estar presente na pasta `tests` e passara a ser um módulo `#[cfg(test)]` junto ao controller:
+É bem claro para mim que um teste que precisa executar o contêiner do banco de dados para passar é bastante frágil. Assim vamos precisar fazer algumas modificações para tornar o teste passável. A mudança que vamos fazer é, na minha opinião, uma forma mais elegante de fazer mocks em rust, pois ela não necessita criar uma trait e uma struct para mockar uma função específica, basta definirmos que para modo de compilação em test, `#[cfg(test)]`, a função terá outro comportamento, geralmente evitando efeitos colaterais com base de dados. Agora, o que vai mudar é que nosso teste de controller deixará de estar presente na pasta `tests` e passará a ser um módulo `#[cfg(test)]` junto ao controller:
 
 ```rust
 #[cfg(test)]
@@ -1299,9 +1302,9 @@ pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
 
 Veja que `put_todo` com `cfg(test)` ativado pula a etapa `client.put_item(put_item).sync()` e simplesmente retorna  um `Option<Uuid>`. 
 
-> No momento a biblioteca rusoto dispõem de uma maneira muito primitiva de testar seus serviços, e para o caso do DyanmoDB, não creio ser suficiente para realizar um teste real
+> No momento, a biblioteca rusoto dispõe de uma maneira muito primitiva de testar seus serviços, por isso, para o caso do DyanmoDB, não creio que ela seja suficiente para realizar um teste real.
 
-Outro approach para este teste, utilizando `cfg` é utilizar `features`, como é um pouco mais sensível deixei para apresentar depois. Neste repositório vamos utilizar `features` para testar os controllers, pois acredito deixar o código mais limpo, porém mais difícil de gerencial, podendo uma feature indesejada subir para produção, assim, recomendo fortemente que os builds de produção utilizem a flag `--release` e que os `cfg` mapeie corretamente isso. Para utilizar essa feature, uma boa prática é adicioná-la no campo `[features]` do Cargo.toml:
+Outro modo de fazer esse teste, utilizando `cfg`, é utilizar `features`, mas por ser um pouco mais sensível deixei para apresentar depois. Neste repositório, vamos utilizar `features` para testar os controllers, o que deixará o código mais limpo, porém mais difícil de gerenciar, podendo fazer com que uma feature indesejada suba para a produção. Assim, recomendo fortemente que os builds de produção utilizem a flag `--release` e que os `cfg` mapeie corretamente isso. Para utilizar essa feature, uma boa prática é adicioná-la ao campo `[features]` do `Cargo.toml`:
 
 ```toml
 [package]
