@@ -1,4 +1,4 @@
-# Adicionando Caching
+# Adicionando Caching com Redis
 
 Vamos utilizar como plataforma de caching o banco de dados **Redis** e para isso precisamos disponibilizar um container de redis. Podemos fazer isso adicionando o alvo `redis` em um Makefile. Esse Makefile vai conter um comando para executar o docker com `docker run -p 6379:6379 --name some-redis -d redis`. Inclusive podemos incluir um alvo para executar `cargo run`:
 
