@@ -6,6 +6,6 @@ Para fazer atualização do `rustup` basta digitar `rustup update` em seu termin
 
 Não esqueça de experimentar utilizar o `cargo`, gerenciador de pacotes e de build do Rust. Para ver se ele está bem em sua máquina, basta digitar `cargo --version`. Para criar um pacote você pode digitar `cargo new <nome do pacote> --lib` e para criar um executável você pode digitar `cargo new <nome do executável> --bin`. Caso você omita as opções `--lib` e `--bin`, o padrão atual é criar um executável. 
 
-A minha experiência de desenvolvimento Rust tem sido muito agradável com o Racer e o RLS configurados no vscode ou no emacs, para o vscode basta adicionar os plugins `Rust` e `Rust (rls)`, caso seu path do cargo tenha algum problema, será necessário apontar o caminho para o `racer` dentro do pacote do `cargo`. 
+A minha experiência de desenvolvimento Rust tem sido muito agradável com o Racer e o RLS configurados no vscode ou no emacs. Para o vscode, basta adicionar os plugins `Rust` e `Rust (rls)`. Caso seu path do cargo tenha algum problema, será necessário apontar o caminho para o `racer` dentro do pacote do `cargo`.
 
 Pronto, agora podemos resolver um exercício básico.
