@@ -84,10 +84,10 @@ Agora podemos começar a descrever o endpoint `/ping`:
 4. Agora temos a função de execução `main` como `async fn main() -> std::io::Result<()> `. É principalmente aqui que entra a macro `#[actix_rt::main]`, já que ela nos permite utilizar a função `main` como `async`. Assim, essa função `main` é basicamente um código padrão para conformar com a macro.
 5. A linha `HttpServer::new(|| {..})` permite criar um servidor HTTP com uma `application factory`, assim como permite configurar a instância do servidor, como `workers` e `bind`, que veremos a seguir.
 6. Assim, a linha `App::new().service(..)` é um `application builder` baseado no padrão *builder* para o `App`, que é uma struct correspondente a aplicação do actix-web, seu objetivo é configurar rotas e settings padrões. A função `service` registra um serviço no servidor, já a função `web::scope("/")` define um escopo comum para as rotas a seguir, e o `route` define as rotas.
-7. Quanto a rota, `.route("/ping", web::get().to(pong))`, primeiro deve se passar uma `&str` com a rota a partir do escopo comum, depois um método de chamada http como `GET` e `POST`, representados por `web::get()` e `web::post()` e uma função de envio do request como `.to(pong)`.
+7. Quanto a rota, `.route("/ping", web::get().to(pong))`, primeiro deve se passar uma `&str` com a rota a partir do escopo comum, depois um método de chamada HTTP como `GET` e `POST`, representados por `web::get()` e `web::post()` e uma função de envio do request como `.to(pong)`.
 8. O módulo `web` possui uma série de funções auxiliares e e tipos auxiliares para o actix-web.
-9. Depois disso vemos `workers(6)`, uma função de `HttpServer` que define a quantidade de threads trabalhadoras que estarão envolvidas neste executável. Por padrão o valor de workers é a quantidade de cpus lógicas disponíveis.
-10. Agora temos o `bind` que recebe o ip e a porta que este servidor se conectará.
+9. Depois disso, vemos `workers(6)`, uma função de `HttpServer` que define a quantidade de threads trabalhadoras que estarão envolvidas nesse executável. Por padrão, o valor de `workers` é a quantidade de CPUs lógicas disponíveis.
+10. Agora temos o `bind`, que recebe o IP e a porta a qual esse servidor se conectará.
 11. `run` e `await` para executar o serviço e esperar pelo `async` definido anteriormente.
 
 É importante também implementarmos um teste para `NOT_FOUND`. Esse teste consiste em um request para uma rota que não existe e um status `NOT_FOUND`: 
@@ -112,11 +112,11 @@ Agora podemos começar a descrever o endpoint `/ping`:
     }
 ```
 
-### Implementando o endpoint `/~/ready`
+### Implementando o endpoint /~/ready
 
-Este endpoint é comum especialmente em serviços kubernetes e sua execução é via `kubectl`. Usualmente o `kubectl` espera que o processo ocorra via HTTP, TCP-gRPC ou uma execução de comando no container. Para um contexto simples de containers, ter este endpoint permite um monitoramento mais elevado de serviços, como os *Golden Signals* (sinais dourados apresentados pelo Google no livro Engenharia de confiabilidade de sites). Assim, ele permite um pouco mais de informações que saber se o servidor está vivo (`/ping`), já que verifica se o serviço é capaz de realizar um pequeno processo. Outros endpoints comuns para este tipo de prova são `/readiness` ou `/~/readiness`. O nosso endpoint vai executar um simples `$ echo hello` e retornar `accepted` para um resultado `Ok` e `internal server error` para um resultado `Err`. 
+Este endpoint é comum especialmente em serviços kubernetes e sua execução é via `kubectl`. Usualmente o `kubectl` espera que o processo ocorra via HTTP, TCP-gRPC ou uma execução de comando no contêiner. Para um contexto simples de contêineres, ter esse endpoint permite um monitoramento mais elevado de serviços, como os *Golden Signals* (sinais dourados apresentados pelo Google no livro Engenharia de Confiabilidade de Sites). Assim, ele permite um pouco mais de informações além de saber se o servidor está vivo (`/ping`), já que verifica se o serviço é capaz de realizar um pequeno processo. Outros endpoints comuns para esse tipo de prova são `/readiness` ou `/~/readiness`. O nosso endpoint vai executar um simples `$ echo hello` e retornar `accepted` para um resultado `Ok` e `internal server error` para um resultado `Err`. 
 
-O primeiro passo para esta prova é definir a rota que vamos chamar, no caso `/~/ready`:
+O primeiro passo para essa prova é definir a rota que vamos chamar, no caso `/~/ready`:
 
 ```rust
 App::new().service(
@@ -127,7 +127,7 @@ App::new().service(
 )
 ```
 
-Note que o endpoint está implementado quanto a rota, mas não como função de `Responder`, que chamamos de `readiness`. Para implementarmos este `Responder` podemos usar a seguinte função:
+Note que o endpoint está implementado como rota, mas não como função de `Responder`, que chamamos de `readiness`. Para implementarmos esse `Responder`, podemos usar a seguinte função:
 
 ```rust
 async fn readiness() -> impl Responder {
@@ -147,7 +147,7 @@ Note que criamos um valor chamado `process` que é um comando executado pela cra
 
 ### Refatorando
 
-Agora que nosso código está funcionando podemos começar a pensar em organizá-lo, já que nosso arquivo main está com muitas funções. A ideia é seguir o padrão do framework Phoenix do Elixir, assim vamos separar o código em  3 conjuntos:
+Agora que nosso código está funcionando podemos começar a pensar em organizá-lo, já que nosso arquivo `main` está com muitas funções. A ideia é seguir o padrão do framework Phoenix do Elixir, assim vamos separar o código em  3 conjuntos:
 
 1. `main.rs`, que contém todas as informações de configuração do servidor, ou seja, a própria instância do servidor.
 2. `todo_api`, que contém todos os módulos responsáveis por lógica e banco de dados.
@@ -211,7 +211,7 @@ Note a presença do módulo `todo_api_web` declarado como `mod todo_api_web;` e 
 pub mod controller;
 ```
 
-Outro ponto que creio ser interessante rafatorar é dar a capacidade de nosso servidor adaptar o número de `workers` a quantidade de cores lógicos que a maquina hospedeira possui. Por exemplo, minha máquina pessoal possui 4 cores lógicos e decidi usar uma estratégia de leve estress aos cores que geralmente se resume a `número de cores lógicos + 2`, ela se torna uma opção segura pelo fato de estarmos utilizando `async` no nosso serviço, ou seja, defini 6 `workers`, mas se meu computador possuísse 8 cores lógicos, eu poderia estar utilizando 10 `workers`. Para resolver este problema podemos utilizar uma lib conhecida como `num_cpus`, basta adicionar ela ao `[dependencies]` do Cargo.toml `num_cpus = "1.0"` e substituir em nosso código da seguinte maneira:
+Outro ponto que creio ser interessante rafatorar é dar a capacidade de nosso servidor adaptar o número de `workers` a quantidade de cores lógicos que a máquina hospedeira possui. Por exemplo, minha máquina pessoal possui 4 cores lógicos e decidi usar uma estratégia de leve estresse aos cores que geralmente se resume a `número de cores lógicos + 2`, ela se torna uma opção segura pelo fato de estarmos utilizando `async` no nosso serviço, ou seja, defini 6 `workers`, mas se meu computador possuísse 8 cores lógicos, eu poderia estar utilizando 10 `workers`. Para resolver este problema podemos utilizar uma lib conhecida como `num_cpus`, basta adicionar ela ao `[dependencies]` do Cargo.toml `num_cpus = "1.0"` e substituir em nosso código da seguinte maneira:
 
 ```rust
 async fn main() -> std::io::Result<()> {
@@ -248,7 +248,7 @@ Além disso, agora precisamos criar o módulo `todo_api_web` com um módulo inte
 mod controller;
 ```
 
-Agora podemos começar a criar os testes de controller no arquivo `tests/todo_api_web/controller.rs`. Primeiro teste que vamos escrever é a verificação se o conteúdo de texto da rota `/ping` é `pong`. para isso precisamos utilizar um módulo de suporte para testes do actix chamado `actix_web::test` e incorporar como `[dev-dependencies]` duas libs que vão nos apoiar no uso de testes, a `bytes = "0.5.3"` para processar os bytes da resposta gerada no endpoint, e a `actix-service = "1.0.5"` que apoia nos testes para chamar o `App` do actix na rota desejada. Sugiro isolar os testes dos controllers `pong` e  `readiness` em um módulo conforme a seguir:
+Agora podemos começar a criar os testes de controller no arquivo `tests/todo_api_web/controller.rs`. O primeiro teste que vamos escrever é a verificação se o conteúdo de texto da rota `/ping` é `pong`. Para isso, precisamos utilizar um módulo de suporte para testes do actix chamado `actix_web::test` e incorporar como `[dev-dependencies]` duas libs que nos apoiarão no uso de testes, a `bytes = "0.5.3"` para processar os bytes da resposta gerada no endpoint, e a `actix-service = "1.0.5"`, que apoia nos testes para chamar um mock de `App` do actix na rota desejada. Sugiro isolar os testes dos controllers `pong` e `readiness` em um módulo conforme a seguir:
 
 ```rust
 mod ping_readiness {
@@ -277,10 +277,11 @@ mod ping_readiness {
     }
 }
 ```
+O teste apresentado possui uma macro de teste diferente do usual no Rust. Em vez de ser `#[test]`, utilizamos uma macro de teste que disponibiliza o runtime de actix com `#[actix_rt::test]`. Além disso, note que agora nossa função de teste passa a ser `async` e utilizamos vários `await` dentro do teste.
 
-O teste que apresentei a cima possui uma macro de teste diferente do usual no Rust. Em vez de ser `#[test]`, utilizamos uma macro de teste que disponibiliza o runtime de actix com `#[actix_rt::test]`. Além disso, note que agora nossa função de teste passa a ser `async` e utilizamos vários `await` dentro do teste. Agora vamos explicar as partes do teste, `test::init_service` disponibiliza um mock de serviço do Actix, que recebe como argumento um tipo `App` com a rota, `web::resource("/ping")`, e designando a essa rota um controller, `.route(web::get().to(pong))`. Além disso, criamos uma instâncias de `Request` para teste com `test::TestRequest`, utilizando o método `get()`, na `uri("/ping")`. Depois disso a `resp` corresponde a ler a resposta que esse serviço `app` darai para o `Request` `req`. Como a resposta de `read_response` são `bytes`, precisamos da biblioteca `byte` para converter o array de `u8`, `b"pong"`, em `bytes` e fazer a comparação de igualdade.
+Agora vamos explicar as partes do teste: `test::init_service` disponibiliza um mock de serviço do Actix que recebe como argumento um tipo `App` com a rota, `web::resource("/ping")`, e designa a essa rota um controller, `.route(web::get().to(pong))`. Além disso, criamos uma instância de `Request` para teste com `test::TestRequest` utilizando o método `get()` na `uri("/ping")`. Depois disso, a `resp` corresponde a ler a resposta que esse serviço `app` daria para o `Request` `req`. Como a resposta de `read_response` são `bytes`, precisamos da biblioteca `byte` para converter o array de `u8`, `b"pong"`, em `bytes` e fazer a comparação de igualdade.
 
-Com o teste de `pong` implementado, podemos criar o teste de `readiness`. No teste de `readiness` não nos interessa saber o corpo da resposta, assim, a sugestão é somnte saber se a execução retornou um status `Accepted`. Para este teste vamos utilizar um recurso da crate `actix-service`, que nos possibilita fazer chamadas a um serviço através de `<App>.call(<Request>).await`, assim podemos utilizar o `call` para retornar uma response, na qual podemos acessar o `status()`. O bloco de testes fica assim:
+Com o teste de `pong` implementado, podemos criar o teste de `readiness`. No teste de `readiness` não nos interessa saber o corpo da resposta, assim a sugestão é somente saber se a execução retornou um status `Accepted`. Para esse teste, vamos utilizar o recurso da crate `actix-service`, que nos possibilita fazer chamadas a um serviço através de `<App>.call(<Request>).await`. Assim podemos utilizar o `call` para retornar uma response, na qual podemos acessar o `status()`. O bloco de testes fica assim:
 
 ```rust
 mod ping_readiness {
