@@ -1,7 +1,18 @@
 # Desenvolvimento Web com Rust
 
 **Livro sobre desenvolvimento web em Rust**
+
 Autora: Julia Naomi Boeira
+
+TODOs:
+- [ ] Revisão de Português
+ - [x] Intro
+ - [x] Parte 1 até cap 5
+ - [ ] Resto da parte 1
+ - [ ] Parte 2
+ - [ ] Parte 3
+- [ ] Revisão didática
+- [ ] Atualizar código da parte 1 para suportar nova sdk da amazon
 
 ## Organização do Livro
 
