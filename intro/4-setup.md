@@ -1,3 +1,5 @@
+[Anterior](./3-book.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./5-exercício.md)
+
 # Instalando Rust
 
 O primeiro passo para instalar Rust é a instalação do `rustup`, uma ferramenta de linha de comando para gerenciar versões do Rust e todo ferramental a sua volta. Para fazer download do `rustup` em Linux e macOS, basta digitar `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` em seu terminal e seguir as instruções. Para a instalação em Windows, basta ir ao site https://www.rust-lang.org/tools/install e garantir que você possui o `C++ build tools for Visual Studio 2013` ou posterior instalado em sua máquina. 

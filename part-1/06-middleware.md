@@ -1,3 +1,5 @@
+[Anterior](./05-auth.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./07-ci.md)
+
 # Exigindo Autenticação
 
 Agora que implementamos a lógica de login, precisamos aplicar ela ao nosso serviço. Atualmente nosso serviço possui 4 conjuntos de rotas, `/auth/`, `/api/`, `/ping`,  `/~/ready`. Dessas rotas somente uma precisa de autenticação (`api`) enquanto as outras servem para fazer a autenticação (`auth`), ver a saúde do serviço (`ping`) e ver a disponibildiade de receber chamadas do serviço (`ready`). Assim, precisamos implementar "algo" que vai aplicar o sistema de login somente a rota `/api`. Esse algo será um middleware que nós vamos construir, ao contrário dos outros que já utilizamos, e lidará com a lógica de autenticação.
@@ -556,3 +558,5 @@ impl User {
 ```
 
 Precisamos modificar `handle` pois precisamos enviar `id` como argumento para validar seu valor posteriormente. Como enviamos id, precisamos modificar `scan_user` para criar um `test_scan_user` que receba o `id` como argumento e passe para um `User::from` que também suporte configurar `id` e definir `is_active` como `true`. Com isso, todos nossos testes passam e podemos prosseguir para os últimos passos, criar um CI, obter um `todo` pelo seu `id` e fazer update de um `todo`.
+
+[Anterior](./05-auth.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./07-ci.md)

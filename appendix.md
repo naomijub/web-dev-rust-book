@@ -1,3 +1,5 @@
+[Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](../appendix.md) | [Bibliografia](../bibliografia.md)
+
 # Apêndice A - Benchmarks
 
 ## Techempower
@@ -171,3 +173,5 @@ Continue lendo em https://medium.com/@maxsparr0w/performance-of-node-js-compared
 - Recomendações de voos: https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/recommendations/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=
 
 - Melhores preços https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=
+
+[Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](../appendix.md) | [Bibliografia](../bibliografia.md)

@@ -1,3 +1,5 @@
+[Anterior](./04-recommendations.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](../appendix.md) | [Bibliografia](../bibliografia.md)
+
 # Aplicando um Router
 
 Neste capítulo vamos aprender a utilizar o `Router` da `YewStack`, pois `Routers` em *Single Page Apps* (SPA)manipulam a exibição de entidades diferentes, dependendo da `URL`. Em vez do comportamento padrão de solicitar um recurso remoto diferente quando um link é clicado, o roteador define a URL localmente para apontar para uma rota válida em seu aplicativo. O roteador detecta essa alteração e decide o que renderizar.
@@ -558,3 +560,5 @@ Esta parte nos trouxe alguns conceitos de desenvolvimento front-end com Rust e W
 Na API que atendia ao front-end utilizamos a crate `juniper` para configurar o GraphQL em cima do `actix-web`, assim como a crate `reqwest` para realizar requests HTTP para uma API externa e utilizamos a crate `redis` para configurar a comunicação com um container Redis. Já no nosso outro serviço, aprendemos a configurar middlewares, como Logger, para o Actix, sistema de tolerância a falhas com `bastion/fort`, uuids, configurações de json com `serde`, configuramos um DynamoDB com a crate `rusoto`, assim como um `Postgres` com a crate `diesel`, utilizamos a crate `chrono` para gerenciar datas, fizemos sistemas de autenticação que utilizavam `jwt` e `bcrypt` para parsear tokens e senhas, além de  testes extensivos para estes cenários, tanto unitários quanto de integração. Vale mencionar também que configuramos um Travis-CI para este cenário. 
 
 Agora você já pode começar a investir em serviços e front-ends Rust para demonstrar seu poder e levar a palavra do Rust a diante.
+
+[Anterior](./04-recommendations.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](../appendix.md) | [Bibliografia](../bibliografia.md)

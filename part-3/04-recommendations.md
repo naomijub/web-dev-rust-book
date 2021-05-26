@@ -1,3 +1,5 @@
+[Anterior](./03-best-prices.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./05-route.md)
+
 # Componente de Recomendações
 
 A query que vamos utilizar neste capítulo será a de `recommendations`, que contém muitas mais informações que a de `best_prices`, mas será útil para compor os componentes faltantes. A baixo a query de `recommendations`:
@@ -725,3 +727,5 @@ O próximo passo é criar os `links` de `callbacks` que alterem o estado da apli
 Criamos uma `div` que possui as duas cabines que conhecemos, `Economy` e `Premium Economy`, dentro de suas prórpias `div`s. Cada uma das `dvi`s  vai ter um `callback` com JavScript  para alterar o estado de `fiilter_cabin`. Fazemos isso adicionando `onclick=link.callback(move |_| Msg::Cabin("Y".to_string()))` a `div` de `Economy` e `onclick=link.callback(move |_| Msg::Cabin("W".to_string()))` a `div` de `Premium Economy`.
 
 Nosso próximo passo é defiiniir uma forma de receber os parâmetros da query GraphQL via rota da URL e que possamos atualizar esses dados de forma a executar um novo request com os novos parâmetros.
+
+[Anterior](./03-best-prices.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./05-route.md)

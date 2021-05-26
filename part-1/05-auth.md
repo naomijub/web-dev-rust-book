@@ -1,3 +1,5 @@
+[Anterior](./04-serving.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./06-middleware.md)
+
 # Autenticação
 
 Criaremos funções do serviço para registrar e para fazer login no nosso serviço. Além disso, implementaremos um middleware que protege nossos endpoints de usuários não autenticados. Para realizar isso vamos utilizar a crate `Diesel` para lidar com a base de dados, que será o Postgres. Para isso precisamos seguir alguns passos:
@@ -2029,3 +2031,5 @@ Movemos todo o arquivo e precisamores modificar o caminho do `use` deste arquivo
 * `src/todo_api_web/model/auth.rs`
 
 São mudanças bastante simples, basta substituir o `db` pelo `model` nos caminhos dos `use`. E para a segunda mudança, vamos criar o módulo `core` em `model/mod.rs`  com `pub mod core` e mover o arquivo `core/model.rs` para `model/core.rs`. Vamos modificar os mesmos arquivos que modificamos em `db/error`, a única diferença é que a função `generate_jwt` incorporava `Jwt` em seu escopo de forma individual. Executando nossos testes com `make test` está tudo ok e podemos continuar para implementar o requerimento de jwt nas chamadas dos endpoints que já temos.
+
+[Anterior](./04-serving.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./06-middleware.md)

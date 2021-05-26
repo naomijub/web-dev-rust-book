@@ -1,3 +1,5 @@
+[Anterior](./4-setup.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](../part-1/00-capa.md)
+
 # Exercício Maior Produto de uma Série
 
 Este exercício é retirado do site exercism.io da track de Rust, e em inglês é chamado de _Largest Series Product_. Ele consiste no seguinte problema:
@@ -462,3 +464,5 @@ pub fn lsp(string_digits: &str, span: usize) -> Result<u64, Error> {
 ```
 
 Agora que revisamos Rust podemos iniciar nosso primeiro serviço.
+
+[Anterior](./4-setup.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](../part-1/00-capa.md)

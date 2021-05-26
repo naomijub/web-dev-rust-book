@@ -1,3 +1,5 @@
+[Anterior](./2-Audience.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./4-setup.md)
+
 # Como este livro é organizado
 
 Nos capítulos de introdução teremos um guia de instalação e um exercício básico. Nosso primeiro projeto será um servidor de gerenciamento de tarefas baseado em Actix Web. Actix Web é um framework de desenvolvimento web em Rust que tem feito muito barulho por suas constantes primeiras colocações em benchmarks de performance, principalmente da TechEmpower, e por algumas confusões pelo uso de `unsafe`. Acredito que o framework seja bastante simples de entender e muito completo, mais informações sobre os benchmarks no apêndice A. Vamos utilizar diversas ferramentas da stack Actix para garantir um serviço completo e algumas ferramentas clássicas da comunidade Rust, como Serde para serialização de JSON e clientes de bancos de dados. Para este projeto vamos utilizar DynamoDB como banco de dados via biblioteca Rusoto para salvar os dados de gerenciamento de tarefas e Postgres com Diesel para salvar informações de autorização. O padrão de arquitetura de software utilizado para esta parte é inspirado no framework Phoenix do Elixir. 
@@ -69,3 +71,5 @@ todo_api
 * Este livro utiliza apenas o framework Actix para servidores web, mas exemplos com outros frameworks podem ser encontrados no livro `Programação Funcional e Concorrente em Rust`. Actix é o framework de `actors` do Rust, e tem como framework web o `actix-web`. 
 
 * A versão de Rust utilizada neste livro é a 1.40 da edição 2018, assim, caso a linguagem evolua mais rápido que o livro, você pode fazer Pull Request nos repositórios do livro. Só peço que explique no Pull Request a que parte ele se refere, qual a modificação, o porquê da modificação e caso ela derive de um erro preexistente, salientar o motivo. Algumas modificações na organização e renomeação de arquivos podem ser bastante interessantes também.
+
+[Anterior](./2-Audience.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./4-setup.md)

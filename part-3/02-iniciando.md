@@ -1,3 +1,5 @@
+[Anterior](./01-setup.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./03-best-prices.md)
+
 # Iniciando o projeto
 
 Para este passo vamos criar um novo projeto chamado `wasm-airline` com o comando `cargo new --lib wasm-airline`. Em nosso `Cargo.toml` vamos adicionar o seguinte código:
@@ -103,3 +105,5 @@ fn view(&self) -> Html {
 ```
 
 Podemos recompilar apenas executando `make build` e recarregar a página. No próximo capítulo vamos iniciar carregando os dados de `BestPrices`.
+
+[Anterior](./01-setup.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./03-best-prices.md)

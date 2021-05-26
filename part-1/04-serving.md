@@ -1,3 +1,5 @@
+[Anterior](./03-get.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./05-auth.md)
+
 # Tornam nosso serviço mais realístico
 
 Agora vamos aplicar uma série de mudanças em nosso servidor para deixá-lo mais robusto. Algumas dessas mudanças incluem sistemas de logs, conteinerizar a aplicação, tornar ela fault tolerante, headers padrões e mais. Para isso, vamos começar com o mais simples e indispensável, o sistema de logs.
@@ -727,3 +729,5 @@ pub async fn show_all_todo(state: web::Data<Clients>) -> impl Responder {
 ```
 
 Com isso, nosso código está pronto para receber novos clientes e nós podemos começar a pensar em autenticação.
+
+[Anterior](./03-get.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./05-auth.md)

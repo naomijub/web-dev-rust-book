@@ -1,3 +1,5 @@
+[Anterior](./00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./02-bestprices.md)
+
 # Configurando o GraphQL
 
 Agora que temos contexto de como funciona o Actix, será muito mais simples criar um novo serviço, assim o objetivo neste capítulo será focar na parte GraphQL deste novo serviço. Antes vamos entender um pouco o que é GraphQL e porque vamos utlizar essa tecnologia.
@@ -301,3 +303,5 @@ mod ping_readiness {
 A estrutura do teste é praticamente igual a estrutura que estavamos utilizando anteriormente, as únicas diferenças são `let schema: std::sync::Arc<Schema> = std::sync::Arc::new(create_schema());`, que a rota agora é `/graphql` e que o payload é um json contendo um campo `query` seguido de sua query `"{\"query\": \"query ping { ping }\"}"`. 
 
 Agora vamos a implementação da primeira query de consulta, que chamaremos de `bestPrices`.
+
+[Anterior](./00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./02-bestprices.md)

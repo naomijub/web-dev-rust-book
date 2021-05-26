@@ -1,3 +1,5 @@
+[Anterior](./02-bestprices.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./04-redis.md)
+
 # Recommendations
 
 Nesta query, `recommendations`, vamos fazer uma consulta a mesma API anterior, mas em um endpoint diferente. Esse endpoint retorna todas as opções de voo para uma rota (data, origem e destino). Consultaremos a URL de `recommendations` da Latam `https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/recommendations/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=`, na qual `departure` é a data de partida no formato `ano-mes-dia`, `origin` é o código IATA da cidade ou do aeroporto de origem, `destination` é o código IATA da cidade ou do aeroporto de destino. Assim, nossa query deve receber 3 argumentos `departure`, `origin` e `destination` e retornar uma lista de todas as opções de vôo, além de lançar erros. Assim como a query `bestPrices`, nossa query de `recommendations` vai receber os mesmos parâmetros:
@@ -764,3 +766,5 @@ Um exemplo utilizando `variables` pelo `Postman` pode ser a foto a seguir. A mes
 ![Usando `variables` com o Postman](../imagens/postmanVariables.png)
 
 Nosso próximo passo é implementar um sistema de caching com redis, para evitar múltiplos requests para a API da Latam.
+
+[Anterior](./02-bestprices.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./04-redis.md)

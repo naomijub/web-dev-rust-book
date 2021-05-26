@@ -1,3 +1,5 @@
+[Anterior](./01-ping-gql.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./03-recommendations.md)
+
 # Best Prices
 
 Nesta query, `bestPrices`, vamos fazer uma consulta a uma API externa que retorna os melhores preços para uma rota (data, origem e destino). Consultaremos a URL de `bestPrices` da Latam `https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=`, na qual `departure` é a data de partida no formato `ano-mes-dia`, `origin` é o código IATA da cidade ou do aeroporto de origem, `destination` é o código IATA da cidade ou do aeroporto de destino. Assim, nossa query deve receber 3 argumentos `departure`, `origin` e `destination` e retornar um conjunto de melhores preços, além de lançar erros. Caso estes argumentos não estejam dentro do padrão esperado. Com isso, nosso primeiro passo será implementar a função `bestPrices` que recebe os 3 argumentos e por enquanto retornará uma `String`.
@@ -819,3 +821,5 @@ impl IntoFieldError for GenericError {
 ```
 
 Agora que evoluímos os erros da nossa API, podemos fazer a query de recommendations.
+
+[Anterior](./01-ping-gql.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./03-recommendations.md)

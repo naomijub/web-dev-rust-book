@@ -1,3 +1,5 @@
+[Anterior](./01-ping-pong.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./03-get.md)
+
 # Criando tarefas
 
 O primeiro passo para criar nossa tarefa será entender o que é uma tarefa. A ideia de uma tarefa é conter informações sobre ela e que outras pessoas do time tenham visibilidade do que se trata a tarefa. Assim vamos começar por modelar o domínio de entrada e saída. Usaremos a `struct` do Rust para modelar:
@@ -1426,3 +1428,5 @@ mod create_todo {
 ```
 
 No próximo capítulo vamos aprender a obter todos os `TodoCard` que criamos na base de dados para depois podermos melhorar as configurações do serviço, por exemplo logs.
+
+[Anterior](./01-ping-pong.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./03-get.md)

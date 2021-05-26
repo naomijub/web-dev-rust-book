@@ -1,3 +1,5 @@
+[Anterior](./02-create.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./04-serving.md)
+
 # Obtendo todas as Todo Cards inseridas
 
 Existem muitas abordagens para como vamos adicionar um novo endpoint no nosso sistema, mas a abordagem que eu gostaria de tratar aqui é a de começar de cima para baixo, ou seja, criamos um endpoint `GET` que lé todas as `TodoCard` e nos retorna elas no formato Json. Dessa vez vamos começar escrevendo um teste para este novo endpoint:
@@ -534,3 +536,5 @@ A mudança que fizemos é bastante simples. Ela simplesmente consiste em transfo
 ![Obtendo todos nossos TodoCards.](../imagens/get_todos.png)
 
 No próximo capítulo, vamos parar um pouco com a criação de endpoints e entender melhor como tornar nosso serviço mais viável para produção
+
+[Anterior](./02-create.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./04-serving.md)

@@ -1,3 +1,5 @@
+[Anterior](./00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./02-create.md)
+
 # Configurando os primeiros endpoints
 
 O nosso objetivo inicial é fazer nosso servidor responder `pong` na rota `/ping` e executar uma função de baixo custo na rota `/~/ready` retornando 200 ou algum valor de status superior a 400, bastante simples. O objetivo disso é definir em nosso servidor endpoints que respondam se o servidor está disponível e saudável, `/ping`, assim como responder se esta pronto para executar mais uma operação, `/~/ready`. Para isso, precisamos criar nosso `todo-server` com o cargo rodando o comando `cargo new todo-server --bin`, que irá gerar os arquivos a seguir:
@@ -317,3 +319,5 @@ mod ping_readiness {
 Com tudo testado, o próximo passo é configurar nosso serviço para criar uma tarefa todo.
 
 * O código deste capítulo está na bibliografia e solicitações de mudança serão bem vindas para manter o código exemplo atualizado.
+
+[Anterior](./00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./02-create.md)

@@ -1,5 +1,7 @@
+[Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](../appendix.md) | [Bibliografia](../bibliografia.md)
+
 # Bibliografia
-<!--Devemos ordenar alfabeticamente?-->
+
 1. [Livro de Rust da Casa do Código](https://www.casadocodigo.com.br/products/livro-rust?_pos=2&_sid=0d745f730&_ss=r)
 2. [Livro Oficial de Rust](https://doc.rust-lang.org/book/)
 3. [Livro de Programaçnao Funcional e Concorrente em Rust](https://www.casadocodigo.com.br/products/livro-rust-funcional-concorrente?_pos=1&_sid=0d745f730&_ss=r)

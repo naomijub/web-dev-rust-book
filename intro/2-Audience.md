@@ -1,3 +1,5 @@
+[Anterior](./1-about.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./1-book.md)
+
 # Audiência
 
 Este livro é para todas as pessoas que estão cansadas de lidar com projetos gigantes e arcaicos, com frameworks burocráticos e que têm muita dor de cabeça na hora de otimizar o código. Rust é uma linguagem de programação de baixo nível, como C, mas com abstrações de alto nível, como Ruby e JavaScript, que garante segurança na criação de processos e evita que threads diferentes concorram e mutem os mesmos dados ao mesmo tempo. Além disso, Rust cuida para ter duas características principais, uma comunidade inclusiva e uma linguagem de fácil entendimento, isso se mostra através dos milhares de livros completíssimos para aprender Rust e suas ferramentas. Infelizmente as partes de `macros`, `borrow checker` e `lifetimes` não são tão simples de aprender — acredito que sejam as partes mais difíceis do Rust —, mas acredito que o `borrow checker` será a única parte que você precisará conviver diariamente.
@@ -10,3 +12,5 @@ Existem alguns grandes casos de uso de Rust em produção, tirando a Mozilla, em
 * **Discord** - Quando o Elixir para de performar bem para a quantidade de dados que você precisa processar, está na hora de delegar esse processamento para quem é bom nisso. No caso do Discord foi o Rust.
 
 Ou seja, Rust é ideal para quem quer produzir serviços com performance excepcional, uma linguagem simples, pouco consumo de memória e muita felicidade. Acredito que seja um livro para pessoas que pelo menos já brincaram um ou dois dias com Rust, mas caso seja necessário, recomendo conferir os livros da documentação oficial e os maravilhosos livros que a Casa do Código possui sobre Rust antes de ler este.
+
+[Anterior](./1-about.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./1-book.md)

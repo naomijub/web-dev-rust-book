@@ -1,3 +1,5 @@
+[Anterior](./02-iniciando.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./04-recommendations.md)
+
 # Componente de Best Prices
 
 Vamos começar com o código que corresponde ao componente de Best Prices, aquele que é o carrossel de preços na parte da imagem a seguir.
@@ -679,3 +681,5 @@ O padrão de data que estamos utilizando é o mesmo do site, que indica o dia da
 Para o caso `available = true` utilizamos o mesmo padrão de formatação de data, mas em vez de utilizar `N/A` vamos formatar o valor de `bp.price` para incluir `R$` e trocar `.` por `,`, `format!("R$ {}", bp.price.unwrap().amount).replace(".", ",")`.
 
 Nosso próximo passo é compor todas as recomendações.
+
+[Anterior](./02-iniciando.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./04-recommendations.md)

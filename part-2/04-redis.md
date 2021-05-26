@@ -1,3 +1,5 @@
+[Anterior](./03-recommendations.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](../part-3/00-capa.md)
+
 # Adicionando Caching com Redis
 
 Vamos utilizar como plataforma de caching o banco de dados **Redis** e para isso precisamos disponibilizar um container de redis. Podemos fazer isso adicionando o alvo `redis` em um Makefile. Esse Makefile vai conter um comando para executar o docker com `docker run -p 6379:6379 --name some-redis -d redis`. Inclusive podemos incluir um alvo para executar `cargo run`:
@@ -170,3 +172,5 @@ pub fn recommendations_info(
 Em nossos exemplos fizemos caching de mesma data, mas é possível passar chaves que expiram com as funções `set_ex` que recebe a quantidade de segundos até expirar no formato `usize`, `pub fn set_ex<'a, K: ToRedisArgs, V: ToRedisArgs>(key: K, value: V, seconds: usize) -> Self`, e a função `pset_ex` que faz a mesma coisa, mas com milisegundos, `pub fn pset_ex<'a, K: ToRedisArgs, V: ToRedisArgs>(key: K, value: V, milliseconds: usize) -> Self`. Outras funcões interessantes de se olhar são `mset_nx`, `getset`, `getrange`, `setrange`, `persist`, `append`, outras funcões podem ser encontradas em https://docs.rs/redis/0.16.0/redis/struct.Cmd.html. 
 
 Nesta parte aprendemos a utilizar GraphQL com Actix, fazer requests HTTP síncronos e salvar essas informações como caching em uma banco de dados Redis. Com isso podemos começar um frontend com WebAssemby capaz de processar as informações do GraphQL em uma single page app que nos permitirá interagir com as passagens da Latam.
+
+[Anterior](./03-recommendations.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](../part-3/00-capa.md)

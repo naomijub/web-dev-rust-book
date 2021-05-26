@@ -1,3 +1,5 @@
+[Anterior](./07-ci.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](../part-2/00-capa.md)
+
 # Concluindo o serviço
 
 Falta pouco para termos nosso serviço pronto, pois precisamos implementar um `get` por id e um `update`. O `get` por id não é muito diferente da rota `index`, a única diferença é que vamos passar um parâmetro `id` e chamaremos a rota de `show` e será um método `GET` também. Já o `update` é um pouco diferente pois vamos enviar um corpo Json com as informações para atualizar em uma rota `update` com o método `PUT`. Assim, os endpoints que vamos implementar são:
@@ -639,3 +641,5 @@ Portanto, quando identificarmos que `previous_text` não existe, criamos uma nov
 Fica como um bom desafio fazer estas mudanças que discutimos aqui antes de seguir para a próxima parte, assim como criar um endpoint de `DELETE`. Nesta parte aprendemos a criar um serviço `REST` com actix que cria e gerencia tarefas via `create`, `update`, `show` e `index`, salvando estas informações em um DynamoDB. Além disso, criamos um middleware de autenticação e endpoints de autenticação, via diesel. Outros middlewares que utilizamos foi o `Logger`, que infelizmente não funciona com `dotenv`, necessária para o `Logger`, e um middleware que cria o header `x-request-id`. Aprendemos a gerenciar o estado da aplicação com `.data()` e a configurar rotas com `.configure()`. Por último, aprendemos a tornar nosso sistema tolerante a falhas e a configurar o docker com todas as dependências.
 
 Agora vamos aprender a utilizar graphql com Actix para fazer um sistema de busca de rotas de voos.
+
+[Anterior](./07-ci.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](../part-2/00-capa.md)
