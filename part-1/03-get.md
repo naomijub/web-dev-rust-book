@@ -54,7 +54,7 @@ pub async fn show_all_todo() -> impl Responder {
 }
 ```
 
-Como nosso teste checa apenas o retorno do status `200`, isso é suficiente. Nosso próximo passo é implementar um teste um pouco mais robusto. Este teste consiste em garantir que o Json recebido possui um vetor de tamanho 1, após um post em `api/create` serem enviados:
+Como nosso teste checa apenas o retorno do status `200`, isso é suficiente. Nosso próximo passo é implementar um teste um pouco mais robusto. Esse teste consiste em garantir que o JSON recebido possua um vetor de tamanho 1 após um post em `api/create` ser enviado:
 
 ```rust
 od read_all_todos {
@@ -122,7 +122,7 @@ pub async fn show_all_todo() -> impl Responder {
 
 Com este teste pronto, nosso próximo teste fica bastante simples, pois agora precisamos fazer um teste quase igual, mas que garanta que o retorno seja um `TodoCard` com as informações que postamos. Note que como este teste conterá um mock da resposta do banco de dados, podemos simplesmente adicionar um `Uuid` pré-determinado no mock. Vou criar uma função de teste, no módulo de `helpers` que retorna um vetor com uma `TodoCard`, `mock_get_todos`.
 
-> note que `TodoCard` não possui um id, assim temos duas opções, a primeira é criar um TodoCardResponse que contém um Id e a segunda é modificarmos a `TodoCard` para conter um campo `id: Option<Uuid>`. Nós vamos seguir a segunda abordagem, cuja única mudança será adicionar `id: None,` no teste `converts_json_to_db` encontrado em `src/todo_api/adapter/mod.rs`.
+> Note que `TodoCard` não possui um id, assim temos duas opções: a primeira é criar um `TodoCardResponse`, que contém um Id e a segunda é modificarmos a `TodoCard` para conter um campo `id: Option<Uuid>`. Nós vamos seguir a segunda abordagem, cuja única mudança será adicionar `id: None,` no teste `converts_json_to_db` encontrado em `src/todo_api/adapter/mod.rs`.
 
 ```rust
 // ...
@@ -155,7 +155,7 @@ pub fn mock_get_todos() -> Vec<TodoCard> {
 }
 ```
 
-Com nossa função implementada podemos podemos criar o novo cenário de teste no submódulo `read_all_todos`:
+Com nossa função implementada, podemos criar o novo cenário de teste no submódulo `read_all_todos`:
 
 ```rust
 #[actix_rt::test]
@@ -189,7 +189,7 @@ pub struct TodoCardsResponse {
 }
 ```
 
-Também é necessário, para fins de teste, implementarmos a trait `PartialEq` para todas as structs, e enums, derivadas de `TodoCardsResponse`. Com essa mudança precisamos modificar a lógica do nosso controller, já que agora é necessário que ele busque `TodoCard`s no banco, faremos isso pela função `get_todos` que retornará `Vec<TodoCard>`. Caso o `match` retorne não podemos enviar um erro `500`:
+Também é necessário, para fins de teste, implementarmos a trait `PartialEq` para todas as structs, e enums, derivadas de `TodoCardsResponse`. Com essa mudança, precisamos modificar a lógica do nosso controller já que agora é necessário que ele busque `TodoCard`s no banco. Faremos isso pela função `get_todos`, que retornará `Vec<TodoCard>`. Caso o `match` retorne, não podemos enviar um erro `500`:
 
 ```rust
 pub async fn show_all_todo() -> impl Responder {
@@ -240,7 +240,7 @@ pub fn get_todos() -> Option<Vec<TodoCard>> {
 }
 ```
 
-Note a presença da struct `ScanInput`, ela está presente como forma de garantir em teste que a construção dela está coerente. Ao rodarmos o teste (comente o `#[cfg(feature = "dynamo")]`) obtemos sucesso! Agora podemos partir para de fato ler a base de dados. Nossa função de `get_todos` vai precisar de algumas mudanças como um `let client = client()` e fazer esse `client` executar um `scan` no Banco de dados com o valor de `scan_item`. Em caso de `Err` no `match` retornamos `None` e em caso de sucesso precisamos passar a função por um `adapter` que transforma um `ScanOutput` em um vetor de `TodoCard`:
+Note a presença da struct `ScanInput`. Ela está presente como forma de garantir em teste que a construção dela está coerente. Ao rodarmos o teste (comente o `#[cfg(feature = "dynamo")]`), obtemos sucesso! Agora podemos partir para a leitura da base de dados de fato. Nossa função de `get_todos` vai precisar de algumas mudanças como um `let client = client()` e fazer esse `client` executar um `scan` no banco de dados com o valor de `scan_item`. Em caso de `Err` no `match` retornamos `None` e em caso de sucesso precisamos passar a função por um `adapter` que transforma um `ScanOutput` em um vetor de `TodoCard`:
 
 ```rust
 #[cfg(not(feature = "dynamo"))]
@@ -262,7 +262,7 @@ pub fn get_todos() -> Option<Vec<TodoCard>> {
 }
 ```
 
-Note que limitamos o `ScanInput` a `100i64`, isso se deve ao fato de que o Dynamo não vai responder mais de 100 itens, se você precisar de mais é importante realizar filtros no scan. Antes de implementarmos o adapter, seria bom dar uma olhada em como é um `ScanOutput`:
+Note que limitamos o `ScanInput` a `100i64`, isso se deve ao fato de que o Dynamo não vai responder mais de 100 itens. Se você precisar de mais, é importante realizar filtros no scan. Antes de implementarmos o `adapter`, seria bom dar uma olhada em como é um `ScanOutput`:
 
 ```rust
 ScanOutput { 
@@ -296,7 +296,7 @@ ScanOutput {
     scanned_count: Some(2) }
 ```
 
-Agora podemos começar a implementar a função `scanoutput_to_todocards`, e para isso vamos escrever o primeiro teste com apenas 1 `items` em `src/todo_api/adapters/mod.rs`:
+Agora podemos começar a implementar a função `scanoutput_to_todocards` e, para isso, vamos escrever o primeiro teste com apenas um `items` em `src/todo_api/adapters/mod.rs`:
 
 ```rust
 #[cfg(test)]
@@ -375,7 +375,7 @@ pub fn scanoutput_to_todocards(scan: ScanOutput) -> Vec<TodoCard> {
 }
 ```
 
-Infelizmente o código de `scanoutput_to_todocards` conta com muitas referências e tipos `Option` e isso nos força a ter um excesso de `clone()` e `unwrap()`, mas basicamente estamos navegando por dentro dos tipos de `AttributeValue` e quando o tipo é um `HashMap` estamos utilizando `get`. Agora podemos testar o caso  para um `scan` com dois comnjuntos de `AttributeValue`, e para isso vamos isolar a criação dos `HashMap`s  em `scan_with_one`:
+Infelizmente o código de `scanoutput_to_todocards` conta com muitas referências e tipos `Option`, o que nos força a ter um excesso de `clone()` e `unwrap()`, mas basicamente estamos navegando por dentro dos tipos de `AttributeValue` e, quando o tipo é um `HashMap`, utilizamos `get`. Agora podemos testar o caso para um `scan` com dois conjuntos de `AttributeValue`. Para isso, vamos isolar a criação dos `HashMap` em `scan_with_one`:
 
 ```rust
 fn attr_values() -> std::collections::HashMap<String, AttributeValue> {
@@ -529,8 +529,8 @@ pub fn scanoutput_to_todocards(scan: ScanOutput) -> Vec<TodoCard> {
 }
 ```
 
-A mudança que fizemos é bastante simples. Ela simplesmente consiste em transformar a variável `item` em um argumento da closure de `map`, assim scan vira um iterável com `scan.items.unwrap().into_iter()` e depois do `map` colecionamos todos os valores com `.collect::<Vec<TodoCard>>()`. Pronto, adapter feito. Agora podemos utilizar este adapter na função `get_todos`. Para testar a mudanca podemos executar a aplicação novamente e testar:
+A mudança que fizemos é bastante simples. Ela simplesmente consiste em transformar a variável `item` em um argumento da closure de `map`. Dessa forma, scan vira um iterável com `scan.items.unwrap().into_iter()` e, depois do `map`, colecionamos todos os valores com `.collect::<Vec<TodoCard>>()`. Pronto, `adapter` feito. Agora podemos utilizar esse `adapter` na função `get_todos`. Para testar a mudança, podemos executar a aplicação novamente e testar:
 
-![Obtendo todos nossos todo cards](../imagens/get_todos.png)
+![Obtendo todos nossos TodoCards.](../imagens/get_todos.png)
 
-No próximo capítulo vamos parar um pouco com a criação de endpoints e entender um pouco melhor como tornar nosso serviço mais viável para produção.
+No próximo capítulo, vamos parar um pouco com a criação de endpoints e entender melhor como tornar nosso serviço mais viável para produção
