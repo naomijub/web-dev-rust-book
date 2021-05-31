@@ -6,6 +6,8 @@ Autora: Julia Naomi Boeira
 <!-- -->
 [Livro](./book.md)
 
+Para atualizar código ou texto relacionado a código no livro, atualize também as mudanças nos [seus repositórios ](https://github.com/web-dev-rust)
+
 TODOs:
 - [ ] Revisão de Português
  - [x] Intro
