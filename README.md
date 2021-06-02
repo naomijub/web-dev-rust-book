@@ -6,9 +6,12 @@ Autora: Julia Naomi Boeira
 <!-- -->
 [Livro](./book.md)
 
-**Para atualizar código ou texto relacionado a código no livro, atualize também as mudanças nos [seus repositórios ](https://github.com/web-dev-rust)**
+## Revisando
+* Se você encontrou um typo, erro de português ou tem uma solução de melhora da didática do texto, PRs são bem vindos. Indique o capítulo e a linha da correção.
+* Se você gostaria que eu corrigisse uma parte do texto, para melhorar a didática, coloque o texto, o capítulo e o que você não entendeu.
+* **Para atualizar código ou texto relacionado a código no livro, atualize também as mudanças nos [seus repositórios ](https://github.com/web-dev-rust)**
 
-TODOs:
+## TODOs:
 - [ ] Revisão de Português
  - [x] Intro
  - [x] Parte 1 até cap 5
