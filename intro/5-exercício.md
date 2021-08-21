@@ -6,7 +6,7 @@ Este exercício é retirado do site exercism.io da track de Rust, e em inglês �
 
 > Dada uma string de dígitos, calcular o maior produto contínuo de uma substring de tamanho `n`. Por exemplo, para a string `"1027839564"` o maior produto com `n = 3` seria `9 * 5 * 6 = 270`, e o maior produto para `n = 5` seria `7 * 8 * 3 * 9 * 5 = 7560`.
 
-Você pode utilizar a ferramenta do exercism.io para realizar as configurações deste exercício. Para isso, pule para o subcapítulo **Resolvendo o primeiro teste**. Bom, a primeira coisa que precisamos fazer é criar uma lib para rodar esses testes. Para isso, executamos em nosso terminal `cargo new largest-series-product --lib && cd largest-series-product`. Abra em seu editor favorito e seu projeto favorito deverá ser da seguinte forma:
+Você pode utilizar a ferramenta do exercism.io para realizar as configurações deste exercício. Para isso, pule para o subcapítulo **Resolvendo o primeiro teste**. Bom, a primeira coisa que precisamos fazer é criar uma lib para rodar esses testes. Para isso, executamos em nosso terminal `cargo new largest-series-product --lib && cd largest-series-product`. Abra em seu editor favorito e seu projeto deverá ser da seguinte forma:
 
 ![Projeto de pacote básico do Cargo](../imagens/cargoproj.png)
 
@@ -135,7 +135,7 @@ fn nome_da_funcao_em_snake_case() {
 
 Em Rust, a declaração de uma função começa com a palavra-chave `fn` seguida pelo nome da função em snake_case. Caso existam, os argumentos são separados como `argumento: TipoDoArgument` e, caso a função retorne algum tipo, se adiciona a linha `-> TipoDeRetorno`. A última linha da função, caso não tenha `;` no final é sempre retornada. Agora para o corpo da função de teste vemos `assert!(lsp("29", 2).is_ok());`. `assert!` e `assert_eq!` são macros de teste de assertividade, isso quer dizer que `assert!` retorna verdade caso o argumento dentro de seu corpo seja verdadeiro, como lsp de 29 e duas casas é do tipo `Ok` (`lsp("29", 2).is_ok()`), e `assert_eq!` recebe dois argumentos, separados por vírgula e procura igualdade e identidade entre eles.
 
- ## Resolvendo o primeiro teste
+## Resolvendo o primeiro teste
 
  Vamos para a primeira função que temos e vamos tentar dissecá-la:
 
@@ -412,7 +412,7 @@ fn a_string_with_non_digits_is_an_error() {
     assert_eq!(Err(Error::InvalidDigit('a')), lsp("1234a5", 2));
 }
 ```
-    
+
 Para resolver esse teste precisamos fazer um `match` por tipos alfabéticos e retornar o primeiro que falha. O `if` que garante que existe uma falha é `if string_digits.matches(char::is_alphabetic).collect::<Vec<&str>>().len() > 0` e assim bastaria adicionar o seguinte código a `lsp`:
 
 ```rust
