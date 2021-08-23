@@ -6,7 +6,7 @@ Este exercício é retirado do site exercism.io da track de Rust, e em inglês �
 
 > Dada uma string de dígitos, calcular o maior produto contínuo de uma substring de tamanho `n`. Por exemplo, para a string `"1027839564"` o maior produto com `n = 3` seria `9 * 5 * 6 = 270`, e o maior produto para `n = 5` seria `7 * 8 * 3 * 9 * 5 = 7560`.
 
-Você pode utilizar a ferramenta do exercism.io para realizar as configurações deste exercício. Para isso, pule para o subcapítulo **Resolvendo o primeiro teste**. Bom, a primeira coisa que precisamos fazer é criar uma lib para rodar esses testes. Para isso, executamos em nosso terminal `cargo new largest-series-product --lib && cd largest-series-product`. Abra em seu editor favorito e seu projeto favorito deverá ser da seguinte forma:
+Você pode utilizar a ferramenta do exercism.io para realizar as configurações deste exercício. Para isso, pule para o subcapítulo **Resolvendo o primeiro teste**. Bom, a primeira coisa que precisamos fazer é criar uma lib para rodar esses testes. Para isso, executamos em nosso terminal `cargo new largest-series-product --lib && cd largest-series-product`. Abra em seu editor favorito e seu projeto deverá ser da seguinte forma:
 
 ![Projeto de pacote básico do Cargo](../imagens/cargoproj.png)
 
