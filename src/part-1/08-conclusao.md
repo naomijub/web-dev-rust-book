@@ -1,4 +1,4 @@
-[Anterior](07-ci.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](part-2/00-capa.md)
+
 
 # Concluindo o serviço
 
@@ -642,4 +642,3 @@ Fica como um bom desafio fazer estas mudanças que discutimos aqui antes de segu
 
 Agora vamos aprender a utilizar graphql com Actix para fazer um sistema de busca de rotas de voos.
 
-[Anterior](07-ci.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](part-2/00-capa.md)

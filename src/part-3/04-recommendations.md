@@ -1,4 +1,3 @@
-[Anterior](03-best-prices.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](05-route.md)
 
 # Componente de Recomendações
 
@@ -383,7 +382,7 @@ A primeira coisa que gostaria de salientar é a presenção do `clone` logo apó
 
 A criação do `flight-container` é algo bastante simples, pois basta incluirmos a `div` dentro da macro `html!`, mas dentro do container precisamos iterar sobre cada um dos voos utilizando `self.data[0].clone().flights.into_iter()`. Note que o campo `data` poderia ser `Option` e neste caso deveriamos utilizar um `if let Some(flights)` para extrair valor de `Some(flights)`, ou poderia ser um vetor vazio, e neste caso seriia melhor utilizar a função `first` e aplicar um `match`. Uma vez que temos nosso `into_iter` podemos applicar um `map` que vai criar nossos `Htmls`, para depois colecionarmos em um `collect::<Html>()`. Nosso `map` começa com um `html!` que cria a div correspondete a todo o bloco com informações do voo, conforme a imagem a seguir:
 
-![Componente com cada uma das recomendações de voo](imagens/flights.png)
+![Componente com cada uma das recomendações de voo](../imagens/flights.png)
 
 O css para está parte é este:
 
@@ -727,5 +726,3 @@ O próximo passo é criar os `links` de `callbacks` que alterem o estado da apli
 Criamos uma `div` que possui as duas cabines que conhecemos, `Economy` e `Premium Economy`, dentro de suas prórpias `div`s. Cada uma das `dvi`s  vai ter um `callback` com JavScript  para alterar o estado de `fiilter_cabin`. Fazemos isso adicionando `onclick=link.callback(move |_| Msg::Cabin("Y".to_string()))` a `div` de `Economy` e `onclick=link.callback(move |_| Msg::Cabin("W".to_string()))` a `div` de `Premium Economy`.
 
 Nosso próximo passo é defiiniir uma forma de receber os parâmetros da query GraphQL via rota da URL e que possamos atualizar esses dados de forma a executar um novo request com os novos parâmetros.
-
-[Anterior](03-best-prices.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](05-route.md)

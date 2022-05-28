@@ -1,4 +1,3 @@
-[Anterior](01-ping-gql.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](03-recommendations.md)
 
 # Best Prices
 
@@ -8,7 +7,7 @@ Nesta query, `bestPrices`, vamos fazer uma consulta a uma API externa que retorn
 
 Nosso objetivo agora é fazer nosso GraphQL responder da seguinte forma:
 
-![`bestPrices` basic query](imagens/bestpricesbasicquery.png)
+![`bestPrices` basic query](../imagens/bestpricesbasicquery.png)
 
 A query que usamos é:
 
@@ -821,5 +820,3 @@ impl IntoFieldError for GenericError {
 ```
 
 Agora que evoluímos os erros da nossa API, podemos fazer a query de recommendations.
-
-[Anterior](01-ping-gql.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](03-recommendations.md)

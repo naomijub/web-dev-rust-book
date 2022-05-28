@@ -1,4 +1,3 @@
-[Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](appendix.md) | [Bibliografia](bibliografia.md)
 
 # Bibliografia
 

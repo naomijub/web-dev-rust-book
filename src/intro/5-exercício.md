@@ -1,5 +1,3 @@
-[Anterior](4-setup.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](part-1/00-capa.md)
-
 # Exercício Maior Produto de uma Série
 
 Este exercício é retirado do site exercism.io da track de Rust, e em inglês é chamado de _Largest Series Product_. Ele consiste no seguinte problema:
@@ -8,7 +6,7 @@ Este exercício é retirado do site exercism.io da track de Rust, e em inglês �
 
 Você pode utilizar a ferramenta do exercism.io para realizar as configurações deste exercício. Para isso, pule para o subcapítulo **Resolvendo o primeiro teste**. Bom, a primeira coisa que precisamos fazer é criar uma lib para rodar esses testes. Para isso, executamos em nosso terminal `cargo new largest-series-product --lib && cd largest-series-product`. Abra em seu editor favorito e seu projeto deverá ser da seguinte forma:
 
-![Projeto de pacote básico do Cargo](imagens/cargoproj.png)
+![Projeto de pacote básico do Cargo](../imagens/cargoproj.png)
 
 Agora, precisamos criar uma pasta para conter todos os testes, a pasta `tests`. O padrão em Rust é que os testes de integração fiquem na pasta `tests` enquanto os testes unitários fiquem junto ao arquivo. Como o exercism já nos dispõe um conjunto bom de testes, podemos simplesmente colar eles no caminho `tests/largest-series-product.rs`. Os testes são:
 
@@ -464,5 +462,3 @@ pub fn lsp(string_digits: &str, span: usize) -> Result<u64, Error> {
 ```
 
 Agora que revisamos Rust podemos iniciar nosso primeiro serviço.
-
-[Anterior](4-setup.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](part-1/00-capa.md)

@@ -1,4 +1,4 @@
-[Anterior](05-auth.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](07-ci.md)
+
 
 # Exigindo Autenticação
 
@@ -558,5 +558,3 @@ impl User {
 ```
 
 Precisamos modificar `handle` pois precisamos enviar `id` como argumento para validar seu valor posteriormente. Como enviamos id, precisamos modificar `scan_user` para criar um `test_scan_user` que receba o `id` como argumento e passe para um `User::from` que também suporte configurar `id` e definir `is_active` como `true`. Com isso, todos nossos testes passam e podemos prosseguir para os últimos passos, criar um CI, obter um `todo` pelo seu `id` e fazer update de um `todo`.
-
-[Anterior](05-auth.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](07-ci.md)

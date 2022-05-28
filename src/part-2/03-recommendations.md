@@ -1,4 +1,4 @@
-[Anterior](02-bestprices.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](04-redis.md)
+
 
 # Recommendations
 
@@ -763,8 +763,6 @@ A resposta parcial desta query é:
 
 Um exemplo utilizando `variables` pelo `Postman` pode ser a foto a seguir. A mesma estratégia poderá ser utilizada via `curl`.
 
-![Usando `variables` com o Postman](imagens/postmanVariables.png)
+![Usando `variables` com o Postman](../imagens/postmanVariables.png)
 
 Nosso próximo passo é implementar um sistema de caching com redis, para evitar múltiplos requests para a API da Latam.
-
-[Anterior](02-bestprices.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](04-redis.md)

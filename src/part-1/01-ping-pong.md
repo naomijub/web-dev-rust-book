@@ -1,4 +1,4 @@
-[Anterior](00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](02-create.md)
+
 
 # Configurando os primeiros endpoints
 
@@ -75,9 +75,9 @@ async fn main() -> std::io::Result<()> {
 
 E seu funcionamento seria:
 
-![Endpoint `/ping`](imagens/pingpong.png)
+![Endpoint `/ping`](../imagens/pingpong.png)
 
-![Endpoint `Not Found` para a rota `/`](imagens/notfound.png)
+![Endpoint `Not Found` para a rota `/`](../imagens/notfound.png)
 
 Agora podemos começar a descrever o endpoint `/ping`: 
 1. A primeira coisa que vemos é a diretiva `use` associada a lib `actix_web`. Essa dirtiva nos permite disponibilizar no nosso código as funções e estruturas de `actix_web` para uso posterior, assim a diretiva `use actix_web::HttpServer` disponibilizaria a estrutura `HttpServer` para usarmos. 
@@ -206,7 +206,7 @@ async fn main() -> std::io::Result<()> {
 
 Note a presença do módulo `todo_api_web` declarado como `mod todo_api_web;` e importando as funções `pong` e `readiness` através de `use todo_api_web::controller::{pong, readiness};`. Além disso, na imagem a seguir podemos perceber a presença de um arquivo `lib.rs` no sistema de arquivos, esse arquivo serve para podermos exportar nossos módulos internos para testes de integração. Assim, atualmente o único módulo declarado em `lib.rs` é `pub mod todo_api_web;`.
 
-![Sistema de arquivos após a refatoração](imagens/basicfilesystem.png)
+![Sistema de arquivos após a refatoração](../imagens/basicfilesystem.png)
 
 ```rust
 //src/todo_web_api/mod.rs
@@ -320,4 +320,3 @@ Com tudo testado, o próximo passo é configurar nosso serviço para criar uma t
 
 * O código deste capítulo está na bibliografia e solicitações de mudança serão bem vindas para manter o código exemplo atualizado.
 
-[Anterior](00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](02-create.md)

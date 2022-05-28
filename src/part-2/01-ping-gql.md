@@ -1,4 +1,4 @@
-[Anterior](00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](02-bestprices.md)
+
 
 # Configurando o GraphQL
 
@@ -211,7 +211,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
 
 Nossa configuração possuirá duas rotas `/graphql`, que é a rota na qual fazemos um post com nossa query, e `/graphiql`, que será uma rota que nos exibirá uma página web interativa da nossa aplicação:
 
-![página interativa do graphiql](imagens/graphiqlping.png)
+![página interativa do graphiql](../imagens/graphiqlping.png)
 
 Note que a direita na rota `graphiql` existe uma aba chamada de `Documentation Explorer`, ela nos permite saber as queries e as mutations disponíveis, assim como seus tipos de entrada e tipos de retorno.
 
@@ -255,7 +255,7 @@ pub async fn graphql(
 
 O handler `graphql` recebe como argumento dois campos 1. `schema` através do tipo actix `web::Data<Arc<Schema>>` e o request `data` do tipo `web::Json<GraphQLRequest>`. A magia acontece na linha `data.execute(&schema, &())`, na qual o GraphQL executa nosso request, `data`, com base no `schema`. Depois disso, encodamos o resultado para Json e respondemos como um `Result<HttpResponse, Error>` oriundo de ` Ok(HttpResponse::Ok().content_type("application/json").body(res))`. Se você executar este código será possível fazer a query `ping` em localhost:4000/graphql:
 
-![QUery `ping` em `/graphql`](imagens/ping_via_postman.png)
+![QUery `ping` em `/graphql`](../imagens/ping_via_postman.png)
 
 ## Testando o endpoint
 
@@ -303,5 +303,3 @@ mod ping_readiness {
 A estrutura do teste é praticamente igual a estrutura que estavamos utilizando anteriormente, as únicas diferenças são `let schema: std::sync::Arc<Schema> = std::sync::Arc::new(create_schema());`, que a rota agora é `/graphql` e que o payload é um json contendo um campo `query` seguido de sua query `"{\"query\": \"query ping { ping }\"}"`. 
 
 Agora vamos a implementação da primeira query de consulta, que chamaremos de `bestPrices`.
-
-[Anterior](00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](02-bestprices.md)
