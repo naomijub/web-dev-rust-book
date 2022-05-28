@@ -1,0 +1,797 @@
+<!DOCTYPE HTML>
+<html lang="pt" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Exigindo Autenticação através de middlewares - Desenvolvimento Web em Rust</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../intro/1-about.html">Sobre autora</a></li><li class="chapter-item expanded affix "><a href="../intro/2-Audience.html">Público alvo</a></li><li class="chapter-item expanded affix "><a href="../intro/3-book.html">Como o livro está organizado</a></li><li class="chapter-item expanded affix "><a href="../intro/4-setup.html">Instalando Rust</a></li><li class="chapter-item expanded affix "><a href="../intro/5-exercício.html">Exercício Maior Produto de uma Série</a></li><li class="chapter-item expanded affix "><a href="../part-1/00-capa.html">Parte 1</a></li><li class="chapter-item expanded "><a href="../part-1/01-ping-pong.html"><strong aria-hidden="true">1.</strong> Configurando os primeiros endpoints</a></li><li class="chapter-item expanded "><a href="../part-1/02-create.html"><strong aria-hidden="true">2.</strong> Criando Tarefas</a></li><li class="chapter-item expanded "><a href="../part-1/03-get.html"><strong aria-hidden="true">3.</strong> Obtendo todas as Todo Cards inseridas</a></li><li class="chapter-item expanded "><a href="../part-1/04-serving.html"><strong aria-hidden="true">4.</strong> Tornam nosso serviço mais realístico</a></li><li class="chapter-item expanded "><a href="../part-1/05-auth.html"><strong aria-hidden="true">5.</strong> Autenticação</a></li><li class="chapter-item expanded "><a href="../part-1/06-middleware.html" class="active"><strong aria-hidden="true">6.</strong> Exigindo Autenticação através de middlewares</a></li><li class="chapter-item expanded "><a href="../part-1/07-ci.html"><strong aria-hidden="true">7.</strong> Configurando um CI</a></li><li class="chapter-item expanded "><a href="../part-1/08-conclusao.html"><strong aria-hidden="true">8.</strong> Concluindo o serviço</a></li><li class="chapter-item expanded affix "><a href="../https://github.com/naomijub/web-dev-rust-book/blob/master/book.html">Topo</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Desenvolvimento Web em Rust</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p><a href="05-auth.html">Anterior</a> | <a href="https://github.com/naomijub/web-dev-rust-book/blob/master/book.md">Topo</a> | <a href="07-ci.html">Próximo</a></p>
+<h1 id="exigindo-autenticação"><a class="header" href="#exigindo-autenticação">Exigindo Autenticação</a></h1>
+<p>Agora que implementamos a lógica de login, precisamos aplicar ela ao nosso serviço. Atualmente nosso serviço possui 4 conjuntos de rotas, <code>/auth/</code>, <code>/api/</code>, <code>/ping</code>,  <code>/~/ready</code>. Dessas rotas somente uma precisa de autenticação (<code>api</code>) enquanto as outras servem para fazer a autenticação (<code>auth</code>), ver a saúde do serviço (<code>ping</code>) e ver a disponibildiade de receber chamadas do serviço (<code>ready</code>). Assim, precisamos implementar &quot;algo&quot; que vai aplicar o sistema de login somente a rota <code>/api</code>. Esse algo será um middleware que nós vamos construir, ao contrário dos outros que já utilizamos, e lidará com a lógica de autenticação.</p>
+<blockquote>
+<p><strong>Middleware</strong></p>
+<p>Já utilizamos Middlewares anterioemente, mas como foram utilizações superficiais não foi preciso entender mais a fundo o que eram. Agora creio que seja um momento interessante de defini-los. Middlewares não são um conceito exclusivo de aplicações web, podendo ser utilizados tanto em sistemas operacionais como em programas do dia a dia. Os middlewares proveem um conjunto de serviços e capacidades comuns a uma aplicação que sua base não prove. Esses serviços e capacidades podem ser gerenciamento de dados, tratamento de mensagens, autenticação e logs. Assim, middlewares atual como um tecido conectivo de vários serviços da aplicação.</p>
+<p>No caso de middlewares de aplicações web, geralmente sua funcionalidade é adicionar comportamentos aos processamento de request e de response. Eles consegue se conectar a um request, ou a um response, que chegou ao servidor e alterar este request, inclusive respondendo antes do esperado, ou alterando o response. Utilizamos o middleware de <code>Logger</code> para incluir logs ao processamento do nosso request e o middleware de <code>DefaultHeaders</code> para incluir um header em nosso response.</p>
+</blockquote>
+<p>As alterações a seguir nos exigiram modificar o Cargo.toml para conter a crate <code>futures</code> e mover a crate <code>actix-server</code> para <code>dependencies</code>:</p>
+<pre><code class="language-toml">[dependencies]
+actix = &quot;0.9.0&quot;
+#...
+jsonwebtokens = &quot;1.0.0-alpha.12&quot;
+actix-service = &quot;1.0.5&quot;
+futures = &quot;0.3.4&quot;
+
+[dev-dependencies]
+bytes = &quot;0.5.3&quot;
+</code></pre>
+<h2 id="estrutura-de-um-middleware-com-actix"><a class="header" href="#estrutura-de-um-middleware-com-actix">Estrutura de um middleware com Actix</a></h2>
+<p>Um middleware pode ser registrado em cada <code>App</code>, <code>scope</code> ou <code>Resource</code> do servidor e é executado em ordem oposta a seu registro. De modo geral, middlewares em Actix são um tipo, preferenciamente uma struct, que implementa as traits <code>Service</code> e <code>Transform</code>, da crate <code>actix_service</code>. Assim, cada um dos métodos da trait tem a capacidade de responder algo imediatamente ou através de uma future. O exemplo mais básico de Middleware seria um <code>hello world</code> no request (<code>Hello from Request</code>) e outro na response (<code>Hello from Response</code>), conforme o código a seguir:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::pin::Pin;
+use std::task::{Context, Poll};
+
+use actix_service::{Service, Transform};
+use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error};
+use futures::future::{ok, Ready};
+use futures::Future;
+
+pub struct SayHi;
+
+impl&lt;S, B&gt; Transform&lt;S&gt; for SayHi
+where
+    S: Service&lt;Request = ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt;,
+    S::Future: 'static,
+    B: 'static,
+{
+    type Request = ServiceRequest;
+    type Response = ServiceResponse&lt;B&gt;;
+    type Error = Error;
+    type InitError = ();
+    type Transform = SayHiMiddleware&lt;S&gt;;
+    type Future = Ready&lt;Result&lt;Self::Transform, Self::InitError&gt;&gt;;
+
+    fn new_transform(&amp;self, service: S) -&gt; Self::Future {
+        ok(SayHiMiddleware { service })
+    }
+}
+
+pub struct SayHiMiddleware&lt;S&gt; {
+    service: S,
+}
+
+impl&lt;S, B&gt; Service for SayHiMiddleware&lt;S&gt;
+where
+    S: Service&lt;Request = ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt;,
+    S::Future: 'static,
+    B: 'static,
+{
+    type Request = ServiceRequest;
+    type Response = ServiceResponse&lt;B&gt;;
+    type Error = Error;
+    type Future = Pin&lt;Box&lt;dyn Future&lt;Output = Result&lt;Self::Response, Self::Error&gt;&gt;&gt;&gt;;
+
+    fn poll_ready(&amp;mut self, cx: &amp;mut Context&lt;'_&gt;) -&gt; Poll&lt;Result&lt;(), Self::Error&gt;&gt; {
+        self.service.poll_ready(cx)
+    }
+
+    fn call(&amp;mut self, req: ServiceRequest) -&gt; Self::Future {
+        println!(&quot;Hello from Request. You requested: {}&quot;, req.path());
+
+        let fut = self.service.call(req);
+
+        Box::pin(async move {
+            let res = fut.await?;
+
+            println!(&quot;Hello from Response&quot;);
+            Ok(res)
+        })
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Existem 2 passos no processamento de um middleware. O primeiro é sua inicialização, na qual o <code>middleware factory</code> é chamado com o próximo serviço encadeado. Isso corresponde a função <code>new_transform</code> da trait <code>Transform</code> com o tipo <code>S</code> definido como <code>Service&lt;_,_,_&gt;</code> sendo o campo<code>service</code> que <code>SayHiMiddleware&lt;S&gt;</code> implementa. Depois disso o método <code>call</code> é chamado com o request. <code>poll_ready</code> nos indica quando a future está pronta.</p>
+<p>O parâmetro <code>req: ServiceRequest</code> pode ser passado de forma mutável e adaptar o request, por exemplo um request do tipo <code>application/edn</code> poderia ser convertido para <code>application/json</code>/ Depois disso, temos a future contendo a response em <code>let fut = self.service.call(req);</code>, que só é concretizada dentro de uma <code>Box</code> não movível contendo um bloco <code>async</code>. a função <code>Pin</code> torna a <code>Box</code> um ponteiro fixo em memória, não movível. Depois disso, basta responde a <code>future</code> com a respostas <code>res</code>.</p>
+<h2 id="definindo-o-middleware-de-autenticação"><a class="header" href="#definindo-o-middleware-de-autenticação">Definindo o Middleware de autenticação</a></h2>
+<p>A primeira coisa que devemos fazer aqui é criar o módulo middleware em nosso código. Esse módulo estará contido em <code>src/todo_api_web/middleware/mod.rs</code>. Com o módulo criado podemos definir a struct de autenticação, <code>Authentication</code>, que corresponde a struct <code>SayHi</code>. É essa struct que vamos passar como argumento para o <code>wrap</code> de <code>App</code>, <code>App:new().wrap(crate::todo_api_web::middleware::Authentication)</code>. <code>Authentication</code> criará o <code>middleware factory</code> para passarmos o serviço a um middleware de fato, <code>AuthenticationMiddleware</code>,  que nos permitirá alterar o request. Este bloco de código fica assim:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use actix_service::{Service, Transform};
+use actix_web::{
+    dev::{ServiceRequest, ServiceResponse},
+    Error, HttpResponse,
+};
+use futures::{
+    future::{ok, Ready},
+    Future,
+};
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+};
+
+use crate::{
+    todo_api_web::model::http::Clients,
+    todo_api::{
+        core::decode_jwt,
+        model::core::JwtValue,
+    }
+};
+
+pub struct Authentication;
+
+impl&lt;S: 'static, B&gt; Transform&lt;S&gt; for Authentication
+where
+    S: Service&lt;Request = ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt;,
+    S::Future: 'static,
+    B: 'static,
+{
+    type Request = ServiceRequest;
+    type Response = ServiceResponse&lt;B&gt;;
+    type Error = Error;
+    type InitError = ();
+    type Transform = AuthenticationMiddleware&lt;S&gt;;
+    type Future = Ready&lt;Result&lt;Self::Transform, Self::InitError&gt;&gt;;
+
+    fn new_transform(&amp;self, service: S) -&gt; Self::Future {
+        ok(AuthenticationMiddleware { service })
+    }
+}
+pub struct AuthenticationMiddleware&lt;S&gt; {
+    service: S,
+}
+
+impl&lt;S: 'static, B&gt; Service for AuthenticationMiddleware&lt;S&gt;
+where
+    S: Service&lt;Request = ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt;,
+    S::Future: 'static,
+    B: 'static,
+{
+    type Request = ServiceRequest;
+    type Response = ServiceResponse&lt;B&gt;;
+    type Error = Error;
+    type Future = Pin&lt;Box&lt;dyn Future&lt;Output = Result&lt;Self::Response, Self::Error&gt;&gt;&gt;&gt;;
+
+    fn poll_ready(&amp;mut self, cx: &amp;mut Context&lt;'_&gt;) -&gt; Poll&lt;Result&lt;(), Self::Error&gt;&gt; {
+        self.service.poll_ready(cx)
+    }
+
+    fn call(&amp;mut self, req: ServiceRequest) -&gt; Self::Future {
+        // ...
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Não há muito o que alterar aqui além do nome das structs, pois este é um modelo padrão para se gerar um middleware, porém poderiámos retornar informações ainda no nível de <code>new_transform</code> e de <code>poll_ready</code>. Já a função <code>call</code> é o centro de nossa atenção, sendo ela responsável pela manipulação de dados que queremos fazer. O primeiro caso que vamos ver é o fato de querermos que este middleware atue somente nas rotas <code>/api/</code>, assim temos duas soluções para isso. A primeira seria adicionar este middleware diretamente em <code>web::scope(&quot;api/&quot;)</code> do arquivo de rotas:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn app_routes(config: &amp;mut web::ServiceConfig) {
+    config.service(
+        web::scope(&quot;/&quot;)
+            .service(
+                web::scope(&quot;api/&quot;)
+                    .wrap(crate::todo_api_web::middleware::Authentication)
+                    .route(&quot;create&quot;, web::post().to(create_todo))
+                    .route(&quot;index&quot;, web::get().to(show_all_todo)),
+            )
+            .service(
+                web::scope(&quot;auth/&quot;)
+                    .route(&quot;signup&quot;, web::post().to(signup_user))
+                    .route(&quot;login&quot;, web::post().to(login))
+                    .route(&quot;logout&quot;, web::delete().to(logout)),
+            )
+            .route(&quot;ping&quot;, web::get().to(pong))
+            .route(&quot;~/ready&quot;, web::get().to(readiness))
+            .route(&quot;&quot;, web::get().to(|| HttpResponse::NotFound())),
+    );
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Nnao gosto muito desta alternativa pois ela impacta a testabilidade. Portanto, prefiro a segunda alternativa que é criar uma condicional que verifica se a rota do request começa com os <code>scope</code>  que queremos. Caso a condicional for verdadeira, aplicamos nossa lógica, senão, simplesmente damos sequência ao request:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn call(&amp;mut self, req: ServiceRequest) -&gt; Self::Future {
+        if req.path().starts_with(&quot;/api/&quot;) {
+         // ...
+        } else {
+            let fut = self.service.call(req);
+            Box::pin(async move {
+                let res = fut.await?;
+                Ok(res)
+            })
+        }
+    }
+<span class="boring">}
+</span></code></pre></pre>
+<p>O <code>if</code> que definimos extrai o <code>path</code>, rota, de <code>ServiceRequest</code>, e aplica a função <code>starts_with</code> com o início da rota que queremos, <code>/api/</code>. Com isso, toda as rotas do serviço que começarem com <code>/api/</code> serão alteradas por este middleware. O próximo passo é extrairmos o header <code>x-auth</code> dos headers do request:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn call(&amp;mut self, req: ServiceRequest) -&gt; Self::Future {
+        if req.path().starts_with(&quot;/api/&quot;) {
+            // ...
+            let jwt = req.headers().get(&quot;x-auth&quot;);
+
+            match jwt {
+                None =&gt; Box::pin(async move {
+                    Ok::&lt;_,actix_http::error::Error&gt;(req.into_response(
+                        HttpResponse::BadRequest()
+                        .json(&quot;{\&quot;error\&quot;: \&quot;x-auth is required\&quot;}&quot;)
+                        .into_body()
+                    ))
+                }),
+                Some(token) =&gt; {
+                    // ...
+                }
+            }
+        }
+        // ...
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Exatraimos o header <code>x-auth</code> aplicando a função <code>headers</code> a request, que obtém todos os headers, e posteriormente escolhendo um header específico com <code>get</code>. O retorno desta função é um <code>Option&lt;String&gt;</code> contendo a String de Jwt. Como este campo é obrigatório, fazemos um <code>match</code> em <code>jwt</code> e no caso <code>None</code> retornamos um <code>BadRequest</code> com a informação que <code>x-auth</code> é requerido, <code>x-auth is required</code>. Depois disso precisamos de duas coisas, decodificar o token Jwt e enviar a resposta decodificada para validar ela no banco de dados, assim precisaremos da função <code>decode_jwt</code> para decodificar o <code>jwt</code> e de <code>Clients</code> armazenado em <code>data</code> para comunicar com o banco de dados: </p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn call(&amp;mut self, req: ServiceRequest) -&gt; Self::Future {
+        if req.path().starts_with(&quot;/api/&quot;) {
+            let data = req.app_data::&lt;Clients&gt;().expect(&quot;Failed to parse app_data&quot;);
+            let jwt = req.headers().get(&quot;x-auth&quot;);
+
+            match jwt {
+                None =&gt; // ...
+                Some(token) =&gt; {
+                    let decoded_jwt: JwtValue = serde_json::from_value(decode_jwt(token.to_str().unwrap())).expect(&quot;Failed to parse Jwt&quot;);
+                    let valid_jwt = data.postgres.send(decoded_jwt);
+
+                    let fut = self.service.call(req);
+                    Box::pin(async move {
+                        match valid_jwt.await {
+                            Ok(true) =&gt; {
+                                let res = fut.await?;
+                                Ok(res)
+                            },
+                            _ =&gt; {
+                                Err(Error::from(()))
+                            }
+                        }
+                    })
+                }
+            }
+        } 
+        // ...
+    }
+<span class="boring">}
+</span></code></pre></pre>
+<blockquote>
+<p>Para recordar <code>decode_jwt</code></p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn decode_jwt(jwt: &amp;str) -&gt; Value {
+   use jsonwebtokens::raw::{decode_json_token_slice, split_token, TokenSlices};
+
+   let TokenSlices { claims, .. } = split_token(jwt).unwrap();
+   let claims = decode_json_token_slice(claims).expect(&quot;Failed to decode token&quot;);
+   claims
+}
+<span class="boring">}
+</span></code></pre></pre>
+</blockquote>
+<p>Nossa função <code>call</code> transforma o token em uma struct <code>JwtValue</code>, que corresponde aos campos presentes no token, através da função <code>serde_json::from_value</code>. O valor de <code>JwtValue</code> é enviado para o banco de dados através de <code>data.postgres.send(decoded_jwt)</code>. Com o resultado da troca de mensagens com <code>DbExecutor</code> via <code>data.postgres.send</code> recebemos um tipo <code>Result&lt;bool, MailBoxError&gt;</code> e fazemos <code>match</code>. O único caso que nos interessa é o <code>Ok(true)</code>, para todos os outros lançamos uma erro. Este erro retornará <code>InternalServerError</code>, pois não podemos reutilizar o conteúdo de <code>req</code> já que foi utilizado em <code>let fut = self.service.call(req);</code> para conretizar o request. Caso o resultado do <code>match</code> seja <code>Ok(true)</code>, deixamos o request prosseguir. Agora, vamos a implementação de <code>JwtValue</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Serialize, Deserialize, Debug)]
+pub struct JwtValue {
+    pub id: String,
+    pub email: String,
+    pub expires_at: chrono::NaiveDateTime,
+}
+
+impl Message for JwtValue {
+    type Result = bool;
+}
+
+impl Handler&lt;JwtValue&gt; for DbExecutor {
+    type Result = bool;
+
+    fn handle(&amp;mut self, msg: JwtValue, _: &amp;mut Self::Context) -&gt; Self::Result {
+        use crate::todo_api::db::auth::token_is_valid;
+
+        let user = token_is_valid(&amp;msg, &amp;self.0.get().expect(&quot;Failed to open connection&quot;));
+        match user {
+            Err(_) =&gt; false,
+            Ok(user) =&gt; {
+                match (user.is_active, validate_jwt_date(user.expires_at), user.id.to_string() == msg.id) {
+                    (true, true, true) =&gt; true,
+                    _ =&gt; false
+                }
+            }
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Nosso token Jwt possui 3 campos em seu <code>claim</code> <code>id, email, expires_at</code>, assim a implementação de <code>JwtValue</code> possui estes 3 campos, definidos como <code>String, String, chrono::NaiveDateTime</code>, respectivamente. Depois definimos a trait <code>Message</code>, com o tipo <code>type Result = bool;</code>. Para <code>Handler</code>, procuramos o <code>User</code> com <code>token_is_valid(&amp;msg, &amp;self.0.get().expect(&quot;Failed to open connection&quot;))</code> e depois aplicamos <code>match</code> a sua resposta. Em caso de <code>Err</code>, retornamos <code>false</code>, e em caso de <code>Ok</code>, verificamos todas as condições que queremos em outro <code>match</code> (poderia ser um <code>if/else</code>, mas creio que o match ficou mais elegante devido ao uso da tupla). Caso todos os itens da tupla, <code>(user.is_active, validate_jwt_date(user.expires_at), user.id.to_string() == msg.id)</code> sejam verdadeiros, retornamos <code>true</code>, senão <code>false</code>. Os itens da tupla são:</p>
+<ol>
+<li>Usuário está ativo com <code>user.is_active</code>.</li>
+<li>Data atual é inferior a data <code>expires_at</code> do token com <code>validate_jwt_date(user.expires_at)</code>.</li>
+<li>O id do token é o mesmo do usuário cadastrado com <code>user.id.to_string() == msg.id</code>.</li>
+</ol>
+<p>Quanto a nossa função <code>token_is_valid</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn token_is_valid(token: &amp;JwtValue, conn: &amp;PgConnection) -&gt; Result&lt;User, DbError&gt; {
+    use crate::schema::auth_user::dsl::*;
+
+    let items = auth_user.filter(email.eq(&amp;token.email)).load::&lt;User&gt;(conn);
+
+    match items {
+        Ok(users) if users.len() &gt; 1 =&gt; Err(DbError::DatabaseConflit),
+        Ok(users) if users.len() &lt; 1 =&gt; Err(DbError::CannotFindUser),
+        Ok(users) =&gt; Ok(users.first().unwrap().clone().to_owned()),
+        Err(_) =&gt; Err(DbError::CannotFindUser),
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Note que ela é praticamente igual a função <code>scan_user</code>. Assim, podemos substituir ela por scan user, obtendo o campo <code>email</code> de <code>JwtValue</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl Handler&lt;JwtValue&gt; for DbExecutor {
+    type Result = bool;
+
+    fn handle(&amp;mut self, msg: JwtValue, _: &amp;mut Self::Context) -&gt; Self::Result {
+        use crate::todo_api::db::auth::scan_user;
+
+        let user = scan_user(String::from(&amp;msg.email), &amp;self.0.get().expect(&quot;Failed to open connection&quot;));
+        match user {
+            Err(_) =&gt; false,
+            Ok(user) =&gt; {
+                match (user.is_active, validate_jwt_date(user.expires_at), user.id.to_string() == msg.id) {
+                    (true, true, true) =&gt; true,
+                    _ =&gt; false
+                }
+            }
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com tudo isso pronto, basta adicionar o middleware em <code>App::new()</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[actix_rt::main]
+async fn web_main() -&gt; Result&lt;(), std::io::Error&gt; {
+    HttpServer::new(|| {
+        App::new()
+        .data(Clients::new())
+        .wrap(DefaultHeaders::new().header(&quot;x-request-id&quot;, Uuid::new_v4().to_string()))
+        .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o&quot;))
+        .wrap(crate::todo_api_web::middleware::Authentication)
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind(&quot;0.0.0.0:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="testando-o-middleware"><a class="header" href="#testando-o-middleware">Testando o middleware</a></h3>
+<p>Nosso middleware funciona bem, e basta executar o comando <code>make run</code> para se divertir com ele, porém não temos nenhum teste que garante o comportamento do middleware. Assim, podemos criar pelo menos dois testes. O primeiro teste é não enviar um header <code>x-auth</code> para uma rota <code>/api/</code> e o segundo teste é enviar um token aleatório. Como <code>decode_token</code> possui uma versão para feature <code>db-test</code>, o resultado será sempre um user válido. Assim, vamos ao primeiro teste:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[cfg(test)]
+mod middleware {
+    use actix_web::{test, App, http::StatusCode};
+    use dotenv::dotenv;
+    use todo_server::todo_api_web::model::http::Clients;
+    use todo_server::todo_api_web::routes::app_routes;
+
+    use crate::helpers::read_json;
+
+    #[actix_rt::test]
+    async fn bad_request_todo_post() {
+        dotenv().ok();
+        let mut app =
+            test::init_service(
+                App::new()
+                .data(Clients::new())
+                .wrap(todo_server::todo_api_web::middleware::Authentication)
+                .configure(app_routes)
+            ).await;
+
+        let req = test::TestRequest::post()
+            .uri(&quot;/api/create&quot;)
+            .header(&quot;Content-Type&quot;, &quot;application/json&quot;)
+            .set_payload(read_json(&quot;post_todo.json&quot;).as_bytes().to_owned())
+            .to_request();
+
+        let resp = test::call_service(&amp;mut app, req).await;
+        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Este teste é práticamente igual ao teste que criamos uma <code>todo_card</code>, porém possui a função <code>.wrap(todo_server::todo_api_web::middleware::Authentication)</code> associada a <code>App</code> e em vez de validar a resposta valida o status como <code>BAD_REQUEST</code>. Depois disso, podemos criar um teste que adiciona um header <code>x-auth</code> com um Jwt contendo valores aleatórios para nossos campos:</p>
+<pre><code>{
+  &quot;id&quot;: &quot;7562bf53-6156-433b-a201-90bbc74b0127&quot;,
+  &quot;email&quot;: &quot;my@email.com&quot;,
+  &quot;expires_at&quot;: &quot;2014-11-28T12:00:09&quot;
+}
+
+Algoritmo HS256 com chave `your-256-bit-==secret`
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc1NjJiZjUzLTYxNTYtNDMzYi1hMjAxLTkwYmJjNzRiMDEyNyIsImVtYWlsIjoibXlAZW1haWwuY29tIiwiZXhwaXJlc19hdCI6IjMwMjAtMTEtMjhUMTI6MDA6MDkifQ.hom6KvmmLIuu3dLCSUrOK9KBWyUb0fvdX4hIay52UIY
+</code></pre>
+<p>O teste para estes valores é:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[actix_rt::test]
+async fn good_token_todo_post() {
+    dotenv().ok();
+    let mut app =
+        test::init_service(
+            App::new()
+            .data(Clients::new())
+            .wrap(todo_server::todo_api_web::middleware::Authentication)
+            .configure(app_routes)
+        ).await;
+
+    let req = test::TestRequest::post()
+        .uri(&quot;/api/create&quot;)
+        .header(&quot;Content-Type&quot;, &quot;application/json&quot;)
+        .header(&quot;x-auth&quot;, &quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc1NjJiZjUzLTYxNTYtNDMzYi1hMjAxLTkwYmJjNzRiMDEyNyIsImVtYWlsIjoibXlAZW1haWwuY29tIiwiZXhwaXJlc19hdCI6IjMwMjAtMTEtMjhUMTI6MDA6MDkifQ.hom6KvmmLIuu3dLCSUrOK9KBWyUb0fvdX4hIay52UIY&quot;)
+        .set_payload(read_json(&quot;post_todo.json&quot;).as_bytes().to_owned())
+        .to_request();
+
+    let resp = test::call_service(&amp;mut app, req).await;
+    println!(&quot;{:?}&quot;, resp);
+    assert_eq!(resp.status(), StatusCode::CREATED);
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Se executarmos este teste vamos receber como resposta um <code>panic!</code>, pois o middleware vai conter um <code>is_active</code> false que vai se encadear para um <code>Err</code>. Assim, precisaremos fazer algumas modificações em <code>scan_user</code>, <code>User.from</code> e <code>handle</code> de JwtValue. Com isso, as modificações serão em ordem de encadeamento:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// src/todo_api/model/core.rs
+impl Handler&lt;JwtValue&gt; for DbExecutor {
+    type Result = bool;
+
+    #[cfg(not(feature = &quot;dbtest&quot;))]
+    fn handle(&amp;mut self, msg: JwtValue, _: &amp;mut Self::Context) -&gt; Self::Result {
+        use crate::todo_api::db::auth::scan_user;
+
+        let user = scan_user(String::from(&amp;msg.email), &amp;self.0.get().expect(&quot;Failed to open connection&quot;));
+        match user {
+            Err(_) =&gt; false,
+            Ok(user) =&gt; {
+                match (user.is_active, validate_jwt_date(user.expires_at), user.id.to_string() == msg.id) {
+                    (true, true, true) =&gt; true,
+                    _ =&gt; false
+                }
+            }
+        }
+    }
+
+    #[cfg(feature = &quot;dbtest&quot;)]
+    fn handle(&amp;mut self, msg: JwtValue, _: &amp;mut Self::Context) -&gt; Self::Result {
+        use crate::todo_api::db::auth::test_scan_user;
+
+        let user = test_scan_user(String::from(&amp;msg.email), String::from(&amp;msg.id), &amp;self.0.get().expect(&quot;Failed to open connection&quot;));
+        match user {
+            Err(_) =&gt; false,
+            Ok(user) =&gt; {
+                match (user.is_active, validate_jwt_date(user.expires_at), user.id.to_string() == msg.id) {
+                    (true, true, true) =&gt; true,
+                    _ =&gt; false
+                }
+            }
+        }
+    }
+}
+
+// src/todo_api/db/auth.rs
+#[cfg(not(feature = &quot;dbtest&quot;))]
+pub fn scan_user(user_email: String, conn: &amp;PgConnection) -&gt; Result&lt;User, DbError&gt; {
+    use crate::schema::auth_user::dsl::*;
+
+    let items = auth_user.filter(email.eq(&amp;user_email)).load::&lt;User&gt;(conn);
+
+    match items {
+        Ok(users) if users.len() &gt; 1 =&gt; Err(DbError::DatabaseConflit),
+        Ok(users) if users.len() &lt; 1 =&gt; Err(DbError::CannotFindUser),
+        Ok(users) =&gt; Ok(users.first().unwrap().clone().to_owned()),
+        Err(_) =&gt; Err(DbError::CannotFindUser),
+    }
+}
+
+#[cfg(feature = &quot;dbtest&quot;)]
+pub fn scan_user(user_email: String, _conn: &amp;PgConnection) -&gt; Result&lt;User, DbError&gt; {
+    use crate::schema::auth_user::dsl::*;
+    use diesel::debug_query;
+    use diesel::pg::Pg;
+    let query = auth_user.filter(email.eq(&amp;user_email));
+    let expected = &quot;SELECT \&quot;auth_user\&quot;.\&quot;email\&quot;, \&quot;auth_user\&quot;.\&quot;id\&quot;, \&quot;auth_user\&quot;.\&quot;password\&quot;, \&quot;auth_user\&quot;.\&quot;expires_at\&quot;, \&quot;auth_user\&quot;.\&quot;is_active\&quot; FROM \&quot;auth_user\&quot; WHERE \&quot;auth_user\&quot;.\&quot;email\&quot; = $1 -- binds: [\&quot;my@email.com\&quot;]&quot;.to_string();
+
+    assert_eq!(debug_query::&lt;Pg, _&gt;(&amp;query).to_string(), expected);
+    Ok(User::from(user_email, &quot;this is a hash&quot;.to_string()))
+}
+
+#[cfg(feature = &quot;dbtest&quot;)]
+pub fn test_scan_user(user_email: String, auth_id: String, _conn: &amp;PgConnection) -&gt; Result&lt;User, DbError&gt; {
+    Ok(User::test_from(user_email, &quot;this is a hash&quot;.to_string(), auth_id))
+}
+
+// src/todo_api/model/auth.rs
+impl User {
+    pub fn from(email: String, password: String) -&gt; Self {
+        let utc = crate::todo_api::db::helpers::one_day_from_now();
+
+        Self {
+            email: email,
+            id: uuid::Uuid::new_v4(),
+            password: password,
+            expires_at: utc.naive_utc(),
+            is_active: false,
+        }
+    }
+
+    #[cfg(feature = &quot;dbtest&quot;)]
+    pub fn test_from(email: String, password: String, id: String) -&gt; Self {
+        let utc = crate::todo_api::db::helpers::one_day_from_now();
+
+        Self {
+            email: email,
+            id: uuid::Uuid::parse_str(&amp;id).unwrap(),
+            password: password,
+            expires_at: utc.naive_utc(),
+            is_active: true,
+        }
+    }
+    // ...
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Precisamos modificar <code>handle</code> pois precisamos enviar <code>id</code> como argumento para validar seu valor posteriormente. Como enviamos id, precisamos modificar <code>scan_user</code> para criar um <code>test_scan_user</code> que receba o <code>id</code> como argumento e passe para um <code>User::from</code> que também suporte configurar <code>id</code> e definir <code>is_active</code> como <code>true</code>. Com isso, todos nossos testes passam e podemos prosseguir para os últimos passos, criar um CI, obter um <code>todo</code> pelo seu <code>id</code> e fazer update de um <code>todo</code>.</p>
+<p><a href="05-auth.html">Anterior</a> | <a href="https://github.com/naomijub/web-dev-rust-book/blob/master/book.md">Topo</a> | <a href="07-ci.html">Próximo</a></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../part-1/05-auth.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../part-1/07-ci.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../part-1/05-auth.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../part-1/07-ci.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE HTML>
+<html lang="pt" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Configurando um CI - Desenvolvimento Web em Rust</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../intro/1-about.html">Sobre autora</a></li><li class="chapter-item expanded affix "><a href="../intro/2-Audience.html">Público alvo</a></li><li class="chapter-item expanded affix "><a href="../intro/3-book.html">Como o livro está organizado</a></li><li class="chapter-item expanded affix "><a href="../intro/4-setup.html">Instalando Rust</a></li><li class="chapter-item expanded affix "><a href="../intro/5-exercício.html">Exercício Maior Produto de uma Série</a></li><li class="chapter-item expanded affix "><a href="../part-1/00-capa.html">Parte 1</a></li><li class="chapter-item expanded "><a href="../part-1/01-ping-pong.html"><strong aria-hidden="true">1.</strong> Configurando os primeiros endpoints</a></li><li class="chapter-item expanded "><a href="../part-1/02-create.html"><strong aria-hidden="true">2.</strong> Criando Tarefas</a></li><li class="chapter-item expanded "><a href="../part-1/03-get.html"><strong aria-hidden="true">3.</strong> Obtendo todas as Todo Cards inseridas</a></li><li class="chapter-item expanded "><a href="../part-1/04-serving.html"><strong aria-hidden="true">4.</strong> Tornam nosso serviço mais realístico</a></li><li class="chapter-item expanded "><a href="../part-1/05-auth.html"><strong aria-hidden="true">5.</strong> Autenticação</a></li><li class="chapter-item expanded "><a href="../part-1/06-middleware.html"><strong aria-hidden="true">6.</strong> Exigindo Autenticação através de middlewares</a></li><li class="chapter-item expanded "><a href="../part-1/07-ci.html" class="active"><strong aria-hidden="true">7.</strong> Configurando um CI</a></li><li class="chapter-item expanded "><a href="../part-1/08-conclusao.html"><strong aria-hidden="true">8.</strong> Concluindo o serviço</a></li><li class="chapter-item expanded affix "><a href="../https://github.com/naomijub/web-dev-rust-book/blob/master/book.html">Topo</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Desenvolvimento Web em Rust</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p><a href="06-middleware.html">Anterior</a> | <a href="https://github.com/naomijub/web-dev-rust-book/blob/master/book.md">Topo</a> | <a href="08-conclusao.html">Próximo</a></p>
+<h1 id="configurando-um-ci"><a class="header" href="#configurando-um-ci">Configurando um CI</a></h1>
+<p>Como já temos a estrutura central de nosso projeto pronta (autenticação com postgres, gerenciamento de dados com DynamoDB e middlewares) podemos começar a pensar em um CI. Para isso, devemos considerar as restrições que temos no nosso <code>make test</code>, que executamos contra um container docker do psotgres:</p>
+<pre><code class="language-sh">db:
+	docker run -i --rm --name auth-db -p 5432:5432 -e POSTGRES_USER=auth -e POSTGRES_PASSWORD=secret -d postgres
+
+int: db
+	sleep 2
+	diesel setup
+	diesel migration run
+	cargo test --test lib --no-fail-fast --features &quot;dbtest&quot; -- --test-threads 3
+	diesel migration redo
+
+
+unit:
+	cargo test --locked  --no-fail-fast --lib -- --test-threads 3
+
+test: unit int
+</code></pre>
+<p>Nosso Makefile para testes consistem em 3 alvos <code>int</code> para testes de integração, <code>unit</code> para testes unitários e <code>test</code> para executar os dois. Algo que podemos ficar em dúvida é o porquê deles estarem separados em <code>int</code> e <code>unit</code>, o motivo é simplesmente que é mais fácil executar os testes unitários e eles são executados mais rapidamente que os de integração. Bom, vamos aos nossos alvos de teste. o alvo <code>unit</code> possui as flags <code>--lib</code> que executa somente os testes encontrados nos módulos de <code>lib.rs</code> e a flag <code>--no-fail-fast</code> que executa todos os testes mesmo que algum deles falhe. Para um CI é bastante útil esta flag de <code>--no-fail-fast</code>, pois queremos saber tudo que precisamos corrigir e, assim, não precisarmos ficar corrigindo a cada commit para a branch. Já o teste de integração possui diversos passos:</p>
+<ol>
+<li>executa o target <code>db</code>, que sobe um container docker com postgres.</li>
+<li><code>sleep 2</code> pausa o processo por 2 segundos até que o container se estabilize.</li>
+<li><code>diesel setup</code>, falamos anteriormente, mas ajuda o diesel a configurar o banco recém gerado (pode não ser necessário).</li>
+<li><code>disel migration run</code>, executa as migrações para o banco.</li>
+<li><code>cargo test</code>, os testes em si.</li>
+<li><code>diesel migration redo</code>, não precisa estar presente no CI, pois o contaienr com postgres será destruido depois da execução, não necessitando fazer <code>rollback</code> das migrações.</li>
+</ol>
+<p>Agora vamos entender o item <code>5</code>. Executamos o <code>cargo test</code> com a flag  <code>--test</code> que indica que vamos executar os testes de integração apenas do arquivo <code>lib.rs</code>, que contém nossos módulos. Depois ativamos a feature <code>dbtest</code> com <code>--features &quot;dbtest&quot;</code>. Agora que sabemos os passos que precisamos executar no CI podemos começar a pensar em sua criação.</p>
+<h2 id="travis-ci"><a class="header" href="#travis-ci">Travis-CI</a></h2>
+<p>O modelo de CI que escolhi para este projeto é o Travis-CI, pois acredito que seja bem simples e executa tudo que precisamos fazer, build e testes. Para executar o travis-ci é necessário entrar no site deles, https://travis-ci.org/, se registrar e dar permissão para o seu github, existe um botão que já faz a autorização e o registro <code>Sign in with github</code>. Caso seus repositórios não apareçam, sugiro clicar em <code>profile</code>, imagem no canto superior direito, e na página de <code>profile</code> clicar em <code>sync account</code>. Agora basta você dar permissão para os repositórios específicos clicando nas chaves ao lado do nome dos repositórios.</p>
+<p>Uma vez que esse processo de registro estiver pronto, você vai precisar adicionar um arquivo <code>.travis.yml</code> ao seu repositório. Este arquivo é uma sequencia de comandos que o CI precisará executar. No nosso caso, este arquivo terá o seguinte formato:</p>
+<pre><code class="language-yaml">language: rust
+rust:
+  - nightly
+  - 1.40.0
+  - stable
+cache: cargo
+services:
+- postgresql
+before_script:
+- psql -c 'create database auth_db;' -U postgres
+- echo &quot;DATABASE_URL=postgres://postgres@localhost/auth_db&quot; &gt; .env
+- cargo install diesel_cli --no-default-features --features=postgres
+- diesel migration run
+script:
+- cargo build --verbose --all
+- cargo test --locked  --no-fail-fast --lib
+- cargo test --test lib --no-fail-fast --features &quot;dbtest&quot;
+</code></pre>
+<p>O primeiro passo é declarar qual linguagem que estamos utilizando, no nosso caso <code>rust</code>, <code>language: rust</code>. Depois disso, definimos quais targets de rust vamos executar nosso código. Como a versão de rust que eu estou suando é a <code>1.40</code>, espero que o código tenha que passar pelo menos nesta versão, além disso, gostaria de testar em <code>nightly</code> e na última <code>stable</code> sob a chave <code>rust:</code>. Precisamos do <code>cargo</code> também, para isso salvamos seu conteúdo em cache com  <code>cache: cargo</code>. O serviço que vamos utilizar como banco de dados é o postgres, assim é necessário declará-lo em <code>services: - postgresql</code>. O próximo passo corresponde aos scripts q devemos executar antes dos nossos cenários de teste, para isso utilizamos a chave <code>before_script</code> com os seguintes ítens:</p>
+<ul>
+<li><code>psql -c 'create database auth_db;' -U postgres</code>, corresponde ao <code>diesel setup</code> e nos permite criar a base de dados <code>auth_db</code> no postgres.</li>
+<li><code>echo &quot;DATABASE_URL=postgres://postgres@localhost/auth_db&quot; &gt; .env</code> é preciso ter o campo <code>DATABASE_URL</code> configurado em seu <code>.env</code> para executar o <code>DbExecutor</code>, assim utilizamos o <code>echo &lt;campo exportado&gt; &gt; .env</code> para enviar o campo exportado para <code>.env</code>.</li>
+<li><code>cargo install diesel_cli --no-default-features --features=postgres</code> instalamos o <code>diesel_cli</code> para poder executar as migrações.</li>
+<li><code>diesel migration run</code>, executamos as migrações.</li>
+</ul>
+<p>Por último, definimos os scripts que vamos executar com a chave <code>script:</code>:</p>
+<ul>
+<li><code>cargo build --verbose --all</code>, testar se o build funciona.</li>
+<li><code>cargo test --locked  --no-fail-fast --lib</code> executar os testes unitários.</li>
+<li><code>cargo test --test lib --no-fail-fast --features &quot;dbtest&quot;</code>, executar os testes de integração.</li>
+</ul>
+<p>Quando comitarmos isso e habilitarmos o travis ler este repositório, teremos um resultado como este:</p>
+<p><img src="imagens/travis.png" alt="Resultado do Travis CI para o Todo Server" /></p>
+<p>Agora podemos terminar nosso todo sever implementando um <code>get by id</code>.</p>
+<p><a href="06-middleware.html">Anterior</a> | <a href="https://github.com/naomijub/web-dev-rust-book/blob/master/book.md">Topo</a> | <a href="08-conclusao.html">Próximo</a></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../part-1/06-middleware.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../part-1/08-conclusao.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../part-1/06-middleware.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../part-1/08-conclusao.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

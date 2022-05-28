@@ -1,0 +1,20 @@
+[Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](appendix.md) | [Bibliografia](bibliografia.md)
+
+# Bibliografia
+
+1. [Livro de Rust da Casa do Código](https://www.casadocodigo.com.br/products/livro-rust?_pos=2&_sid=0d745f730&_ss=r)
+2. [Livro Oficial de Rust](https://doc.rust-lang.org/book/)
+3. [Livro de Programaçnao Funcional e Concorrente em Rust](https://www.casadocodigo.com.br/products/livro-rust-funcional-concorrente?_pos=1&_sid=0d745f730&_ss=r)
+4. [Rust por Exemplo](https://doc.rust-lang.org/stable/rust-by-example/)
+5. [Instalação do Rust](https://www.rust-lang.org/tools/install)
+6. [Adopting Elixir](https://pragprog.com/book/tvmelixir/adopting-elixir)
+7. [Web Development with Clojure](https://pragprog.com/book/dswdcloj3/web-development-with-clojure-third-edition)
+8. [Modern C++ Programming with Test-Driven Development](https://pragprog.com/book/lotdd/modern-c-programming-with-test-driven-development)
+9. [Programming Phoenix 1.4](https://pragprog.com/book/phoenix14/programming-phoenix-1-4)
+10. [Código do servidor de tarefas](https://github.com/web-dev-rust/todo-server)
+11. [Código do servidor de passagens](https://github.com/web-dev-rust/airline-tickets)
+12. [Código do frontend para visualização de passagens](https://github.com/web-dev-rust/wasm-airline)
+13. [Actix](https://actix.rs/)
+14. [Guia do Diesel](http://diesel.rs/guides/getting-started/)
+15. [How to Graphql](https://www.howtographql.com/)
+16. [Livro GraphQL da Casa do Código](https://www.casadocodigo.com.br/products/livro-graphql?_pos=1&_sid=a01bcef18&_ss=r)

@@ -1,0 +1,920 @@
+<!DOCTYPE HTML>
+<html lang="pt" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Tornam nosso serviço mais realístico - Desenvolvimento Web em Rust</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../intro/1-about.html">Sobre autora</a></li><li class="chapter-item expanded affix "><a href="../intro/2-Audience.html">Público alvo</a></li><li class="chapter-item expanded affix "><a href="../intro/3-book.html">Como o livro está organizado</a></li><li class="chapter-item expanded affix "><a href="../intro/4-setup.html">Instalando Rust</a></li><li class="chapter-item expanded affix "><a href="../intro/5-exercício.html">Exercício Maior Produto de uma Série</a></li><li class="chapter-item expanded affix "><a href="../part-1/00-capa.html">Parte 1</a></li><li class="chapter-item expanded "><a href="../part-1/01-ping-pong.html"><strong aria-hidden="true">1.</strong> Configurando os primeiros endpoints</a></li><li class="chapter-item expanded "><a href="../part-1/02-create.html"><strong aria-hidden="true">2.</strong> Criando Tarefas</a></li><li class="chapter-item expanded "><a href="../part-1/03-get.html"><strong aria-hidden="true">3.</strong> Obtendo todas as Todo Cards inseridas</a></li><li class="chapter-item expanded "><a href="../part-1/04-serving.html" class="active"><strong aria-hidden="true">4.</strong> Tornam nosso serviço mais realístico</a></li><li class="chapter-item expanded "><a href="../part-1/05-auth.html"><strong aria-hidden="true">5.</strong> Autenticação</a></li><li class="chapter-item expanded "><a href="../part-1/06-middleware.html"><strong aria-hidden="true">6.</strong> Exigindo Autenticação através de middlewares</a></li><li class="chapter-item expanded "><a href="../part-1/07-ci.html"><strong aria-hidden="true">7.</strong> Configurando um CI</a></li><li class="chapter-item expanded "><a href="../part-1/08-conclusao.html"><strong aria-hidden="true">8.</strong> Concluindo o serviço</a></li><li class="chapter-item expanded affix "><a href="../https://github.com/naomijub/web-dev-rust-book/blob/master/book.html">Topo</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Desenvolvimento Web em Rust</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p><a href="03-get.html">Anterior</a> | <a href="https://github.com/naomijub/web-dev-rust-book/blob/master/book.md">Topo</a> | <a href="05-auth.html">Próximo</a></p>
+<h1 id="tornam-nosso-serviço-mais-realístico"><a class="header" href="#tornam-nosso-serviço-mais-realístico">Tornam nosso serviço mais realístico</a></h1>
+<p>Agora vamos aplicar uma série de mudanças em nosso servidor para deixá-lo mais robusto. Algumas dessas mudanças incluem sistemas de logs, conteinerizar a aplicação, tornar ela fault tolerante, headers padrões e mais. Para isso, vamos começar com o mais simples e indispensável, o sistema de logs.</p>
+<h2 id="aplicando-logs"><a class="header" href="#aplicando-logs">Aplicando logs</a></h2>
+<p>O primeiro passo para começarmos a entender logs em Rust é darmos uma olhada na crate responsável por isso. A crate que vamos utilizar é a <code>log = &quot;0.4.8&quot;</code>, que implementa sua lógica de logs de acordo com a ideia de que um log consiste em um <code>alvo</code>, um <code>nível</code> e um <code>corpo</code>. O alvo é uma string que define o caminho do módulo no qual o requerimento do log é necessário. O nível é a severidade do log, <code>error</code>, <code>warn</code>, <code>info</code>, <code>debug</code> e <code>trace</code>, e o corpo é o conteúdo que o log apresenta. </p>
+<p>A crate que vamos utilizar nos disponibiliza cinco macros para isso: <code> error!, warn!, info!, debug!, trace!</code>, dentre as quais <code>error</code> é a mais severa e <code>trace</code> a menos severa. As macros funcionam de forma muito similar ao <code>println!</code>, assim a forma de utilizá-las é bastante intuitiva. Outra questão importante é que o sistema de logs deve ser inicializado apenas uma vez por outra crate, a mais comum delas é a <code>env_logger = &quot;0.7.1&quot;</code>. Um exemplo rápido de como ficaria a combinação dessas duas é:</p>
+<pre><pre class="playground"><code class="language-rust">#[macro_use]
+extern crate log;
+
+fn main() {
+    env_logger::init();
+
+    info!(&quot;starting up&quot;);
+
+    // ...
+}
+</code></pre></pre>
+<h3 id="inicializando-o-sistema-de-logs"><a class="header" href="#inicializando-o-sistema-de-logs">Inicializando o sistema de Logs</a></h3>
+<p>Para inicializar nosso sistema de logs, precisamos adicionar a crate <code>env_logger</code> ao nosso <code>[dependencies]</code> do <code>Cargo.toml</code>, o <code>env_logger = &quot;0.7.1&quot;</code>. Com a crate disponível, podemos importar o <code>env_logger</code> para o contexto do arquivo <code>main.rs</code> com <code>use env_logger;</code> e inicializá-lo com <code>env_logger::init()</code> conforme o código a seguir:</p>
+<pre><pre class="playground"><code class="language-rust">// ...
+use env_logger;
+
+#[actix_rt::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+    env_logger::init();
+    // ...
+}
+</code></pre></pre>
+<p>Com isso o c;odigo parece compilar, mas não conseguimos ver logs no console quando executamos um <code>curl</code>. Isso se deve ao fato de que precisamos informar ao <code>actix_web</code> que queremos que logs de algum nível sejam disponibilizados. Para isso, devemos incluir a linha <code>std::env::set_var(&quot;RUST_LOG&quot;, &quot;actix_web=info&quot;);</code> antes de <code>env_logger::init();</code> na função <code>main</code> para habilitar logs de <code>error</code> a <code>info</code>. Além disso, precisamos disponibilizar o middleware <code>Logger</code> com a forma como queremos o log, note que o middleware pertence à crate <code>actix_web</code>em <code>use actix_web::middleware::Logger;</code>:</p>
+<pre><pre class="playground"><code class="language-rust">// ...
+use actix_web::middleware::Logger;
+use env_logger;
+// ...
+
+#[actix_rt::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+    std::env::set_var(&quot;RUST_LOG&quot;, &quot;actix_web=info&quot;);
+    env_logger::init();
+    create_table();
+    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D&quot;))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind(&quot;127.0.0.1:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+
+</code></pre></pre>
+<p>Se fizermos um <code>POST curl</code> agora no endpoint <code>/api/create</code> vamos receber o seguinte log:</p>
+<pre><code>[2020-02-08T01:41:32Z INFO  actix_web::middleware::logger] IP:127.0.0.1:54089 DATETIME:2020-02-07T22:41:32-03:00 REQUEST:&quot;POST /api/create HTTP/1.1&quot; STATUS: 201 DURATION:33.976000
+</code></pre>
+<p>Note que o formato após os colchetes <code>[...]</code> é igual ao que definimos no middleware de <code>Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D&quot;)</code>, assim podemos entender alguns dos parâmetros que estamos passando:</p>
+<ul>
+<li><code>%a</code> é o IP do request.</li>
+<li><code>%t</code> é o DateTime do request.</li>
+<li><code>%r</code> é o método (<code>POST</code> no caso) seguido do endpoint (<code>/api/create</code>) e o protocolo usado.</li>
+<li><code>%s</code> é o status de retorno do request.</li>
+<li><code>%D</code> é a duração total do request, em milisegundos.</li>
+</ul>
+<p>Algumas outras variáveis disponíveis nesse middleware são:</p>
+<ul>
+<li><code>%t</code> horário no qual o request começou a ser processado.</li>
+<li><code>%P</code> o ID do processo filho que serviu o request.</li>
+<li><code>%b</code> tamanho da resposta em bytes (inclui os headers).</li>
+<li><code>%T</code> duração do request em segundos com fração float de <code>.06f</code>.</li>
+<li><code>%{FOO}i</code> headers[‘FOO’] do request.</li>
+<li><code>%{FOO}o</code> headers[‘FOO’] da response.</li>
+<li><code>%{FOO}e</code> valor da variável de ambiente <code>FOO</code>, <code>os.environ[&quot;FOO&quot;]</code>.
+Algumas outras variávels disponíveis neste middleware são:</li>
+</ul>
+<h3 id="adicionando-logs"><a class="header" href="#adicionando-logs">Adicionando logs</a></h3>
+<p>Para adicionar os logs ao nosso código, vamos utilizar duas macros <code>error!</code> e <code>debug!</code>. Para isso, precisamos adicionar <code>log = &quot;0.4&quot;</code> ao nosso <code>[dependencies]</code> no <code>Cargo.toml</code>. A função de <code>debug</code> deverá nos apoiar com resultados no ambiente de desenvolvimento, enquanto a função de <code>error!</code> será exibir os erros no console. Para isso, usaremos o código <code>use log::{error, debug};</code>. Um bom local para inicializar é no <code>create_table</code>, a primeira função que nosso código executa. Para modo debug, utilize a env <code>std::env::set_var(&quot;RUST_LOG&quot;, &quot;debug&quot;);</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use log::{debug, error};
+// ...
+
+pub fn create_table() {
+    let client = client();
+    let list_tables_input: ListTablesInput = Default::default();
+
+    match client.list_tables(list_tables_input).sync() {
+        Ok(list) =&gt; {
+            match list.table_names {
+                Some(table_vec) =&gt; {
+                    if table_vec.len() &gt; 0 {
+                        error!(&quot;Table already exists and has more then one item&quot;);
+                    } else {
+                        create_table_input()
+                    }
+                }
+                None =&gt; create_table_input(),
+            };
+        }
+        Err(_) =&gt; {
+            create_table_input();
+        }
+    }
+}
+
+fn create_table_input() {
+    // ...
+
+    match client.create_table(create_table_input).sync() {
+        Ok(output) =&gt; {
+            debug!(&quot;Table created {:?}&quot;, output);
+        }
+        Err(error) =&gt; {
+            error!(&quot;Could not create table due to error: {:?}&quot;, error);
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Outro lugar em que podemos aplicar logs é no arquivo <code>src/todo_api/db/todo.rs</code>, pois as funções de <code>put</code> e <code>get</code> são bastante suscetíveis a erros. Assim podemos modificar o arquivo para:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ...
+use log::{debug, error};
+
+#[cfg(not(feature = &quot;dynamo&quot;))]
+pub fn put_todo(todo_card: TodoCardDb) -&gt; Option&lt;Uuid&gt; {
+    // ...
+
+    match client.put_item(put_item).sync() {
+        Ok(_) =&gt; {
+            debug!(&quot;item created with id {:?}&quot;, todo_card.id);
+            Some(todo_card.id)
+        },
+        Err(e) =&gt; {
+            error!(&quot;error when creating item {:?}&quot;, e);
+            None
+        }
+    }
+}
+
+#[cfg(not(feature = &quot;dynamo&quot;))]
+pub fn get_todos() -&gt; Option&lt;Vec&lt;TodoCard&gt;&gt; {
+    // ...
+
+    match client.scan(scan_item).sync() {
+        Ok(resp) =&gt; {
+            let todocards = adapter::scanoutput_to_todocards(resp);
+            debug!(&quot;Scanned {:?} todo cards&quot;, todocards);
+            Some(todocards)
+        },
+        Err(e) =&gt; {
+            error!(&quot;Could not scan todocards due to error {:?}&quot;, e);
+            None
+        },
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Note que nos casos de <code>Err</code> agora estamos logando o motivo com <code>e</code>. O úmtimo passo para este momento é adicionar logs aos controllers em <code>src/todo_api_web/controllers/todo.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use log::{error};
+// ...
+
+pub async fn create_todo(info: web::Json&lt;TodoCard&gt;) -&gt; impl Responder {
+    let todo_card = adapter::todo_json_to_db(info, uuid::Uuid::new_v4());
+
+    match put_todo(todo_card) {
+        None =&gt; {
+            error!(&quot;Failed to create todo card&quot;);
+            HttpResponse::BadRequest().body(&quot;Failed to create todo card&quot;)
+        },
+        Some(id) =&gt; HttpResponse::Created()
+            .content_type(&quot;application/json&quot;)
+            .body(serde_json::to_string(&amp;TodoIdResponse::new(id)).expect(&quot;Failed to serialize todo card&quot;))
+    }
+}
+
+pub async fn show_all_todo() -&gt; impl Responder {
+    match get_todos() {
+        None =&gt; {
+            error!(&quot;Failed to read todo cards&quot;);
+            HttpResponse::InternalServerError().body(&quot;Failed to read todo cards&quot;)
+        },
+        Some(todos) =&gt; HttpResponse::Ok()
+            .content_type(&quot;application/json&quot;)
+            .body(serde_json::to_string(&amp;TodoCardsResponse{cards: todos}).expect(&quot;Failed to serialize todo cards&quot;)),
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Note que adicionamos somente a opção de <code>error</code> já que o <code>None =&gt; {...}</code> é a única resposta que pode conter diversas razões, pelo fato do <code>Some</code> já estar mapeado em <code>put_todo</code> e <code>get_todos</code>.</p>
+<h2 id="tornando-nosso-sistema-tolerância-a-falha"><a class="header" href="#tornando-nosso-sistema-tolerância-a-falha">Tornando nosso sistema tolerância a falha</a></h2>
+<p>Erlang possui um sistema de tolerância a falhas inspirado em sistemas de atores bastante poderosos e versáteis. Assim a comunidade Rust desenvolveu uma crate que ajuda esse sistema. A crate é chamada de <code>bastion</code> e depende de outra crate chamada <code>fort</code>, que disponibiliza o runtime, para que <code>bastion</code> funcione. <strong>Lembre-se de que adicionar runtimes implica em um aumento de consumo de memória e tamanho de executável</strong>, mas vamos seguir com essa abordagem. Assim adicionamos as duas crates ao nosso <code>[dependencies]</code> do <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dependencies]
+# ...
+fort = &quot;0.3&quot;
+bastion = &quot;0.3&quot;
+</code></pre>
+<p>Para utilizarmos a crate <code>fort</code>, precisamos habilitar o runtime de <code>bastion</code> com a macro <code>#[fort::root]</code> e modificar a chamada da <code>main</code>. Fazemos isso modificando a antiga função <code>main</code> para se chamar <code>web_main</code> ou <code>actix_main</code>, e chamamos ela da instância <code>main</code> na qual o <code>bastion</code> está disponível:</p>
+<pre><pre class="playground"><code class="language-rust">// ...
+use bastion::prelude::*;
+
+
+#[actix_rt::main]
+async fn web_main() -&gt; Result&lt;(), std::io::Error&gt; {
+    std::env::set_var(&quot;RUST_LOG&quot;, &quot;actix_web=info&quot;);
+    env_logger::init();
+    create_table();
+    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D&quot;))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind(&quot;127.0.0.1:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+
+#[fort::root]
+async fn main(_: BastionContext) -&gt; Result&lt;(), ()&gt; {
+    let _ = web_main();
+    Ok(())
+}
+</code></pre></pre>
+<p>Note que a função <code>main</code> também é declarada como <code>async</code>, isso é um requerimento de <code>fort::root</code>. Assim, ao executarmos <code>cargo run</code> o sistema vai se reiniciar mesmo que utilizemos <code>crtl+c</code>. Inclusive outro teste que podemos fazer é adicionar um <code>panic!</code> antes do <code>Ok(())</code>, que interromperá a thread a cada ciclo:</p>
+<pre><pre class="playground"><code class="language-rust">#[fort::root]
+async fn main(_: BastionContext) -&gt; Result&lt;(), ()&gt; {
+    let _ = web_main();
+    panic!(&quot;Holy shit&quot;);
+    Ok(())
+}
+</code></pre></pre>
+<p>Note que neste caso, ao tentarmos utilizar um extra <code>ctrl+c</code> recebemos o seguinte erro:</p>
+<pre><code>Panic in Arbiter thread.
+thread 'bastion-async-thread' panicked at 'env_logger::init should not be called after logger initialized: SetLoggerError(())', src/libcore/result.rs:1165:5
+</code></pre>
+<p>Com isso, podemos concluir que as funções <code>std::env::set_var(&quot;RUST_LOG&quot;, &quot;actix_web=info&quot;)</code>, <code>env_logger::init()</code> e <code>create_table()</code> não precisam estar dentro da função <code>web_main()</code>:</p>
+<pre><pre class="playground"><code class="language-rust">#[actix_rt::main]
+async fn web_main() -&gt; Result&lt;(), std::io::Error&gt; {    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D&quot;))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind(&quot;127.0.0.1:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+
+#[fort::root]
+async fn main(_: BastionContext) -&gt; Result&lt;(), ()&gt; {
+    std::env::set_var(&quot;RUST_LOG&quot;, &quot;actix_web=info&quot;);
+    env_logger::init();
+    create_table();
+    
+    let _ = web_main();
+
+    Ok(())
+}
+</code></pre></pre>
+<p>Na macro <code>fort::root</code>, existe um atributo a mais que podemos passar, o <code>redundancy</code>. Este atributo espera um valor do tipo inteiro positivo e, para utilizá-lo, basta adicionar <code>#[fort::root(redundancy = 2)]</code>. O atributo <code>redundancy</code> corresponde ao número de elementos que este grupo vai ter, no nosso caso a quantidade de <code>web_main()</code> que vamos iniciar, valor padrão de <code>redundancy</code> é <code>1</code>.</p>
+<p>No momento, precisamos ter cuidado, pois já estabelecemos uma quantidade de <code>workers</code> igual a <code>num_cpus::get() + 2</code> e isso faz com que não sobrem muitos cores para iniciarmos processos. Uma possível solução para o <code>redundancy</code> seria iniciá-lo em diferentes máquinas distribuídas, mas essa crate de <code>bastion</code> ainda não está estável. Outra possível forma de limitar o tamanho dos <code>workers</code> para poder tirar proveito do <code>redundancy</code> é definir no <code>HttpServer</code> a quantidade máxima de conexões que cada <code>worker</code> pode estabelecer com a função <code>maxconn</code>, seu valor padrão é <code>25k</code>. Um exemplo fictício seria:</p>
+<pre><pre class="playground"><code class="language-rust">#[actix_rt::main]
+async fn web_main() -&gt; Result&lt;(), std::io::Error&gt; {    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D&quot;))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() - 2)
+    .maxconn(30000)
+    .bind(&quot;127.0.0.1:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+
+#[fort::root(redundancy = 10)]
+async fn main(_: BastionContext) -&gt; Result&lt;(), ()&gt; {
+    std::env::set_var(&quot;RUST_LOG&quot;, &quot;actix_web=info&quot;);
+    env_logger::init();
+    create_table();
+    
+    let _ = web_main();
+
+    Ok(())
+}
+</code></pre></pre>
+<blockquote>
+<p>A crate que, no momento em que escrevi este livro, estava sendo desenvolvida para instâncias remotas do <code>bastion</code> pode ser encontrada no link https://github.com/bastion-rs/artillery.</p>
+</blockquote>
+<p>Agora podemos evoluir nosso código para facilitar nossa vida quando executamos um processo que se recusa a terminar, faremos isso com containers docker.</p>
+<h2 id="incluindo-docker"><a class="header" href="#incluindo-docker">Incluindo Docker</a></h2>
+<p>Como o foco deste livro não é docker e ele não é um requisito para entender o livro, vou mostrar o código e explicar um pouco o que está acontecendo. Assim vamos começar por um <code>Dockerfile</code> extremamente simples.</p>
+<pre><code class="language-Dockerfile">FROM rustlang/rust:nightly
+
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+COPY . /usr/src/app
+
+CMD [&quot;cargo&quot;, &quot;build&quot;, &quot;-q&quot;]
+</code></pre>
+<p>A primeira diretiva, a <code>FROM</code>, tem como objetivo definir a imagem base para nosso contêiner. Nesse caso, estamos utilizando uma versão <code>nightly</code> do Rust, pois a versão stable não era compatível com a versão da minha máquina quando escrevi este livro. Depois disso, temos a diretiva <code>RUN</code>, que executa algum comando, no nosso caso a criação da pasta <code>/usr/src/app</code>, e já definimos essa pasta como o diretório que vamos utilizar com <code>WORKDIR</code>. Depois disso, copiamos todo nosso código para nosso diretório com <code>COPY</code> e executamos um comando do cargo, o <code>build</code>, para construir nossa aplicação, <code>cargo build -q</code> com <code>CMD</code>. Outra opção de <code>Dockerfile</code> com otimização para builds repetidos é:</p>
+<pre><code class="language-Dockerfile">FROM rust:latest
+
+RUN mkdir -p /usr/src/
+WORKDIR /usr/src/
+RUN USER=root cargo new --bin app
+WORKDIR /app
+
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
+COPY ./tests ./tests
+
+RUN cargo build --release
+RUN rm src/*.rs
+
+COPY ./src ./src
+
+CMD [&quot;cargo&quot;, &quot;build&quot;, &quot;--release&quot;]
+</code></pre>
+<p>O objetivo desse segundo <code>Dockerfile</code> é diminuir o tempo de execução do contêiner ao cachear as dependências do app e somente atualizar o cache a partir do <code>COPY ./src ./src</code>.</p>
+<p>Com este container pronto, podemos começar a pensar em como utilizar os dois containers (DynamoDB e <code>todo_server</code>) em conjunto. Faremos isso com <code>docker-compose.yml</code>:</p>
+<pre><code class="language-yml">version: &quot;3.7&quot;
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: cargo run
+    ports:
+      - &quot;4000:4000&quot;
+    cap_drop:
+      - all
+    cap_add:
+      - NET_BIND_SERVICE
+    environment:
+      - AWS_ACCESS_KEY_ID=foo
+      - AWS_SECRET_ACCESS_KEY=bar
+      - AWS_REGION=julia-home
+      - AWS_DYNAMODB_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - dynamodb
+    links:
+      - dynamodb
+    networks:
+      internal_net:
+        ipv4_address: 172.21.1.2
+
+  dynamodb:
+    container_name: &quot;dynamodb&quot;
+    image: amazon/dynamodb-local
+    ports:
+      - &quot;8000:8000&quot;
+    networks:
+      internal_net:
+        ipv4_address: 172.21.1.1
+    environment:
+      - ./Djava.library.path=./DynamoDBLocal_lib
+    volumes:
+      - dynamodata:/home/dynamodblocal/
+    working_dir: /home/dynamodblocal/
+    command: &quot;-jar DynamoDBLocal.jar -sharedDb -dbPath .&quot;
+
+networks:
+  internal_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  dynamodata:
+</code></pre>
+<p>Nosso <code>docker-compose</code> precisa de quatro chaves principais: <code>version</code>, que corresponde à versão do compose, <code>services</code>, que corresponde aos contêineres que vamos rodar, <code>networks</code> é a configuração de rede que vamos utilizar, e <code>volumes</code> são os volumes compartilhados com os contêineres. A configuração de <code>networks</code> simplesmente define uma rede interna com <code>internal_net</code> e uma range de subnets em <code>subnet: 172.21.0.0/16</code>. Em <code>services</code>, precisamos declarar dois contêineres <code>web</code>, os quais conterão nossa aplicação e o contêiner <code>dynamodb</code>, que conterá a imagem do <strong>DynamoDB</strong>. O contêiner <code>dynamodb</code> possui as seguintes chaves:</p>
+<ul>
+<li><code>container_name</code>: é o nome do contêiner, no nosso caso <code>dynamodb</code>.</li>
+<li><code>image</code>: a fonte da imagem que estamos utilizando, no caso do DynamoDB é <code>amazon/dynamodb-local</code>.</li>
+<li><code>ports</code>: o mapeamento de portas de dentro do contêiner para fora, <code>8000:8000</code>.</li>
+<li><code>networks</code>: a definição do IP que vamos utilizar, <code>ipv4_address: 172.21.1.1</code>.</li>
+<li><code>environment</code>: configurações de ambiente, <code>./Djava.library.path=./DynamoDBLocal_lib</code>, relevante para o dynamo.</li>
+<li><code>volumes</code>: volumes disponíveis para o dynamo utilizar, <code>dynamodata:/home/dynamodblocal/</code>.</li>
+<li><code>working_dir</code>: diretório no qual o dynamo executará, <code>/home/dynamodblocal/</code>.</li>
+<li><code>command</code>: para inicializar o dynamo <code>&quot;-jar DynamoDBLocal.jar -sharedDb -dbPath .&quot;</code>.</li>
+</ul>
+<p>Depois disso temos o <code>web</code>, que não vou repetir algumas chaves:</p>
+<ul>
+<li><code>build</code>: o contexto de criação da imagem, <code>context: .</code>. No caso, estamos passando um dockerfile chamado <code>Dockerfile</code> <code>dockerfile: Dockerfile</code>.</li>
+<li><code>command</code>: executamos o comando <code>cargo run</code> para essa aplicação.</li>
+<li><code>cap_drop</code> e <code>cap_add</code>: correspondem a capacidade de um container de remover ou de adicionar capacidades.</li>
+<li><code>environment</code>: para executar o DynamoDB dessa forma precisamos adicionar algumas variáveis de ambiente para que o <code>client</code> configure suas credenciais.
+<ul>
+<li><code>AWS_ACCESS_KEY_ID=foo</code></li>
+<li><code>AWS_SECRET_ACCESS_KEY=bar</code></li>
+<li><code>AWS_REGION=julia-home</code></li>
+<li><code>AWS_DYNAMODB_ENDPOINT=http://dynamodb:8000</code></li>
+</ul>
+</li>
+<li><code>depends_on</code>: define a ordem na qual os serviços devem ser inicializados, assim <code>dynamodb</code> é inicializado antes de <code>web</code></li>
+<li><code>links</code>: forma legada de fazer com que dois serviços estejam conectados, atualmente bastaria o <code>networks</code>, mas coloquei como exemplo. No caso de <code>links</code> e <code>networks</code> estarem definidos, é preciso que ambos estejam na mesma rede.</li>
+</ul>
+<p>Se executarmos <code>docker-compose up</code>, veremos que nossos serviços são inicializados, porém, quando fazemos um request, ocorre uma falha de comunicação. Para resolver essa falha, precisamos alterar nosso cliente para que ele se conecte às configurações da rede do <code>docker-compose</code>. Para isso, podemos criar um novo cliente e fazer com que o antigo execute somente com a feature <code>dynamo</code> ativada:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// src/todo_api/db/helpers.rs
+// ...
+#[cfg(feature = &quot;dynamo&quot;)]
+pub fn client() -&gt; DynamoDbClient {
+    DynamoDbClient::new(Region::Custom {
+        name: String::from(&quot;us-east-1&quot;),
+        endpoint: String::from(&quot;http://localhost:8000&quot;),
+    })
+}
+
+#[cfg(not(feature = &quot;dynamo&quot;))]
+pub fn client() -&gt; DynamoDbClient {
+    DynamoDbClient::new(Region::Custom {
+        name: String::from(&quot;julia-home&quot;),
+        endpoint: String::from(&quot;http://dynamodb:8000&quot;),
+    })
+}
+// ...
+<span class="boring">}
+</span></code></pre></pre>
+<p>Além disso, precisamos alterar o <code>bind</code> de nosso servidor para expor o serviço para fora do container:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ...
+
+#[actix_rt::main]
+async fn web_main() -&gt; Result&lt;(), std::io::Error&gt; {    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D&quot;))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind(&quot;0.0.0.0:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+
+// ...
+<span class="boring">}
+</span></code></pre></pre>
+<p>Se tivéssemos as configurações de produção, poderíamos criar a feature <code>compose</code> para utilizar com o <code>docker-compose</code>. Se executarmos o código agora com <code>docker-compose up --build</code> e, em seguida, um <code>curl</code>, tudo voltará a funcionar como antes. Outra coisa que podemos fazer agora é atualizar nosso Makefile para incluir o <code>docker-compose</code>:</p>
+<pre><code class="language-sh">db:
+	docker run -p 8000:8000 amazon/dynamodb-local
+
+test:
+	cargo test --features &quot;dynamo&quot;
+
+run-local:
+	cargo run --features &quot;dynamo&quot;
+
+run:
+	docker-compose up --build
+
+down:
+	docker-compose down
+</code></pre>
+<h2 id="headers-padrões"><a class="header" href="#headers-padrões">Headers padrões</a></h2>
+<p>Outro ponto que acredito ser importante é o uso de headers para identificar os requests nos logs. Costumo ver o padrão de um header chamado <code>x-request-id</code> cujo valor é um <code>uuid</code>. Para implementarmos esse padrão com o actix, precisamos utilizar um middleware que felizmente a equipe do actix já disponibilizou para nós, o <code>actix_web::middleware::DefaultHeaders</code>. Para isso, precisamos disponibilizá-lo no escopo com <code>use</code> e depois passar essa informação para um <code>wrap</code>. A forma de utilizar esses headers padrões é <code>DefaultHeaders::new().header(&quot;X-Version&quot;, &quot;0.2&quot;)</code>, isto é, criamos um novo header com <code>DefaultHeaders::new()</code> e depois chamamos a função <code>header</code> para adicionar um header com os argumentos-chave e valor do tipo string:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// src/main.rs
+// ...
+HttpServer::new(|| {
+    App::new()
+    .wrap(DefaultHeaders::new().header(&quot;x-request-id&quot;, Uuid::new_v4().to_string()))
+    .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D&quot;))
+    .configure(app_routes)
+})
+// ...
+<span class="boring">}
+</span></code></pre></pre>
+<p>Além disso, precisamos definir o header no <code>Logger</code>, para isso usamos a chave <code>X-REQUEST-ID:%{x-request-id}o</code> após a <code>DURATION</code>, pois somente assim o valor de <code>x-request-id</code> será logado:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ...
+HttpServer::new(|| {
+    App::new()
+    .wrap(DefaultHeaders::new().header(&quot;x-request-id&quot;, Uuid::new_v4().to_string()))
+    .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o&quot;))
+    .configure(app_routes)
+})
+// ...
+<span class="boring">}
+</span></code></pre></pre>
+<p>Um exemplo de resposta seria:</p>
+<pre><code>[2020-02-08T23:10:58Z INFO  actix_web::middleware::logger] IP:172.21.0.1:52686 DATETIME:2020-02-08T23:10:58Z REQUEST:&quot;POST /api/create HTTP/1.1&quot; STATUS: 201 DURATION:166.921700 X-REQUEST-ID=bd15de62-1ba6-4d43-89ca-4f89418
+</code></pre>
+<h2 id="adicionando-o-cliente-ao-estado-da-api"><a class="header" href="#adicionando-o-cliente-ao-estado-da-api">Adicionando o cliente ao estado da API</a></h2>
+<p>Nosso próximo passo vem de uma necessidade de refactor e preparação para o código futuro. Esse refactor consiste em retirar a declaração de <code>let cliente = client();</code> de todos os códigos envolvendo banco de dados e passá-los como argumentos. Uma das vantagens disso é caso decidamos ter mais clientes de algum tipo de serviço como outros bancos de dados ou S3. Para fazermos isso, vamos criar uma nova struct chamada <code>Clients</code> que conterá o campo <code>dynamo</code> e depois a passaremos como argumento para o <code>HttpServer</code> via função <code>data</code>.</p>
+<p>Assim, nosso primeiro passo é descrever a o modelo de <code>Clients</code> em <code>src/todo_api_web/model/http.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::todo_api::db::helpers::client;
+
+#[derive(Clone)]
+pub struct Clients {
+    pub dynamo: rusoto_dynamodb::DynamoDbClient,
+}
+
+impl Clients {
+    pub fn new() -&gt; Self {
+        Self { dynamo: client() }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora podemos utilizar a função <code>data</code> em <code>HttpServer</code> para passar Clients como argumento. Fazemos isso com <code>Clients::new()</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ...
+use todo_api_web::{
+    routes::app_routes,
+    model::http::Clients,
+};
+
+#[actix_rt::main]
+async fn web_main() -&gt; Result&lt;(), std::io::Error&gt; {  
+    HttpServer::new(|| {
+        App::new()
+        .data(Clients::new())
+        .wrap(DefaultHeaders::new().header(&quot;x-request-id&quot;, Uuid::new_v4().to_string()))
+        .wrap(Logger::new(&quot;IP:%a DATETIME:%t REQUEST:\&quot;%r\&quot; STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o&quot;))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind(&quot;0.0.0.0:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+// ...
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com isso temos <code>Clients</code> disponível no nos nossos controllers, para isso adicionamos o estado com <code>state: web::Data&lt;Clients&gt;</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ...
+use crate::{
+    // ...
+    todo_api_web::model::{
+        http::Clients,
+        TodoCard, TodoIdResponse, TodoCardsResponse
+    }
+};
+
+
+pub async fn create_todo(state: web::Data&lt;Clients&gt;, info: web::Json&lt;TodoCard&gt;) -&gt; impl Responder {
+    let todo_card = adapter::todo_json_to_db(info, uuid::Uuid::new_v4());
+
+    match put_todo(state.dynamo.clone(), todo_card) {
+        // ...
+    }
+}
+
+pub async fn show_all_todo(state: web::Data&lt;Clients&gt;) -&gt; impl Responder {
+    match get_todos(state.dynamo.clone()) {
+        // ...
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora precisamos que as funcões <code>put_todo</code> e <code>get_todos</code> tenham como argumentos um <code>client :rusoto_dynamo::DynamoDbClient</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ...
+use rusoto_dynamodb::{DynamoDbClient, PutItemInput, ScanInput};
+
+#[cfg(not(feature = &quot;dynamo&quot;))]
+pub fn put_todo(client: DynamoDbClient, todo_card: TodoCardDb) -&gt; Option&lt;Uuid&gt; {
+    use rusoto_dynamodb::DynamoDb;
+
+    let put_item = PutItemInput {
+        table_name: TODO_CARD_TABLE.to_string(),
+        item: todo_card.clone().into(),
+        ..PutItemInput::default()
+    };
+
+    match client.put_item(put_item).sync() {
+        // ...
+    }
+}
+
+#[cfg(not(feature = &quot;dynamo&quot;))]
+pub fn get_todos(client: DynamoDbClient) -&gt; Option&lt;Vec&lt;TodoCard&gt;&gt; {
+    use rusoto_dynamodb::DynamoDb;
+
+    let scan_item = ScanInput {
+        limit: Some(100i64),
+        table_name: TODO_CARD_TABLE.to_string(),
+        ..ScanInput::default()
+    };
+
+    match client.scan(scan_item).sync() {
+        // ...
+    }
+}
+
+#[cfg(feature = &quot;dynamo&quot;)]
+pub fn get_todos(_: DynamoDbClient) -&gt; Option&lt;Vec&lt;TodoCard&gt;&gt; {
+    // ...
+}
+
+#[cfg(feature = &quot;dynamo&quot;)]
+pub fn put_todo(_: DynamoDbClient, todo_card: TodoCardDb) -&gt; Option&lt;Uuid&gt; {
+    // ...
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Feito isso, devemos adicionar <code>.data(Clients::new())</code> a todos os testes de integração, pois esse argumento é esperado nas funções de controller. Um exemplo seria:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[actix_rt::test]
+    async fn test_todo_cards_with_value() {
+        let mut app = test::init_service(
+            App::new()
+                .data(Clients::new())
+                .configure(app_routes)
+        ).await;
+    
+        // ...
+        assert_eq!(todo_cards.cards, mock_get_todos());
+    }
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="serializando-o-response"><a class="header" href="#serializando-o-response">Serializando o Response</a></h3>
+<p>Até o momento estávamos utilizando o formato de criação de <code>HttpResponse</code> da seguinte maneira <code>HttpResponse::Ok().content_type(&quot;application/json&quot;).body(serde_json::to_string(&amp;struct).expect(&quot;Failed to serialize todo cards&quot;))</code>, mas existe uma forma que pode simplificar nossa vida por nos permitir delegar a chamada de <code>serde_json</code>. Esse formato substitui o <code>.body(...)</code> por <code>.json(...)</code>. A vantagem de se utilizar esse formato é que ele reduz a quantidade de código que nós devemos manter, delegando ao actix essa responsabilidade. Nos capítulos introdutórios do livro, falamos que o actix estava com muita vantagem em relação a outros frameworks nos benchmarks da TechEmpower, porém, no caso de serialização JSON, existem alguns frameworks C/C++ à sua frente, inclusive a crate <code>hyper</code>. O Objetivo de <code>body</code> é principalmente enviar mensagens sem dados estruturados ou estruturados em outros formatos como Edn.</p>
+<p>Com esse pequeno refactor, nossos controllers de <code>todo</code> serão modificados para o seguinte formato:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// src/todo_web_api/controller/todo.rs
+// ...
+pub async fn create_todo(state: web::Data&lt;Clients&gt;, info: web::Json&lt;TodoCard&gt;) -&gt; impl Responder {
+    let todo_card = adapter::todo_json_to_db(info, uuid::Uuid::new_v4());
+
+    match put_todo(state.dynamo.clone(), todo_card) {
+        None =&gt; {
+            error!(&quot;Failed to create todo card&quot;);
+            HttpResponse::BadRequest().body(&quot;Failed to create todo card&quot;)
+        }
+        Some(id) =&gt; HttpResponse::Created()
+            .content_type(&quot;application/json&quot;)
+            .json(TodoIdResponse::new(id))
+    }
+}
+
+pub async fn show_all_todo(state: web::Data&lt;Clients&gt;) -&gt; impl Responder {
+    match get_todos(state.dynamo.clone()) {
+        None =&gt; {
+            error!(&quot;Failed to read todo cards&quot;);
+            HttpResponse::InternalServerError().body(&quot;Failed to read todo cards&quot;)
+        }
+        Some(todos) =&gt; HttpResponse::Ok().content_type(&quot;application/json&quot;)
+            .json(TodoCardsResponse { cards: todos })
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com isso, nosso código está pronto para receber novos clientes e nós podemos começar a pensar em autenticação.</p>
+<p><a href="03-get.html">Anterior</a> | <a href="https://github.com/naomijub/web-dev-rust-book/blob/master/book.md">Topo</a> | <a href="05-auth.html">Próximo</a></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../part-1/03-get.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../part-1/05-auth.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../part-1/03-get.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../part-1/05-auth.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

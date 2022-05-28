@@ -1,0 +1,14 @@
+[Anterior](1-about.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](3-book.md)
+
+# Audiência
+
+Este livro é para todas as pessoas que estão cansadas de lidar com projetos gigantes e arcaicos, com frameworks burocráticos e que têm muita dor de cabeça na hora de otimizar o código. Rust é uma linguagem de programação de baixo nível, como C, mas com abstrações de alto nível, como Ruby e JavaScript, que garante segurança na criação de processos e evita que threads diferentes concorram e mutem os mesmos dados ao mesmo tempo. Além disso, Rust cuida para ter duas características principais, uma comunidade inclusiva e uma linguagem de fácil entendimento, isso se mostra através dos milhares de livros completíssimos para aprender Rust e suas ferramentas. Infelizmente as partes de `macros`, `borrow checker` e `lifetimes` não são tão simples de aprender — acredito que sejam as partes mais difíceis do Rust —, mas acredito que o `borrow checker` será a única parte que você precisará conviver diariamente.
+
+Existem alguns grandes casos de uso de Rust em produção, tirando a Mozilla, empresa criadora da linguagem e hoje uma das principais mantenedoras dela. Os maiores casos são:
+
+* **NPM** - Escalando um serviço ligado a CPU com bilhões de requests. Rust foi escolhido entre C, C++, Java e Go. C e C++ foram descartados devido à insegurança a nível de memória, Java por conta da necessidade de deployar a JVM e Go por ter tido uma performance pior que Rust com muito mais trabalho em relação a ferramental básico.
+* **Tilde** - Tilde fez seu MVP para monitoramento do espaço com Ruby on Rails, mas infelizmente a quantidade brutal de memória consumida fazia com que eles não tivessem competitividade do produto. Avaliando uma solução em C++, perceberam que a quantidade de crashes podia aumentar exponencialmente e que treinar uma equipe rubysta para manter um código C++ era bem complicado. Foi aí que entrou o Rust, a ausência de coletor de lixo e a segurança em memória garantiram a performance que o projeto queria.
+* **Dropbox** - Para a Dropbox, o diferencial do uso de Rust foi desenvolver um serviço que aumentasse a velocidade de entrega e que diminuísse o espaço consumido. Rust com seu runtime quase mínimo e sua performance excepcional foi a solução preferida.
+* **Discord** - Quando o Elixir para de performar bem para a quantidade de dados que você precisa processar, está na hora de delegar esse processamento para quem é bom nisso. No caso do Discord foi o Rust.
+
+Ou seja, Rust é ideal para quem quer produzir serviços com performance excepcional, uma linguagem simples, pouco consumo de memória e muita felicidade. Acredito que seja um livro para pessoas que pelo menos já brincaram um ou dois dias com Rust, mas caso seja necessário, recomendo conferir os livros da documentação oficial e os maravilhosos livros que a Casa do Código possui sobre Rust antes de ler este.
