@@ -1,0 +1,12 @@
+[book]
+name = "wed-dev-rust-book"
+authors = ["Julia Naomi <jnboeira@outlook.com>"]
+description = "Livro sobre desenvolvimento web em Rust"
+
+[output.html]
+git-repository-url = "https://github.com/naomijub/web-dev-rust-book"
+
+[output.linkcheck]
+optional = true
+follow-web-links = true
+warning-policy = "error"
