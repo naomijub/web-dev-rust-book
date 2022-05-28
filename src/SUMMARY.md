@@ -1,4 +1,4 @@
-
+- [Capa](0-capa.md)
 - [Sobre autora](intro/1-about.md)
 - [Público alvo](intro/2-Audience.md)
 - [Como o livro está organizado](intro/3-book.md)
