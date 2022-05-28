@@ -1,4 +1,4 @@
-[Anterior](00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](02-create.md)
+
 
 # Configurando os primeiros endpoints
 
@@ -76,9 +76,9 @@ async fn main() -> std::io::Result<()> {
 
 E seu funcionamento seria:
 
-![Endpoint `/ping`](imagens/pingpong.png)
+![Endpoint `/ping`](../imagens/pingpong.png)
 
-![Endpoint `Not Found` para a rota `/`](imagens/notfound.png)
+![Endpoint `Not Found` para a rota `/`](../imagens/notfound.png)
 
 Agora podemos começar a descrever o endpoint `/ping`: 
 1. A primeira coisa que vemos é a diretiva `use` associada a lib `actix_web`. Essa diretiva nos permite disponibilizar no nosso código as funções e estruturas de `actix_web` para uso posterior, assim a diretiva `use actix_web::HttpServer` disponibilizaria a estrutura `HttpServer` para usarmos. 
@@ -299,4 +299,3 @@ Com tudo testado, o próximo passo é configurar nosso serviço para criar uma t
 
 * O código deste capítulo está na bibliografia e solicitações de mudança serão bem vindas para manter o código exemplo atualizado.
 
-[Anterior](00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](02-create.md)

@@ -1,4 +1,3 @@
-[Anterior](04-recommendations.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](appendix.md) | [Bibliografia](bibliografia.md)
 
 # Aplicando um Router
 
@@ -551,7 +550,7 @@ Para finalizar o css utilizado em `view_index`:
 
 E uma imagem com o resultado de `view_index` na rota `"/"`:
 
-![View da rota "/"](imagens/view_index.png)
+![View da rota "/"](../imagens/view_index.png)
 
 Agora basta subir, no diretório do GraphQL, o Redis com `make redis`, subir o GraphQL com `make run` e subir, no diretório wasm, o wasm com `make run` adicionar suas rotas desejada e datas desejadas e procurar seu próximo voo em sua própria API.
 
@@ -560,5 +559,3 @@ Esta parte nos trouxe alguns conceitos de desenvolvimento front-end com Rust e W
 Na API que atendia ao front-end utilizamos a crate `juniper` para configurar o GraphQL em cima do `actix-web`, assim como a crate `reqwest` para realizar requests HTTP para uma API externa e utilizamos a crate `redis` para configurar a comunicação com um container Redis. Já no nosso outro serviço, aprendemos a configurar middlewares, como Logger, para o Actix, sistema de tolerância a falhas com `bastion/fort`, uuids, configurações de json com `serde`, configuramos um DynamoDB com a crate `rusoto`, assim como um `Postgres` com a crate `diesel`, utilizamos a crate `chrono` para gerenciar datas, fizemos sistemas de autenticação que utilizavam `jwt` e `bcrypt` para parsear tokens e senhas, além de  testes extensivos para estes cenários, tanto unitários quanto de integração. Vale mencionar também que configuramos um Travis-CI para este cenário. 
 
 Agora você já pode começar a investir em serviços e front-ends Rust para demonstrar seu poder e levar a palavra do Rust a diante.
-
-[Anterior](04-recommendations.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](appendix.md) | [Bibliografia](bibliografia.md)

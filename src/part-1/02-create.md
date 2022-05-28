@@ -1,4 +1,4 @@
-[Anterior](01-ping-pong.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](03-get.md)
+
 
 # Criando tarefas
 
@@ -1439,4 +1439,3 @@ mod create_todo {
 
 No próximo capítulo vamos aprender a obter todos os `TodoCard` que criamos na base de dados para depois podermos melhorar as configurações do serviço, por exemplo logs.
 
-[Anterior](01-ping-pong.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](03-get.md)

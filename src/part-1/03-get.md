@@ -1,4 +1,3 @@
-[Anterior](02-create.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](04-serving.md)
 
 # Obtendo todas as Todo Cards inseridas
 
@@ -496,8 +495,6 @@ pub fn scanoutput_to_todocards(output: ScanOutput) -> Option<Vec<TodoCard>> {
 
 A mudança que fizemos é bastante simples. Ela simplesmente consiste em transformar a variável `item` em um argumento da closure de `map`. Dessa forma, scan vira um iterável com `scan.items.unwrap().into_iter()` e, depois do `map`, colecionamos todos os valores com `.collect::<Vec<TodoCard>>()`. Pronto, `adapter` feito. Agora podemos utilizar esse `adapter` na função `get_todos`. Para testar a mudança, podemos executar a aplicação novamente e testar:
 
-![Obtendo todos nossos TodoCards.](imagens/get_todos.png)
+![Obtendo todos nossos TodoCards.](../imagens/get_todos.png)
 
 No próximo capítulo, vamos parar um pouco com a criação de endpoints e entender melhor como tornar nosso serviço mais viável para produção
-
-[Anterior](02-create.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](04-serving.md)

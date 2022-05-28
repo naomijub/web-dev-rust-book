@@ -1,4 +1,3 @@
-[Anterior](00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](02-iniciando.md)
 
 # Setup de WebAssembly
 
@@ -145,5 +144,3 @@ pub fn run_app() {
 4. Disponibilize o bundle no browser com `miniserve ./static --index index.html`. E pronto, basta acessar `localhost:8080`.
 
 Ao longo das próximas etapas do projeto vamos utilizar a `opção 2`, mas se você preferir utilizar a `opção 1` fique a vontade.
-
-[Anterior](00-capa.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](02-iniciando.md)

@@ -1,4 +1,3 @@
-[Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](appendix.md) | [Bibliografia](bibliografia.md)
 
 # Apêndice A - Benchmarks
 
@@ -12,7 +11,7 @@ Os benchmarks do Techempower são abertos a comunidade desenvolver seus serviço
 5. Atualização de dados, neste teste verificamos a escrita em banco de dados. Cada request processa multiplos fetchs em multiplas linhas de uma tabela simples, guardamos em memória, modificamos os valores em memória, atualizamos cada linha individualmente  e depois serializamos os valores em memória para retornar como Json. Actix em primeiro lugar.
 6. Texto puro, neste teste o framework responde com `plaintext` `"hello, World"`. Actix em quarto lugar (rust em primeiro e segundo).
 
-![Techempower 2018 Fortunes](imagens/techempower.png)
+![Techempower 2018 Fortunes](../imagens/techempower.png)
 Referência https://www.techempower.com/benchmarks/#section=data-r18&hw=ph&test=fortune
 
 ## Express vs Actix
@@ -42,9 +41,9 @@ CREATE TABLE task (
 
 Teste de performance foi feito em um  Ubuntu 18 Xeon E5–2660 com 40 cores, e o banco de dados foi inicializado com 100_000 `TASK` aleatórias com 1000 `WORKER`s  relacionadas. Os testes foram executados com https://github.com/wg/wrk e os resultados são os seguintes:
 
-![Requests por segundo, maior é melhor](imagens/actixexpressloadrps.png)
+![Requests por segundo, maior é melhor](../imagens/actixexpressloadrps.png)
 
-![Tempo médio de resposta, ms, menor é melhor](imagens/actixexpressloadmrt.png)
+![Tempo médio de resposta, ms, menor é melhor](../imagens/actixexpressloadmrt.png)
 
 Continue lendo em https://medium.com/@maxsparr0w/performance-of-node-js-compared-to-actix-web-37f20810fb1a
 
@@ -173,5 +172,3 @@ Continue lendo em https://medium.com/@maxsparr0w/performance-of-node-js-compared
 - Recomendações de voos: https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/recommendations/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=
 
 - Melhores preços https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure=<YYYY-mm-dd>&origin=<IATA>&destination=<IATA>&cabin=Y&country=BR&language=PT&home=pt_br&adult=1&promoCode=
-
-[Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Apêndice](appendix.md) | [Bibliografia](bibliografia.md)
