@@ -1,0 +1,13 @@
+[package]
+name = "wed-dev-rust-book"
+version = "0.1.0"
+authors = ["Julia Naomi <jnboeira@outlook.com>"]
+description = "Livro sobre desenvolvimento web em Rust"
+readme = "README.md"
+documentation = "https://github.com/naomijub/web-dev-rust-book/README.md"
+repository = "https://github.com/naomijub/web-dev-rust-book"
+keywords = ["web dev", "rust", "backend", "frontend", "graphql", "rest", "yew", "book"]
+license = "MIT"
+edition = "2018"
+
+[dependencies]
