@@ -1,0 +1,534 @@
+<!DOCTYPE HTML>
+<html lang="pt" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Configurando os primeiros endpoints - Desenvolvimento Web em Rust</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../intro/1-about.html">Sobre autora</a></li><li class="chapter-item expanded affix "><a href="../intro/2-Audience.html">Público alvo</a></li><li class="chapter-item expanded affix "><a href="../intro/3-book.html">Como o livro está organizado</a></li><li class="chapter-item expanded affix "><a href="../intro/4-setup.html">Instalando Rust</a></li><li class="chapter-item expanded affix "><a href="../intro/5-exercício.html">Exercício Maior Produto de uma Série</a></li><li class="chapter-item expanded affix "><a href="../part-1/00-capa.html">Parte 1</a></li><li class="chapter-item expanded "><a href="../part-1/01-ping-pong.html" class="active"><strong aria-hidden="true">1.</strong> Configurando os primeiros endpoints</a></li><li class="chapter-item expanded "><a href="../part-1/02-create.html"><strong aria-hidden="true">2.</strong> Criando Tarefas</a></li><li class="chapter-item expanded "><a href="../part-1/03-get.html"><strong aria-hidden="true">3.</strong> Obtendo todas as Todo Cards inseridas</a></li><li class="chapter-item expanded "><a href="../part-1/04-serving.html"><strong aria-hidden="true">4.</strong> Tornam nosso serviço mais realístico</a></li><li class="chapter-item expanded "><a href="../part-1/05-auth.html"><strong aria-hidden="true">5.</strong> Autenticação</a></li><li class="chapter-item expanded "><a href="../part-1/06-middleware.html"><strong aria-hidden="true">6.</strong> Exigindo Autenticação através de middlewares</a></li><li class="chapter-item expanded "><a href="../part-1/07-ci.html"><strong aria-hidden="true">7.</strong> Configurando um CI</a></li><li class="chapter-item expanded "><a href="../part-1/08-conclusao.html"><strong aria-hidden="true">8.</strong> Concluindo o serviço</a></li><li class="chapter-item expanded affix "><a href="../https://github.com/naomijub/web-dev-rust-book/blob/master/book.html">Topo</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Desenvolvimento Web em Rust</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p><a href="00-capa.html">Anterior</a> | <a href="https://github.com/naomijub/web-dev-rust-book/blob/master/book.md">Topo</a> | <a href="02-create.html">Próximo</a></p>
+<h1 id="configurando-os-primeiros-endpoints"><a class="header" href="#configurando-os-primeiros-endpoints">Configurando os primeiros endpoints</a></h1>
+<p>O nosso objetivo inicial é fazer nosso servidor responder <code>pong</code> na rota <code>/ping</code> e executar uma função de baixo custo na rota <code>/~/ready</code> retornando 200 ou algum valor de status superior a 400, bastante simples. O objetivo disso é definir em nosso servidor endpoints que respondam se o servidor está disponível e saudável, <code>/ping</code>, assim como responder se esta pronto para executar mais uma operação, <code>/~/ready</code>. Para isso, precisamos criar nosso <code>todo-server</code> com o cargo rodando o comando <code>cargo new todo-server --bin</code>, que irá gerar os arquivos a seguir:</p>
+<ol>
+<li>todo-server/src/main.rs</li>
+<li>todo-server/Cargo.lock </li>
+<li>todo-server/Cargo.toml</li>
+</ol>
+<p>O arquivo <code>main.rs</code> é bastante simples, pois possui somente uma linha executando uma impressão no console de <code>&quot;Hello, world!&quot;</code> da seguinte forma:</p>
+<pre><pre class="playground"><code class="language-rust">fn main() {
+    println!(&quot;Hello, world!&quot;);
+}
+</code></pre></pre>
+<p>Já o arquivo <code>Cargo.toml</code> possui todas as informações sobre o binário gerado:</p>
+<pre><code class="language-toml">[package]
+name = &quot;todo-server&quot;
+version = &quot;0.1.0&quot;
+authors = [&quot;Julia Naomi @naomijub&quot;]
+edition = &quot;2018&quot;
+
+[dependencies]
+</code></pre>
+<p>Já o arquivo <code>Cargo.lock</code> corresponde às configurações geradas para o <code>Cargo.toml</code> com o registro de versões de dependências, assim como o <code>package-lock.json</code> no Node.</p>
+<h2 id="adicionando-actix"><a class="header" href="#adicionando-actix">Adicionando Actix</a></h2>
+<p>Nossa principal dependência é o <code>Actix</code>, assim precisamos adicionar a dependência <code>actix-web = &quot;2.0&quot;</code> à seção <code>[dependencies]</code> do <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[package]
+name = &quot;todo-server&quot;
+version = &quot;0.1.0&quot;
+authors = [&quot;Julia Naomi @naomijub&quot;]
+edition = &quot;2018&quot;
+
+[dependencies]
+actix-web = &quot;2.0&quot;
+</code></pre>
+<h3 id="implementando-o-endpoint-ping"><a class="header" href="#implementando-o-endpoint-ping">Implementando o endpoint <code>/ping</code></a></h3>
+<p>Este endpoint é comum a muitos serviços, mas em alguns casos é chamado de <code>/healthy</code>, <code>/healthcheck</code> ou <code>/~/healthy</code>, digamos que seja um exemplo com aplicações práticas de um <code>hello world</code>. Neste primeiro momento vamos apresentar primeiro a implementção do <code>/ping</code> e depois explicar, pois acredito que neste caso seja importante ter visão do todo antes de entrar nos detalhes. Assim, uma implementação bem simples de <code>/ping</code> seria:</p>
+<pre><pre class="playground"><code class="language-rust">use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+
+async fn pong() -&gt; impl Responder {
+   HttpResponse::Ok().body(&quot;pong&quot;)
+}
+
+#[actix_rt::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+   HttpServer::new(|| {
+       App::new().service(
+           web::scope(&quot;/&quot;)
+               .route(&quot;ping&quot;, web::get().to(pong))
+               .route(&quot;&quot;, web::get().to(|| HttpResponse::NotFound())),
+       )
+   })
+   .workers(6)
+   .bind(&quot;127.0.0.1:4000&quot;)
+   .unwrap()
+   .run()
+   .await
+}
+</code></pre></pre>
+<p>E seu funcionamento seria:</p>
+<p><img src="imagens/pingpong.png" alt="Endpoint /ping" /></p>
+<p><img src="imagens/notfound.png" alt="Endpoint Not Found para a rota /" /></p>
+<p>Agora podemos começar a descrever o endpoint <code>/ping</code>: </p>
+<ol>
+<li>A primeira coisa que vemos é a diretiva <code>use</code> associada a lib <code>actix_web</code>. Essa dirtiva nos permite disponibilizar no nosso código as funções e estruturas de <code>actix_web</code> para uso posterior, assim a diretiva <code>use actix_web::HttpServer</code> disponibilizaria a estrutura <code>HttpServer</code> para usarmos. </li>
+<li>Depois vemos a função <code>async fn pong() -&gt; impl Responder</code>. Essa função é uma função assíncrona, devido as palavras reservadas <code>async fn</code>, cujo nome é <code>pong</code>, recebe nenhum argumento <code>()</code> e como tipo de resposta implementa a trait <code>Responder</code>, que tem como tipo de retorno <code>Future&lt;Output = Result&lt;Response, Self::Error&gt;&gt;</code>. A resposta de <code>pong</code> é um status code <code>Ok()</code> com um <code>body(&quot;pong&quot;)</code>, porém seria possível também implementar com a função <code>with_status</code> da trait <code>Responder</code>, ficando <code>&quot;pong&quot;.with_status(StatusCode::NotFound)</code>, que seria classificado como um <code>CustomResponder</code>, ou um <code>Responder</code> customizado.</li>
+<li>a seguir encontramos a macro <code>#[actix_rt::main]</code>, essa macro exige adicionarmos uma nova dependência ao <code>Cargo.toml</code>, <code>actix-rt = &quot;1.0&quot;</code>. A função dessa macro é executar qualquer função marcada como <code>async</code> no runtime de actix.</li>
+<li>Agora temos a função de execução <code>main</code> como <code>async fn main() -&gt; std::io::Result&lt;()&gt; </code>. É principalmente aqui que entra a macro <code>#[actix_rt::main]</code>, já que ela nos permite utilizar a função <code>main</code> como <code>async</code>. Assim, essa função <code>main</code> é basicamente um código padrão para conformar com a macro.</li>
+<li>A linha <code>HttpServer::new(|| {..})</code> permite criar um servidor HTTP com uma <code>application factory</code>, assim como permite configurar a instância do servidor, como <code>workers</code> e <code>bind</code>, que veremos a seguir.</li>
+<li>Assim, a linha <code>App::new().service(..)</code> é um <code>application builder</code> baseado no padrão <em>builder</em> para o <code>App</code>, que é uma struct correspondente a aplicação do actix-web, seu objetivo é configurar rotas e settings padrões. A função <code>service</code> registra um serviço no servidor, já a função <code>web::scope(&quot;/&quot;)</code> define um escopo comum para as rotas a seguir, e o <code>route</code> define as rotas.</li>
+<li>Quanto a rota, <code>.route(&quot;/ping&quot;, web::get().to(pong))</code>, primeiro deve se passar uma <code>&amp;str</code> com a rota a partir do escopo comum, depois um método de chamada HTTP como <code>GET</code> e <code>POST</code>, representados por <code>web::get()</code> e <code>web::post()</code> e uma função de envio do request como <code>.to(pong)</code>.</li>
+<li>O módulo <code>web</code> possui uma série de funções auxiliares e e tipos auxiliares para o actix-web.</li>
+<li>Depois disso, vemos <code>workers(6)</code>, uma função de <code>HttpServer</code> que define a quantidade de threads trabalhadoras que estarão envolvidas nesse executável. Por padrão, o valor de <code>workers</code> é a quantidade de CPUs lógicas disponíveis.</li>
+<li>Agora temos o <code>bind</code>, que recebe o IP e a porta a qual esse servidor se conectará.</li>
+<li><code>run</code> e <code>await</code> para executar o serviço e esperar pelo <code>async</code> definido anteriormente.</li>
+</ol>
+<p>É importante também implementarmos um teste para <code>NOT_FOUND</code>. Esse teste consiste em um request para uma rota que não existe e um status <code>NOT_FOUND</code>: </p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[actix_rt::test]
+    async fn not_found_route() {
+        let mut app = test::init_service(
+            App::new().service(
+            web::scope(&quot;/&quot;)
+                .route(&quot;ping&quot;, web::get().to(pong))
+                .route(&quot;&quot;, web::get().to(|| HttpResponse::NotFound())),
+            )
+        ).await;
+
+        let req = test::TestRequest::get()
+            .uri(&quot;/crazy-route&quot;)
+            .to_request();
+
+        let resp = app.call(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::NOT_FOUND);
+    }
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="implementando-o-endpoint-ready"><a class="header" href="#implementando-o-endpoint-ready">Implementando o endpoint /~/ready</a></h3>
+<p>Este endpoint é comum especialmente em serviços kubernetes e sua execução é via <code>kubectl</code>. Usualmente o <code>kubectl</code> espera que o processo ocorra via HTTP, TCP-gRPC ou uma execução de comando no contêiner. Para um contexto simples de contêineres, ter esse endpoint permite um monitoramento mais elevado de serviços, como os <em>Golden Signals</em> (sinais dourados apresentados pelo Google no livro Engenharia de Confiabilidade de Sites). Assim, ele permite um pouco mais de informações além de saber se o servidor está vivo (<code>/ping</code>), já que verifica se o serviço é capaz de realizar um pequeno processo. Outros endpoints comuns para esse tipo de prova são <code>/readiness</code> ou <code>/~/readiness</code>. O nosso endpoint vai executar um simples <code>$ echo hello</code> e retornar <code>accepted</code> para um resultado <code>Ok</code> e <code>internal server error</code> para um resultado <code>Err</code>. </p>
+<p>O primeiro passo para essa prova é definir a rota que vamos chamar, no caso <code>/~/ready</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>App::new().service(
+  web::scope(&quot;/&quot;)
+    .route(&quot;ping&quot;, web::get().to(pong))
+    .route(&quot;~/ready&quot;, web::get().to(readiness))
+    .route(&quot;&quot;, web::get().to(|| HttpResponse::NotFound())),
+)
+<span class="boring">}
+</span></code></pre></pre>
+<p>Note que o endpoint está implementado como rota, mas não como função de <code>Responder</code>, que chamamos de <code>readiness</code>. Para implementarmos esse <code>Responder</code>, podemos usar a seguinte função:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn readiness() -&gt; impl Responder {
+    let process = std::process::Command::new(&quot;sh&quot;)
+            .arg(&quot;-c&quot;)
+            .arg(&quot;echo hello&quot;)
+            .output();
+
+    match process {
+        Ok(_) =&gt; HttpResponse::Accepted(),
+        Err(_) =&gt; HttpResponse::InternalServerError(),
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Note que criamos um valor chamado <code>process</code> que é um comando executado pela crate de <code>OS</code> <code>std::process::Command</code>. Para o <code>readiness</code> o comando que estamos executando é <code>sh -c echo hello</code>, que imprime <code>hello</code> no console. Depois disso fazemos pattern matching do resultado e se for <code>Ok</code> retornamos um <code>2XX</code> ou retornamos <code>500</code> para um <code>Err</code>.</p>
+<h3 id="refatorando"><a class="header" href="#refatorando">Refatorando</a></h3>
+<p>Agora que nosso código está funcionando podemos começar a pensar em organizá-lo, já que nosso arquivo <code>main</code> está com muitas funções. A ideia é seguir o padrão do framework Phoenix do Elixir, assim vamos separar o código em  3 conjuntos:</p>
+<ol>
+<li><code>main.rs</code>, que contém todas as informações de configuração do servidor, ou seja, a própria instância do servidor.</li>
+<li><code>todo_api</code>, que contém todos os módulos responsáveis por lógica e banco de dados.</li>
+<li><code>todo_api_web</code>, que contém todos os módulos responsáveis pelo gerenciamento do conteúdo web, como views e controllers, no nosso caso somente controllers.</li>
+</ol>
+<p>Assim, nossa primeira refatoração seria mover as funcões que implementam a trait <code>Responder</code> para um módulo de controller, <code>src/todo_api/controller/mod.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use actix_web::{HttpResponse, Responder};
+
+pub async fn pong() -&gt; impl Responder {
+    HttpResponse::Ok().body(&quot;pong&quot;)
+}
+
+pub async fn readiness() -&gt; impl Responder {
+    let process = std::process::Command::new(&quot;sh&quot;)
+            .arg(&quot;-c&quot;)
+            .arg(&quot;echo hello&quot;)
+            .output();
+
+    match process {
+        Ok(_) =&gt; HttpResponse::Accepted(),
+        Err(_) =&gt; HttpResponse::InternalServerError(),
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Além disso, nosso arquivo <code>main.rs</code> agora consome nosso módulo:</p>
+<pre><pre class="playground"><code class="language-rust">use actix_web::{web, App, HttpResponse, HttpServer};
+
+mod todo_api_web;
+
+use todo_api_web::controller::{pong, readiness};
+
+#[actix_rt::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+    HttpServer::new(|| {
+        App::new().service(
+            web::scope(&quot;/&quot;)
+                .route(&quot;ping&quot;, web::get().to(pong))
+                .route(&quot;~/ready&quot;, web::get().to(readiness))
+                .route(&quot;&quot;, web::get().to(|| HttpResponse::NotFound())),
+        )
+    })
+    .workers(6)
+    .bind(&quot;127.0.0.1:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+</code></pre></pre>
+<p>Note a presença do módulo <code>todo_api_web</code> declarado como <code>mod todo_api_web;</code> e importando as funções <code>pong</code> e <code>readiness</code> através de <code>use todo_api_web::controller::{pong, readiness};</code>. Além disso, na imagem a seguir podemos perceber a presença de um arquivo <code>lib.rs</code> no sistema de arquivos, esse arquivo serve para podermos exportar nossos módulos internos para testes de integração. Assim, atualmente o único módulo declarado em <code>lib.rs</code> é <code>pub mod todo_api_web;</code>.</p>
+<p><img src="imagens/basicfilesystem.png" alt="Sistema de arquivos após a refatoração" /></p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>//src/todo_web_api/mod.rs
+pub mod controller;
+<span class="boring">}
+</span></code></pre></pre>
+<p>Outro ponto que creio ser interessante rafatorar é dar a capacidade de nosso servidor adaptar o número de <code>workers</code> a quantidade de cores lógicos que a máquina hospedeira possui. Por exemplo, minha máquina pessoal possui 4 cores lógicos e decidi usar uma estratégia de leve estresse aos cores que geralmente se resume a <code>número de cores lógicos + 2</code>, ela se torna uma opção segura pelo fato de estarmos utilizando <code>async</code> no nosso serviço, ou seja, defini 6 <code>workers</code>, mas se meu computador possuísse 8 cores lógicos, eu poderia estar utilizando 10 <code>workers</code>. Para resolver este problema podemos utilizar uma lib conhecida como <code>num_cpus</code>, basta adicionar ela ao <code>[dependencies]</code> do Cargo.toml <code>num_cpus = &quot;1.0&quot;</code> e substituir em nosso código da seguinte maneira:</p>
+<pre><pre class="playground"><code class="language-rust">async fn main() -&gt; std::io::Result&lt;()&gt; {
+    HttpServer::new(|| {
+        App::new().service(
+            web::scope(&quot;/&quot;)
+                .route(&quot;ping&quot;, web::get().to(pong))
+                .route(&quot;~/ready&quot;, web::get().to(readiness))
+                .route(&quot;&quot;, web::get().to(|| HttpResponse::NotFound())),
+        )
+    })
+    .workers(num_cpus::get() + 2)
+    .bind(&quot;127.0.0.1:4000&quot;)
+    .unwrap()
+    .run()
+    .await
+}
+</code></pre></pre>
+<h2 id="testando-os-endpoints"><a class="header" href="#testando-os-endpoints">Testando os endpoints</a></h2>
+<p>Uma coisa importante antes de continuarmos é criarmos testes para os endpoints implementados, especialmente agora que já aprendemos como funciona o a criação de rotas e controllers. No caso de rotas e controllers é mais eficiente começar com testes de integração, inclusive por já termos implementado as rotas anteriormente. Assim, precisamos criar alguns arquivos para executar nossos testes de integração. O primeiro arquivo que precisamos é o arquivo <code>lib</code> dentrod e <code>tests</code>, <code>tests/lib.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>extern crate todo_server;
+
+mod todo_api_web;
+<span class="boring">}
+</span></code></pre></pre>
+<p>Além disso, agora precisamos criar o módulo <code>todo_api_web</code> com um módulo interno <code>controller</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// tests/todo_api_web/mod.rs
+mod controller;
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora podemos começar a criar os testes de controller no arquivo <code>tests/todo_api_web/controller.rs</code>. O primeiro teste que vamos escrever é a verificação se o conteúdo de texto da rota <code>/ping</code> é <code>pong</code>. Para isso, precisamos utilizar um módulo de suporte para testes do actix chamado <code>actix_web::test</code> e incorporar como <code>[dev-dependencies]</code> duas libs que nos apoiarão no uso de testes, a <code>bytes = &quot;0.5.3&quot;</code> para processar os bytes da resposta gerada no endpoint, e a <code>actix-service = &quot;1.0.5&quot;</code>, que apoia nos testes para chamar um mock de <code>App</code> do actix na rota desejada. Sugiro isolar os testes dos controllers <code>pong</code> e <code>readiness</code> em um módulo conforme a seguir:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>mod ping_readiness {
+    use todo_server::todo_api_web::controller::{pong, readiness};
+
+    use bytes::Bytes;
+    use actix_web::{
+        test, web, App,
+    };
+
+    #[actix_rt::test]
+    async fn test_ping_pong() {
+        let mut app = test::init_service(
+            App::new().service(
+                web::resource(&quot;/ping&quot;)
+                .route(web::get().to(pong))
+            )
+        ).await;
+
+        let req = test::TestRequest::get()
+            .uri(&quot;/ping&quot;)
+            .to_request();
+        let resp = test::read_response(&amp;mut app, req).await;
+
+        assert_eq!(resp, Bytes::from_static(b&quot;pong&quot;));
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>O teste apresentado possui uma macro de teste diferente do usual no Rust. Em vez de ser <code>#[test]</code>, utilizamos uma macro de teste que disponibiliza o runtime de actix com <code>#[actix_rt::test]</code>. Além disso, note que agora nossa função de teste passa a ser <code>async</code> e utilizamos vários <code>await</code> dentro do teste.</p>
+<p>Agora vamos explicar as partes do teste: <code>test::init_service</code> disponibiliza um mock de serviço do Actix que recebe como argumento um tipo <code>App</code> com a rota, <code>web::resource(&quot;/ping&quot;)</code>, e designa a essa rota um controller, <code>.route(web::get().to(pong))</code>. Além disso, criamos uma instância de <code>Request</code> para teste com <code>test::TestRequest</code> utilizando o método <code>get()</code> na <code>uri(&quot;/ping&quot;)</code>. Depois disso, a <code>resp</code> corresponde a ler a resposta que esse serviço <code>app</code> daria para o <code>Request</code> <code>req</code>. Como a resposta de <code>read_response</code> são <code>bytes</code>, precisamos da biblioteca <code>byte</code> para converter o array de <code>u8</code>, <code>b&quot;pong&quot;</code>, em <code>bytes</code> e fazer a comparação de igualdade.</p>
+<p>Com o teste de <code>pong</code> implementado, podemos criar o teste de <code>readiness</code>. No teste de <code>readiness</code> não nos interessa saber o corpo da resposta, assim a sugestão é somente saber se a execução retornou um status <code>Accepted</code>. Para esse teste, vamos utilizar o recurso da crate <code>actix-service</code>, que nos possibilita fazer chamadas a um serviço através de <code>&lt;App&gt;.call(&lt;Request&gt;).await</code>. Assim podemos utilizar o <code>call</code> para retornar uma response, na qual podemos acessar o <code>status()</code>. O bloco de testes fica assim:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>mod ping_readiness {
+    use todo_server::todo_api_web::controller::{pong, readiness};
+
+    use bytes::Bytes;
+    use actix_web::{
+        test, web, App,
+        http::StatusCode,
+    };
+    use actix_service::Service;
+
+    #[actix_rt::test]
+    async fn test_ping_pong() {
+        // ...
+    }
+
+    #[actix_rt::test]
+    async fn test_readiness_ok() {
+        let mut app = test::init_service(
+            App::new()
+                .service(web::resource(&quot;/readiness&quot;).to(readiness))
+        ).await;
+    
+        let req = test::TestRequest::with_uri(&quot;/readiness&quot;).to_request();
+    
+        let resp = app.call(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::ACCEPTED);
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com tudo testado, o próximo passo é configurar nosso serviço para criar uma tarefa todo.</p>
+<ul>
+<li>O código deste capítulo está na bibliografia e solicitações de mudança serão bem vindas para manter o código exemplo atualizado.</li>
+</ul>
+<p><a href="00-capa.html">Anterior</a> | <a href="https://github.com/naomijub/web-dev-rust-book/blob/master/book.md">Topo</a> | <a href="02-create.html">Próximo</a></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../part-1/00-capa.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../part-1/02-create.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../part-1/00-capa.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../part-1/02-create.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

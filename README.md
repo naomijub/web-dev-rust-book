@@ -7,7 +7,7 @@ Autora: Julia Naomi Boeira
 [![](https://media.giphy.com/media/FOe2EcTuBYGbG0Yc3w/giphy.gif)](https://www.patreon.com/naomijub) <br/>
 [Patreon link](https://www.patreon.com/naomijub)
 <!-- -->
-[Livro](./SUMMARY.md)
+[Livro](./src/SUMMARY.md)
 
 ## Revisando
 * Se você encontrou um typo, erro de português ou tem uma solução de melhora da didática do texto, PRs são bem vindos. Indique o capítulo e a linha da correção.
