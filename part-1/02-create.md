@@ -88,14 +88,9 @@ Assim, podemos escrever nosso teste sem conflito de dependências em `tests/todo
 
 ```rust
 mod create_todo {
-    use todo_server::todo_api_web::{
-        controller::todo::create_todo,
-        model::TodoIdResponse,
-    };
+    use todo_server::todo_api_web::{controller::todo::create_todo, model::todo::TodoIdResponse};
 
-    use actix_web::{
-        test, web, App,
-    };
+    use actix_web::{http::header::CONTENT_TYPE, test, web, App, body};
     use serde_json::from_str;
 
     fn post_todo() -> String {
@@ -119,29 +114,24 @@ mod create_todo {
                     }
                 ],
                 \"state\": \"Doing\"
-            }"
+            }",
         )
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn valid_todo_post() {
-        let mut app = test::init_service(
-            App::new()
-                .service(
-                    web::resource("/api/create")
-                    .route(web::post().to(create_todo))
-            )
-        ).await;
-    
+        let mut app = test::init_service(App::new().service(create_todo)).await;
+
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
+            .insert_header((CONTENT_TYPE, "application/json"))
             .set_payload(post_todo().as_bytes().to_owned())
             .to_request();
 
-        let resp = test::read_response(&mut app, req).await;
-
-        let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
@@ -164,22 +154,18 @@ A seguir possuímos a definição do teste e o uso do runtime do actix, seguidos
 
 ```rust
 //definição do teste
-#[actix_rt::test]
-async fn valid_todo_post()
+#[actix_web::test]
+async fn valid_todo_post() {
 ```
 
 ```rust
 // Definição do App
 let mut app = test::init_service(
-    App::new()
-        .service(
-            web::resource("/api/create")
-            .route(web::post().to(create_todo))
-    )
+    App::new().service(create_todo)
 ).await;
 ```
 
-Note duas mudanças na definição do `App`: nossa rota possui um padrão diferente `/api/create` e o controller `create_todo` está sendo passado para um método `post()`. Outro detalhe é que estamos utilizando mais recursos na criação do request:
+Note duas mudanças na definição do `App`: nossa rota possui um padrão diferente `/api/create` e o controller `create_todo` está sendo passado para um método `service()`. Outro detalhe é que estamos utilizando mais recursos na criação do request:
 
 ```rust
 let req = test::TestRequest::post()
@@ -191,7 +177,7 @@ let req = test::TestRequest::post()
 
 Veja que `TestRequest` agora instancia um tipo `POST` antes de adicionar informações ao seu builder, `TestRequest::post()`. As duas outras mudanças são a adição das funções `header` e `set_payload`, `.header("Content-Type", "application/json").set_payload(post_todo().as_bytes().to_owned())`. `header` define o tipo de conteúdo que estamos enviando e sua ausência nesse caso pode implicar em uma resposta com o status `400`. `set_payload` recebe um array de bytes com o conteúdo do `payload`, ou seja `post_todo`.
 
-Depois podemos ler a resposta normalmente, `let resp = test::read_response(&mut app, req).await;`, e transformar essa resposta em uma struct conhecida pelo serviço, `let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();`. O último passo é garantir que a resposta contendo o `TodoIdResponse` seja de fato um id válido e para isso utilizamos a macro `assert!` em `assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());`. Note a função auxiliar `get_id`, se nosso teste estivesse dentro do nosso módulo em vez de na pasta de testes de integração, seria possível anotar ela com `#[cfg(test)]` e economizar espaço no executável e tempo de compilação. Eu optei por deixá-la visível e testar o controller nos testes de integração, mas a escolha é sua:
+Depois podemos ler a resposta normalmente, `let resp = test::call_service(&mut app, req).await;`, obter o body da response em bytes `let body = resp.into_body();let bytes = body::to_bytes(body).await.unwrap();` e transformar essa resposta em uma struct conhecida pelo serviço, `from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();`. O último passo é garantir que a resposta contendo o `TodoIdResponse` seja de fato um id válido e para isso utilizamos a macro `assert!` em `assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());`. Note a função auxiliar `get_id`, se nosso teste estivesse dentro do nosso módulo em vez de na pasta de testes de integração, seria possível anotar ela com `#[cfg(test)]` e economizar espaço no executável e tempo de compilação. Eu optei por deixá-la visível e testar o controller nos testes de integração, mas a escolha é sua:
 
 ```rust
 impl TodoIdResponse {
@@ -256,34 +242,30 @@ impl TodoIdResponse {
 Para o item 1, `create_todo` controller, devemos novamente criar uma função `async`, que tem como tipo de resposta uma implementação da trait `Responder`, a `impl Responder`, como fizemos com `pong` e `readiness`:
 
 ```rust
-// src/todo_api_web/conytoller/todo.rs
-use actix_web::{HttpResponse, web, Responder};
+// src/todo_api_web/controller/todo.rs
+use crate::todo_api_web::model::todo::TodoIdResponse;
+use actix_web::{ http::header::ContentType, post, web, HttpResponse, Responder};
 use uuid::Uuid;
-use crate::todo_api_web::model::{TodoCard, TodoIdResponse};
 
-pub async fn create_todo(_info: web::Json<TodoCard>) -> impl Responder {
+#[post("/api/create")]
+pub async fn create_todo(_payload: web::Payload) -> impl Responder {
     let new_id = Uuid::new_v4();
+    let str = serde_json::to_string(&TodoIdResponse::new(new_id)).unwrap();
     HttpResponse::Created()
-        .content_type("application/json")
-        .body(serde_json::to_string(&TodoIdResponse::new(new_id)).expect("failed to serialize ContactsBatchResponseId")
-    )
+        .content_type(ContentType::json())
+        .body(str)
 }
 ```
 
-As primeiras coisas que podemos perceber são a create de `Uuid` para gerar novos `uuids` com `Uuid::new_v4()`, e os tipos de entrada e de saída, `TodoCard, TodoIdResponse`, respectivamente. O actix possui uma forma interna de desserializar objetos JSON que é definido no módulo `web` com `web::Json<T>` e é em `T` que vamos incluir nossa struct `TodoCard`. Veja que o tipo de retorno `TodoIdResponse` está sendo serializado pelo `serde_json` e retornado ao `body`. Caso algo dê errado, obteremos um erro do tipo `"failed to serialize ContactsBatchResponseId"`. Note também que adicionamos o header `Content-type` através da função `content_type("application/json")`. Assim já seria suficiente para nosso teste passar, mas se quisermos testar essa rota com um `curl` é preciso adicionar ao `App` de `main.rs`:
+As primeiras coisas que podemos perceber são a create de `Uuid` para gerar novos `uuids` com `Uuid::new_v4()`, e os tipos de entrada e de saída, `TodoCard, TodoIdResponse`, respectivamente. O actix possui uma forma interna de desserializar objetos JSON que é definido no módulo `web` com `web::Json<T>` e é em `T` que vamos incluir nossa struct `TodoCard`. Veja que o tipo de retorno `TodoIdResponse` está sendo serializado pelo `serde_json` e retornado ao `body`. Note também que adicionamos o header `Content-type` através da função `.content_type(ContentType::json())`. Assim já seria suficiente para nosso teste passar, mas se quisermos testar essa rota com um `curl` é preciso adicionar ao `App` de `main.rs`:
 
 ```rust
 HttpServer::new(|| {
-    App::new().service(
-        web::scope("/")
-            .service(
-                web::scope("api/")
-                    .route("create", web::post().to(create_todo))
-            )
-            .route("ping", web::get().to(pong))
-            .route("~/ready", web::get().to(readiness))
-            .route("", web::get().to(|| HttpResponse::NotFound())),
-    )
+    App::new()
+        .service(readiness)
+        .service(ping)
+        .service(create_todo)
+        .default_service(web::to(|| HttpResponse::NotFound()))
 })
 ```
 
