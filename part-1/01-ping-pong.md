@@ -170,7 +170,6 @@ pub async fn readiness() -> impl Responder {
 pub async fn ping() -> impl Responder {
     HttpResponse::Ok().body("pong")
 }
-
 ```
 
 Além disso, nosso arquivo `main.rs` agora consome nosso módulo:
