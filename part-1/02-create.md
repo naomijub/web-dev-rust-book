@@ -177,6 +177,13 @@ let req = test::TestRequest::post()
 
 Veja que `TestRequest` agora instancia um tipo `POST` antes de adicionar informações ao seu builder, `TestRequest::post()`. As duas outras mudanças são a adição das funções `header` e `set_payload`, `.header("Content-Type", "application/json").set_payload(post_todo().as_bytes().to_owned())`. `header` define o tipo de conteúdo que estamos enviando e sua ausência nesse caso pode implicar em uma resposta com o status `400`. `set_payload` recebe um array de bytes com o conteúdo do `payload`, ou seja `post_todo`.
 
+```rust
+let resp = test::call_service(&mut app, req).await;
+    let body = resp.into_body();
+    let bytes = body::to_bytes(body).await.unwrap();
+    let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
+    assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
+```
 Depois podemos ler a resposta normalmente, `let resp = test::call_service(&mut app, req).await;`, obter o body da response em bytes `let body = resp.into_body();let bytes = body::to_bytes(body).await.unwrap();` e transformar essa resposta em uma struct conhecida pelo serviço, `from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();`. O último passo é garantir que a resposta contendo o `TodoIdResponse` seja de fato um id válido e para isso utilizamos a macro `assert!` em `assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());`. Note a função auxiliar `get_id`, se nosso teste estivesse dentro do nosso módulo em vez de na pasta de testes de integração, seria possível anotar ela com `#[cfg(test)]` e economizar espaço no executável e tempo de compilação. Eu optei por deixá-la visível e testar o controller nos testes de integração, mas a escolha é sua:
 
 ```rust
@@ -298,23 +305,19 @@ Basicamente estamos extraindo todas as rotas para uma nova função que alterar�
 
 ```rust
 // main.rs
-#[macro_use] extern crate serde;
+mod todo_api_web;
+use todo_api_web::routes::app_routes;
 
 use actix_web::{App, HttpServer};
+use num_cpus;
 
-mod todo_api_web;
-
-use todo_api_web::{
-    routes::app_routes
-};
-
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        App::new().configure(app_routes)
+        App::new().configure(app_routes) 
     })
     .workers(num_cpus::get() + 2)
-    .bind("127.0.0.1:4000")
+    .bind(("localhost", 4004))
     .unwrap()
     .run()
     .await
@@ -327,52 +330,34 @@ Agora podemos fazer a mesma refatoração nos testes, `tests/todo_api_web/contro
 mod ping_readiness {
     use todo_server::todo_api_web::routes::app_routes;
 
-    use bytes::Bytes;
-    use actix_web::{
-        test, App,
-        http::StatusCode,
-    };
-    use actix_service::Service;
+    use actix_web::{body, http::StatusCode, test, web, App};
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_ping_pong() {
-        let mut app = test::init_service(
-            App::new().configure(
-                app_routes
-            )
-        ).await;
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
 
-        let req = test::TestRequest::get()
-            .uri("/ping")
-            .to_request();
-        let resp = test::read_response(&mut app, req).await;
+        let req = test::TestRequest::get().uri("/ping").to_request();
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
 
-        assert_eq!(resp, Bytes::from_static(b"pong"));
+        assert_eq!(bytes, web::Bytes::from_static(b"pong"));
     }
 
-    #[actix_rt::test]
-    async fn test_readiness_ok() {
-        let mut app = test::init_service(
-            App::new()
-                .configure(app_routes)
-        ).await;
-    
-        let req = test::TestRequest::with_uri("/readiness").to_request();
-    
-        let resp = app.call(req).await.unwrap();
+    #[actix_web::test]
+    async fn test_readiness() {
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let req = test::TestRequest::get().uri("/~/ready").to_request();
+        let resp = test::call_service(&mut app, req).await;
+
         assert_eq!(resp.status(), StatusCode::ACCEPTED);
     }
 }
 
 mod create_todo {
-    use todo_server::todo_api_web::{
-        model::TodoIdResponse,
-        routes::app_routes
-    };
+    use todo_server::todo_api_web::{controller::todo::create_todo, model::todo::TodoIdResponse};
 
-    use actix_web::{
-        test, App,
-    };
+    use actix_web::{body, http::header::CONTENT_TYPE, test, web, App};
     use serde_json::from_str;
 
     fn post_todo() -> String {
@@ -396,45 +381,43 @@ mod create_todo {
                     }
                 ],
                 \"state\": \"Doing\"
-            }"
+            }",
         )
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn valid_todo_post() {
-        let mut app = test::init_service(
-            App::new()
-                .configure(app_routes)
-        ).await;
-    
+        let mut app = test::init_service(App::new().service(create_todo)).await;
+
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
+            .insert_header((CONTENT_TYPE, "application/json"))
             .set_payload(post_todo().as_bytes().to_owned())
             .to_request();
 
-        let resp = test::read_response(&mut app, req).await;
-
-        let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
+
 ```
 
 Com estas alterações podemos perceber que um teste falha ao executarmos `cargo test`, esse é o teste `test todo_api_web::controller::ping_readiness::test_readiness_ok`, que falha com um `404`. Isso se deve ao fato de que a rota que estamos enviando o request de `readiness` estava errada esse tempo todo, pois escrevemos `/readiness`, enquanto a rota real é `/~/ready`:
 
 ```rust
-#[actix_rt::test]
-async fn test_readiness_ok() {
-    let mut app = test::init_service(
-        App::new()
-            .configure(app_routes)
-    ).await;
-
-    let req = test::TestRequest::with_uri("/~/ready").to_request();
-
-    let resp = app.call(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::ACCEPTED);
+#[get("/~/ready")]
+pub async fn readiness() -> impl Responder {
+    let process = std::process::Command::new("sh")
+        .arg("-c")
+        .arg("echo hello")
+        .output();
+    match process {
+        Ok(_) => HttpResponse::Accepted(),
+        Err(_) => HttpResponse::InternalServerError(),
+    }
 }
 ```
 
