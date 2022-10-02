@@ -56,7 +56,7 @@ use actix_web::{get, Responder, HttpResponse};
 #[get("/ping")]
 pub async fn ping() -> impl Responder {
     HttpResponse::Ok().body("pong")
- }
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -84,7 +84,7 @@ Agora podemos começar a descrever o endpoint `/ping`:
 1. A primeira coisa que vemos é a diretiva `use` associada a lib `actix_web`. Essa dirtiva nos permite disponibilizar no nosso código as funções e estruturas de `actix_web` para uso posterior, assim a diretiva `use actix_web::HttpServer` disponibilizaria a estrutura `HttpServer` para usarmos. 
 2. Depois vemos a função `async fn ping() -> impl Responder`. Essa função é uma função assíncrona, devido as palavras reservadas `async fn`, cujo nome é `ping`, recebe nenhum argumento `()` e como tipo de resposta implementa a trait `Responder`, que tem como tipo de retorno `Future<Output = Result<Response, Self::Error>>`. A resposta de `ping` é um status code `Ok()` com um `body("pong")`, porém seria possível também implementar com a função `with_status` da trait `Responder`, ficando `"pong".with_status(StatusCode::NotFound)`, que seria classificado como um `CustomResponder`, ou um `Responder` customizado.
 3. a seguir encontramos a macro `#[actix_web::main]`. A função dessa macro é executar qualquer função marcada como `async` no runtime de actix.
-4. Agora temos a função de execução `main` como `async fn main() -> std::io::Result<()> `. É principalmente aqui que entra a macro `#[actix_web::main]`, já que ela nos permite utilizar a função `main` como `async` e sera o entrypoint do sistema.
+4. Agora temos a função de execução `main` como `async fn main() -> std::io::Result<()> `. Assim, essa macro gera o código necessário para que nossa função `main` esteja conforme o padrão de funções `main` do Rust.
 5. A linha `HttpServer::new(|| {..})` permite criar um servidor HTTP com uma `application factory`, assim como permite configurar a instância do servidor, como `workers` e `bind`, que veremos a seguir.
 6. Assim, a linha `App::new().service(..)` é um `application builder` baseado no padrão *builder* para o `App`, que é uma struct correspondente a aplicação do actix-web, seu objetivo é configurar rotas e settings padrões. A função `service` registra um serviço no servidor.
 7. A rota do serviço `ping` é definida pela macros `#[get("/ping")]`.
@@ -116,7 +116,7 @@ async fn not_found_route() {
 
 Este endpoint é comum especialmente em serviços kubernetes e sua execução é via `kubectl`. Usualmente o `kubectl` espera que o processo ocorra via HTTP, TCP-gRPC ou uma execução de comando no contêiner. Para um contexto simples de contêineres, ter esse endpoint permite um monitoramento mais elevado de serviços, como os *Golden Signals* (sinais dourados apresentados pelo Google no livro Engenharia de Confiabilidade de Sites). Assim, ele permite um pouco mais de informações além de saber se o servidor está vivo (`/ping`), já que verifica se o serviço é capaz de realizar um pequeno processo. Outros endpoints comuns para esse tipo de prova são `/readiness` ou `/~/readiness`. O nosso endpoint vai executar um simples `$ echo hello` e retornar `accepted` para um resultado `Ok` e `internal server error` para um resultado `Err`. 
 
-O primeiro passo para essa prova é definir a rota que vamos chamar, no caso `/ready`:
+O primeiro passo para essa prova é definir a rota que vamos chamar, no caso `/~/ready`:
 
 ```rust
 App::new()
@@ -128,7 +128,7 @@ App::new()
 Agora temos que implementar a funcao `readiness`:
 
 ```rust
-#[get("/ready")]
+#[get("/~/ready")]
 pub async fn readiness() -> impl Responder {
     let process = std::process::Command::new("sh").arg("-c").arg("echo hello").output();
     match process {
@@ -154,7 +154,7 @@ Assim, nossa primeira refatoração seria mover as funcões que implementam a tr
 ```rust
 use actix_web::{get, Responder, HttpResponse};
 
-#[get("/ready")]
+#[get("/~/ready")]
 pub async fn readiness() -> impl Responder {
     let process = std::process::Command::new("sh")
         .arg("-c")
@@ -285,7 +285,7 @@ mod ping_readiness {
     async fn test_readiness() {
         let mut app = test::init_service(App::new().service(readiness)).await;
 
-        let req = test::TestRequest::get().uri("/ready").to_request();
+        let req = test::TestRequest::get().uri("/~/ready").to_request();
         let resp = test::call_service(&mut app, req).await;
         assert_eq!(resp.status(), StatusCode::ACCEPTED);
     }
