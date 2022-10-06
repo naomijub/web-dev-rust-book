@@ -435,9 +435,9 @@ db:
 
 ### Escrevendo no banco de dados
 
-Como essa primeira feature envolve exploração, primeiro vou apresentar a lógica de como fazemos para depois escrever os testes e generalizações. O próximo passo para termos a lógica do banco de dados é criar um novo módulo em `lib.rs` (e no `main.rs`) chamado `todo_api`, que por sua vez possuirá o módulo `db`, que vai gerenciar todas as relações com o DynamoDB. Antes de seguir com o servidor em si, vou comentar a atual função `main` e substituir por outra simples, `fn main() {// ...}`, que utiliza somente o módulo `todo_api` para executar a criação de uma `TodoCard` no banco de dados, depois disso podemos conectar as partes novamente.
+Como essa primeira feature envolve exploração, primeiro vou apresentar a lógica de como fazemos para depois escrever os testes e generalizações. O próximo passo para termos a lógica do banco de dados é criar um novo módulo em `lib.rs` (e no `main.rs`) chamado `todo_api`, que por sua vez possuirá o módulo `db`, que vai gerenciar todas as relações com o DynamoDB. Antes de seguir com o servidor em si, vou comentar a atual função `main` e substituir por outra simples que sera descrita posteriormente, que utiliza somente o módulo `todo_api` para executar a criação de uma `TodoCard` no banco de dados, depois disso podemos conectar as partes novamente.
 
-Para podermos nos comunicar facilmente com o DynamoDB em Rust, existem duas bibliotecas. Uma que relaciona todos os serviços da AWS chamada `rusoto_core` e outra, a `rusoto_dynamodb`, voltada ao DynamoDB. Basta adicioná-las às dependências no `Cargo.toml`. (Atualmente a rusoto está sem novos desenvolvimentos em prol da sdk Rust da AWS que está em Beta)
+Para podermos nos comunicar facilmente com o DynamoDB em Rust, existem a biblioteca oferecida pela AWS, chamada `aws-sdk-dynamodb`. Basta adicioná-las às dependências no `Cargo.toml`. (Atualmente a sdk Rust da AWS está em Developer Preview e não deve ser usada em produção).
 
 ```toml
 [dependencies]
@@ -449,30 +449,36 @@ serde = { version = "1.0.104", features = ["derive"] }
 serde_json = "1.0.44"
 serde_derive = "1.0.104"
 num_cpus = "1.0"
-rusoto_dynamodb = "0.41.0"
-rusoto_core = "0.41.0"
+aws-config = "0.49.0"
+aws-sdk-dynamodb = "0.19.0"
 
 [dev-dependencies]
 bytes = "0.5.3"
 actix-service = "1.0.5"
 ```
 
-Com a biblioteca `rusoto_dynamodb` disponível, podemos começar a pensar em como nos comunicar com o DynamoDB. Podemos fazer isso adicionando um módulo `helpers` dentro de `todo_api/db` e criando uma função que retorna o cliente:
+Com a biblioteca `aws-sdk-dynamodb` disponível, podemos começar a pensar em como nos comunicar com o DynamoDB. Podemos fazer isso adicionando um módulo `helpers` dentro de `todo_api/db` e criando uma função que retorna o cliente:
 
-```rust
-use rusoto_core::Region;
-use rusoto_dynamodb::DynamoDbClient;
+Nota: Para utilizar o dynamodb localmente, deve ser criado um arquivo de configuracao contendo uma região e credenciais (que não precisam ser validas) da AWS em `~/.aws/config` contendo:
 
-pub fn client() -> DynamoDbClient {
-    DynamoDbClient::new(Region::Custom {
-        name: String::from("us-east-1"),
-        endpoint: String::from("http://localhost:8000"),
-    })
-}
+```code
+[profile localstack]
+region=us-east-1
+aws_access_key_id=AKIDLOCALSTACK
+aws_secret_access_key=localstacksecret
 ```
 
 Agora precisamos criar uma tabela, para nosso caso não vou utilizar uma migracão pois acredito que em um cenário real este banco de dados será configurado por outro serviço, algo mais próximo a um ambiente cloud. Assim, vamos criar a função `create_table` em `todo_api/db/helpers.rs`, que fará a configuração da tabela para nós:
 
+```rust
+#[actix_web::main]
+async fn main(){
+    create_table()
+        .await
+}
+```
+
+//TODO: OLD SNIPPET BELOW, DELETE ONCE ABOVE IS COMPLETED
 ```rust
 // ...
 use rusoto_dynamodb::{
@@ -512,14 +518,17 @@ pub fn create_table() {
 }
 ```
 
-Para testarmos esta configuração precisamos executar o comando `make db`, adicionar uma simples mudança no `main.rs` e executar `cargo run` em outro terminal:
+Para testar precisamos executar o comando `make db`. Em outro terminal, precisamos setar uma variavel de ambiente para a `aws-config` utilizar o profile `localstack` que adicionamos em `~/.aws/config`, para isso usamos `export AWS_PROFILE=localstack` (no osx ou linux) e executamos em seguida `cargo build &&cargo run`.
 
 ```rust
-// ...
+// main.rs
 use todo_api::db::helpers::create_table;
 
-fn main() {
-    create_table();
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    create_table()
+        .await
+        .map_err(|_e| std::io::Error::new(std::io::ErrorKind::Other, "Error initializing database"))
 }
 ```
 
