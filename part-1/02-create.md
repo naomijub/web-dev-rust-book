@@ -471,54 +471,61 @@ aws_secret_access_key=localstacksecret
 Agora precisamos criar uma tabela, para nosso caso não vou utilizar uma migracão pois acredito que em um cenário real este banco de dados será configurado por outro serviço, algo mais próximo a um ambiente cloud. Assim, vamos criar a função `create_table` em `todo_api/db/helpers.rs`, que fará a configuração da tabela para nós:
 
 ```rust
-#[actix_web::main]
-async fn main(){
-    create_table()
-        .await
-}
-```
-
-//TODO: OLD SNIPPET BELOW, DELETE ONCE ABOVE IS COMPLETED
-```rust
-// ...
-use rusoto_dynamodb::{
-    DynamoDb, DynamoDbClient, CreateTableInput, KeySchemaElement, 
-    AttributeDefinition, ProvisionedThroughput
+use actix_web::http::Uri;
+use aws_sdk_dynamodb::{
+    model::{
+        AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType,
+    },
+    Client, Endpoint,
 };
-// ...
+
 pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 
-pub fn create_table() {
-    let client = client();
-    let create_table_input = CreateTableInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        key_schema: vec![KeySchemaElement {
-            attribute_name: "id".into(),
-            key_type: "HASH".into(),
-        }],
-        attribute_definitions: vec![AttributeDefinition {
-            attribute_name: "id".into(),
-            attribute_type: "S".into(),
-        }],
-        provisioned_throughput: Some(ProvisionedThroughput {
-            read_capacity_units: 1,
-            write_capacity_units: 1,
-        }),
-        ..CreateTableInput::default()
-    };
+pub async fn create_table() {
+    let config = aws_config::load_from_env().await;
+    let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
+        .endpoint_resolver(
+            Endpoint::immutable(Uri::from_static("http://localhost:8000")),
+        )
+        .build();
 
-    match client.create_table(create_table_input).sync() {
-        Ok(output) =>  {
-            println!("Output: {:?}", output);
-        },
+    let client = Client::from_conf(dynamodb_local_config);
+
+    let table_name = TODO_CARD_TABLE.to_string();
+    let ad = AttributeDefinition::builder()
+        .attribute_name("id")
+        .attribute_type(ScalarAttributeType::S)
+        .build();
+
+    let ks = KeySchemaElement::builder()
+        .attribute_name("id")
+        .key_type(KeyType::Hash)
+        .build();
+
+    let pt = ProvisionedThroughput::builder()
+        .read_capacity_units(1)
+        .write_capacity_units(1)
+        .build();
+
+    match client
+        .create_table()
+        .table_name(table_name)
+        .key_schema(ks)
+        .attribute_definitions(ad)
+        .provisioned_throughput(pt)
+        .send()
+        .await
+    {
+        Ok(output) => {
+            println!("Output: {:?}", output);    
+        }
         Err(error) => {
             println!("Error: {:?}", error);
         }
     }
 }
 ```
-
-Para testar precisamos executar o comando `make db`. Em outro terminal, precisamos setar uma variavel de ambiente para a `aws-config` utilizar o profile `localstack` que adicionamos em `~/.aws/config`, para isso usamos `export AWS_PROFILE=localstack` (no osx ou linux) e executamos em seguida `cargo build &&cargo run`.
+Para testar precisamos executar o comando `make db`. Em outro terminal, precisamos setar uma variavel de ambiente para a `aws-config` utilizar o profile `localstack` que adicionamos em `~/.aws/config`, para isso usamos `export AWS_PROFILE=localstack` (no osx ou linux). Depois atualizamos a main com o cdigo abaixo e executamos em seguida, no mesmo terminal aonde setamos a variavel de ambiente `AWS_PROFILE` executamos `cargo build && cargo run`.
 
 ```rust
 // main.rs
@@ -526,115 +533,177 @@ use todo_api::db::helpers::create_table;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    create_table()
-        .await
-        .map_err(|_e| std::io::Error::new(std::io::ErrorKind::Other, "Error initializing database"))
+    create_table();
 }
 ```
-
 Executando esta sequência de comandos, recebemos o seguinte output:
 
 ```rust
-CreateTableOutput { 
-    table_description: Some(TableDescription { 
-        attribute_definitions: Some([AttributeDefinition { attribute_name: "id", attribute_type: "S" }]),
-        billing_mode_summary: Some(BillingModeSummary { 
-            billing_mode: Some("PROVISIONED"), 
-            last_update_to_pay_per_request_date_time: Some(0.0) }), 
-        creation_date_time: Some(1580524670.506), 
-        global_secondary_indexes: None, 
-        item_count: Some(0), 
-        key_schema: Some([KeySchemaElement { attribute_name: "id", key_type: "HASH" }]), 
-        latest_stream_arn: None, 
-        latest_stream_label: None, 
-        local_secondary_indexes: None, 
-        provisioned_throughput: Some(
-            ProvisionedThroughputDescription { 
-                last_decrease_date_time: Some(0.0), 
-                last_increase_date_time: Some(0.0), 
-                number_of_decreases_today: Some(0), 
-                read_capacity_units: Some(1), 
-                write_capacity_units: Some(1) }), 
-        restore_summary: None, 
-        sse_description: None, 
-        stream_specification: None, 
-        table_arn: Some("arn:aws:dynamodb:ddblocal:000000000000:table/TODO_CARDS"), 
-        table_id: None, 
-        table_name: Some("TODO_CARDS"), 
-        table_size_bytes: Some(0), 
-        table_status: Some("ACTIVE") 
-    }) 
+Output: CreateTableOutput CreateTableOutput {
+	table_description: Some(TableDescription {
+		attribute_definitions: Some([AttributeDefinition {
+			attribute_name: Some("id"),
+			attribute_type: Some(S)
+		}]),
+		table_name: Some("TODO_CARDS"),
+		key_schema: Some([KeySchemaElement {
+			attribute_name: Some("id"),
+			key_type: Some(Hash)
+		}]),
+		table_status: Some(Active),
+		creation_date_time: Some(DateTime {
+			seconds: 1665206254,
+			subsecond_nanos: 461999893
+		}),
+		provisioned_throughput: Some(ProvisionedThroughputDescription {
+			last_increase_date_time: Some(DateTime {
+				seconds: 0,
+				subsecond_nanos: 0
+			}),
+			last_decrease_date_time: Some(DateTime {
+				seconds: 0,
+				subsecond_nanos: 0
+			}),
+			number_of_decreases_today: Some(0),
+			read_capacity_units: Some(1),
+			write_capacity_units: Some(1)
+		}),
+		table_size_bytes: 0,
+		item_count: 0,
+		table_arn: Some("arn:aws:dynamodb:ddblocal:000000000000:table/TODO_CARDS"),
+		table_id: None,
+		billing_mode_summary: None,
+		local_secondary_indexes: None,
+		global_secondary_indexes: None,
+		stream_specification: None,
+		latest_stream_label: None,
+		latest_stream_arn: None,
+		global_table_version: None,
+		replicas: None,
+		restore_summary: None,
+		sse_description: None,
+		archival_summary: None,
+		table_class_summary: None
+	})
 }
 ```
 
 Tabela criada! Mas se executarmos `cargo run` de novo, receberemos um erro dizendo que não é possível criar uma tabela que já existe:
 
 ```rust
-Error: Service(ResourceInUse("Cannot create preexisting table"))
+Error: ServiceError {
+	err: CreateTableError {
+		kind: ResourceInUseException(ResourceInUseException {
+			message: Some("Cannot create preexisting table")
+		}),
+		meta: Error {
+			code: Some("ResourceInUseException"),
+			message: Some("Cannot create preexisting table"),
+			request_id: Some("543a624e-7f21-4dd2-80f2-520ae078152b"),
+			extras: {}
+		}
+	},
+	raw: Response {
+		inner: Response {
+			status: 400,
+			version: HTTP / 1.1,
+			headers: {
+				"date": "Sat, 08 Oct 2022 05:33:45 GMT",
+				"content-type": "application/x-amz-json-1.0",
+				"x-amzn-requestid": "543a624e-7f21-4dd2-80f2-520ae078152b",
+				"content-length": "112",
+				"server": "Jetty(9.4.48.v20220622)"
+			},
+			body: SdkBody {
+				inner: Once(Some(b "{\"__type\":\"com.amazonaws.dynamodb.v20120810#ResourceInUseException\",\"Message\":\"Cannot create preexisting table\"}")),
+				retryable: true
+			}
+		},
+		properties: SharedPropertyBag(Mutex {
+			data: PropertyBag,
+			poisoned: false,
+			..
+		})
+	}
+}
 ```
 
-Para corrigir esse erro, sugiro modificar o método `create_table` para verificar se existem tabelas com a função `client.list_tables(list_tables_input).sync()`. Para isso, fazemos a seguinte modificação:
+Para corrigir esse erro, sugiro modificar o método `create_table` para verificar se existem tabelas com a função `client.list_tables().send()`. Para isso, fazemos a seguinte modificação:
 
 ```rust
-use rusoto_dynamodb::{
-    AttributeDefinition, CreateTableInput, DynamoDb, DynamoDbClient, KeySchemaElement,
-    ProvisionedThroughput, ListTablesInput
+use actix_web::http::Uri;
+use aws_sdk_dynamodb::{
+    model::{
+        AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType,
+    },
+    Client, Endpoint
 };
 
-// ...
-pub fn create_table() {
-    let client = client();
-    let list_tables_input: ListTablesInput = Default::default();
+pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 
-    match client.list_tables(list_tables_input).sync() {
+pub async fn create_table() {
+    let config = aws_config::load_from_env().await;
+    let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
+        .endpoint_resolver(
+            Endpoint::immutable(Uri::from_static("http://localhost:8000")),
+        )
+        .build();
+
+    let client = Client::from_conf(dynamodb_local_config);
+
+    match client.list_tables().send().await {
         Ok(list) => {
             match list.table_names {
                 Some(table_vec) => {
                     if table_vec.len() > 0 {
                         println!("Error: {:?}", "Table already exists");
                     } else {
-                        create_table_input()
+                        create_table_input(&client).await
                     }
                 }
-                None => create_table_input(),
+                None => create_table_input(&client).await,
             };
         }
         Err(_) => {
-            create_table_input();
+            create_table_input(&client).await;
         }
     }
 }
 
-fn create_table_input() {
-    let client = client();
+async fn create_table_input(client: &Client) {
+    let table_name = TODO_CARD_TABLE.to_string();
+    let ad = AttributeDefinition::builder()
+        .attribute_name("id")
+        .attribute_type(ScalarAttributeType::S)
+        .build();
 
-    let create_table_input = CreateTableInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        key_schema: vec![KeySchemaElement {
-            attribute_name: "id".into(),
-            key_type: "HASH".into(),
-        }],
-        attribute_definitions: vec![AttributeDefinition {
-            attribute_name: "id".into(),
-            attribute_type: "S".into(),
-        }],
-        provisioned_throughput: Some(ProvisionedThroughput {
-            read_capacity_units: 1,
-            write_capacity_units: 1,
-        }),
-        ..CreateTableInput::default()
-    };
+    let ks = KeySchemaElement::builder()
+        .attribute_name("id")
+        .key_type(KeyType::Hash)
+        .build();
 
-    match client.create_table(create_table_input).sync() {
+    let pt = ProvisionedThroughput::builder()
+        .read_capacity_units(1)
+        .write_capacity_units(1)
+        .build();
+
+    match client
+        .create_table()
+        .table_name(table_name)
+        .key_schema(ks)
+        .attribute_definitions(ad)
+        .provisioned_throughput(pt)
+        .send()
+        .await
+    {
         Ok(output) => {
-            println!("Output: {:?}", output);
+            println!("Output: {:?}", output);    
         }
         Err(error) => {
             println!("Error: {:?}", error);
         }
     }
 }
-
 ```
 
 Note que, quando verificamos as listas existentes na tabela, surgiram várias situações possíveis e para facilitar a criação da tabela, extraímos sua lógica para `create_table_input`. A primeira situação é `Err`, que possivelmente representa algum problema de listagem de tabelas na base, indicando ausência de tabelas, que nos permite criar tabelas. O segundo caso, dentro do `Ok` é um `None`, que pode significar os mais diversos problemas. Depois disso obtemos a listagem em `Some`, mas esta listagem pode estar vazia, sendo um caso para criar tabela, o `else`, e se a listagem for maior que zero, não criamos a tabela.
