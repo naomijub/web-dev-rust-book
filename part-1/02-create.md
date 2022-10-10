@@ -781,11 +781,10 @@ use uuid::Uuid;
 use crate::todo_api_web::model::{TodoCard, TodoIdResponse};
 use crate::todo_api::model::{TodoCardDb};
 
-
 pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
     let todo_card = TodoCardDb::new(info);
-
-    match put_todo(todo_card) {
+    let client = get_client().await;
+    match put_todo(&client, todo_card).await {
         None => HttpResponse::BadRequest().body("Failed to create todo card"),
         Some(id) => HttpResponse::Created()
             .content_type("application/json")
@@ -794,21 +793,18 @@ pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
 }
 
 /// A partir daqui vamos extrair logo mais
-use rusoto_dynamodb::{DynamoDb, PutItemInput};
-
+use aws_sdk_dynamodb::{Client};
 use crate::{
-    todo_api::db::helpers::{TODO_CARD_TABLE, client},
+    todo_api::db::helpers::{TODO_CARD_TABLE},
 };
+use super::helpers::get_client;
 
-pub fn put_todo(todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-    
-    match client.put_item(put_item).sync() {
+pub async fn put_todo(client: &Client, todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
+    match client.put_item()
+    .table_name(TODO_CARD_TABLE.to_string())
+    .set_item(Some(todo_card.clone().into()))
+    .send()
+    .await {
         Ok(_) => {
             Some(todo_card.id)
         },
@@ -821,21 +817,20 @@ pub fn put_todo(todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
 
 Veja que nosso controller ficou muito mais funcional agora. Ele recebe um JSON do tipo `TodoCard`, transforma esse JSON em um `TodoCardDb` e envia para a função `put_todo` inserir no banco de dados. Caso ocorra algum problema com a inserção fazemos pattern matching com o `None` e retornamos algo como `HttpResponse::BadRequest()` ou `HttpResponse::InternalServerError()`, mas caso o retorno seja um id em `Some`, retornamos um JSON contendo `TodoIdResponse`. Note que foi necessário adicionar a função `body` ao `HttpResponse::BadRequest()` para garantir que os dois pattern matchings tivessem o mesmo tipo de retorno `Response`, em vez de `ResponseBuilder`. 
 
-Mais à frente, na função `put_todo`, nos deparamos com a struct `PutItemInput`, struct responsável por configurar como será a inserção do item via função `put_item(item).sync`. Ao mesmo tempo, se você estiver utilizando o `rls` do rust, vai perceber que o `into` de `item: todo_card.clone().into(),` está destacado, isso se deve ao fato de que precisamos implementar a função `into` para o tipo `TodoCardDB` de forma que retorne `HashMap<String, AttributeValue>`. Para isso, utilizamos a declaração `impl Into<HashMap<String, AttributeValue>> for TodoCardDb` com a seguinte implementação:
+Se você estiver utilizando o `rls` do rust, vai perceber que o `into` de `item: todo_card.clone().into(),` está destacado, isso se deve ao fato de que precisamos implementar a função `into` para o tipo `TodoCardDB` de forma que retorne `HashMap<String, AttributeValue>`. Para isso, utilizamos a declaração `impl Into<HashMap<String, AttributeValue>> for TodoCardDb` com a seguinte implementação:
 
 ```rust
 // src/todo_api/model/mod.rs
-use rusoto_dynamodb::AttributeValue;
 use std::collections::HashMap;
 
 impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
     fn into(self) -> HashMap<String, AttributeValue> {
         let mut todo_card = HashMap::new();
-        todo_card.insert("id".to_string(), val!(S => Some(self.id.to_string())));
-        todo_card.insert("title".to_string(), val!(S => Some(self.title)));
-        todo_card.insert("description".to_string(), val!(S => Some(self.description)));
-        todo_card.insert("owner".to_string(), val!(S => Some(self.owner.to_string())));
-        todo_card.insert("state".to_string(), val!(S => Some(self.state.to_string())));
+        todo_card.insert("id".to_string(), val!(S => self.id.to_string()));
+        todo_card.insert("title".to_string(), val!(S => self.title));
+        todo_card.insert("description".to_string(), val!(S => self.description));
+        todo_card.insert("owner".to_string(), val!(S => self.owner.to_string()));
+        todo_card.insert("state".to_string(), val!(S => self.state.to_string()));
         todo_card.insert("tasks".to_string(), val!(L => task_to_db_val(self.tasks)));
         todo_card
     }
@@ -881,7 +876,7 @@ fn task_to_db_val(tasks: Vec<TaskDb>) -> Vec<AttributeValue> {
         .iter()
         .map(|t| {
             let mut tasks_hash = HashMap::new();
-            tasks_hash.insert("title".to_string(), val!(S => Some(t.title.clone())));
+            tasks_hash.insert("title".to_string(), val!(S => t.title.clone()));
             tasks_hash.insert("is_done".to_string(), val!(B => t.is_done));
             val!(M => tasks_hash)
         })
@@ -896,24 +891,16 @@ Ainda falta falarmos da `val!`. `val!` é uma macro criada para transformar os v
 #[macro_export]
 macro_rules! val {
     (B => $bval:expr) => {{
-        let mut attr = AttributeValue::default();
-        attr.bool = Some($bval);
-        attr
+        AttributeValue::Bool($bval)
     }};
     (L => $val:expr) => {{
-        let mut attr = AttributeValue::default();
-        attr.l = Some($val);
-        attr
+        AttributeValue::L($val)
     }};
     (S => $val:expr) => {{
-        let mut attr = AttributeValue::default();
-        attr.s = $val;
-        attr
+        AttributeValue::S($val)
     }};
     (M => $val:expr) => {{
-        let mut attr = AttributeValue::default();
-        attr.m = Some($val);
-        attr
+        AttributeValue::M($val)
     }};
 }
 ```
@@ -955,87 +942,48 @@ E vamos receber um `Uuid` como resposta e o status `201`:
 
 ### Organizando nosso código
 
-Nosso controller possui um conjunto de códigos que não fazem sentido dentro do contexto de controller, no caso a função `put_todo`, como descrita a seguir:
+Nosso controller possui um conjunto de códigos que não fazem sentido dentro do contexto de controller, no caso a função `put_todo`. A primeira coisa que vamos fazer é criar um módulo `todo` dentro de `todo_api/db` que conterá toda a lógica de banco de dados para o `todo`:
 
 ```rust
-use rusoto_dynamodb::{DynamoDb, PutItemInput};
+use super::helpers::get_client;
+use crate::todo_api::db::helpers::TODO_CARD_TABLE;
+use aws_sdk_dynamodb::Client;
 
-use crate::{
-    todo_api::db::helpers::{TODO_CARD_TABLE, client},
-};
-
-pub fn put_todo(todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-    
-    match client.put_item(put_item).sync() {
-        Ok(_) => {
-            Some(todo_card.id)
-        },
-        Err(_) => {
-            None
-        }
+pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
+    match client
+        .put_item()
+        .table_name(TODO_CARD_TABLE.to_string())
+        .set_item(Some(todo_card.clone().into()))
+        .send()
+        .await
+    {
+        Ok(_) => Some(todo_card.id),
+        Err(_) => None,
     }
 }
-```
 
-A primeira coisa que vamos fazer é criar um módulo `todo` dentro de `todo_api/db` que conterá toda a lógica de banco de dados para o `todo`:
-
-```rust
-// src/todo_api/db/todo.rs
-use rusoto_dynamodb::{DynamoDb, PutItemInput};
-use uuid::Uuid;
-use crate::{
-    todo_api::{
-        db::helpers::{TODO_CARD_TABLE, client},
-        model::TodoCardDb
-    }
-};
-
-pub fn put_todo(todo_card: TodoCardDb) ->  Option<Uuid> {
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-    
-    match client.put_item(put_item).sync() {
-        Ok(_) => {
-            Some(todo_card.id)
-        },
-        Err(_) => {
-            None
-        }
-    }
-}
 ```
 
 E agora podemos simplificar muito nosso controller com:
 
 ```rust
-use actix_web::{HttpResponse, web, Responder};
-use crate::{
-    todo_api::{
-        db::todo::put_todo,
-        model::{TodoCardDb}
-    },
-    todo_api_web::model::{TodoCard, TodoIdResponse}
-};
+use crate::todo_api::db:: {helpers::get_client, todo::put_todo};
+use crate::todo_api::model::TodoCardDb;
+use crate::todo_api_web::model::todo::{TodoCard, TodoIdResponse};
+use actix_web::{http::header::ContentType, post, web, HttpResponse, Responder};
 
-
+#[post("/api/create")]
 pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
     let todo_card = TodoCardDb::new(info);
-
-    match put_todo(todo_card) {
+    let client = get_client().await;
+    match put_todo(&client, todo_card).await {
         None => HttpResponse::BadRequest().body("Failed to create todo card"),
         Some(id) => HttpResponse::Created()
-            .content_type("application/json")
-            .body(serde_json::to_string(&TodoIdResponse::new(id)).expect("Failed to serialize todo card"))
+        .content_type(ContentType::json())
+            .body(
+                serde_json::to_string(&TodoIdResponse::new(id))
+                    .expect("Failed to serialize todo card"),
+            ),
     }
 }
 ```
@@ -1143,11 +1091,11 @@ Uma última refatoração que podemos fazer é a função `task_to_db_val`, já 
 impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
     fn into(self) -> HashMap<String, AttributeValue> {
         let mut todo_card = HashMap::new();
-        todo_card.insert("id".to_string(), val!(S => Some(self.id.to_string())));
-        todo_card.insert("title".to_string(), val!(S => Some(self.title)));
-        todo_card.insert("description".to_string(), val!(S => Some(self.description)));
-        todo_card.insert("owner".to_string(), val!(S => Some(self.owner.to_string())));
-        todo_card.insert("state".to_string(), val!(S => Some(self.state.to_string())));
+        todo_card.insert("id".to_string(), val!(S => self.id.to_string()));
+        todo_card.insert("title".to_string(), val!(S => self.title));
+        todo_card.insert("description".to_string(), val!(S => self.description));
+        todo_card.insert("owner".to_string(), val!(S => self.owner.to_string()));
+        todo_card.insert("state".to_string(), val!(S => self.state.to_string()));
         todo_card.insert("tasks".to_string(), 
             val!(L => self.tasks.into_iter().map(|t| t.to_db_val()).collect::<Vec<AttributeValue>>()));
         todo_card
@@ -1157,7 +1105,7 @@ impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
 impl TaskDb {
     fn to_db_val(self) -> AttributeValue {
         let mut tasks_hash = HashMap::new();
-            tasks_hash.insert("title".to_string(), val!(S => Some(self.title.clone())));
+            tasks_hash.insert("title".to_string(), val!(S => self.title.clone()));
             tasks_hash.insert("is_done".to_string(), val!(B => self.is_done));
             val!(M => tasks_hash)
     }
