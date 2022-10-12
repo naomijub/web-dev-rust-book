@@ -4,6 +4,8 @@
 
 Autora: Julia Naomi Boeira
 <!-- -->
+[Github Sponsor](https://github.com/sponsors/naomijub)
+<!-- -->
 [Livro](https://naomijub.github.io/web-dev-rust-book/)
 
 ## Revisando
