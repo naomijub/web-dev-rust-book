@@ -1112,22 +1112,23 @@ impl TaskDb {
 }
 ```
 
-Agora  faltam alguns testes.
+Agora faltam alguns testes.
 
 ## Aplicando testes a nosso endpoint
 
 Creio que uma boa abordagem agora seja começar pelos testes mais unitários, por isso vamos começar pelo adapter. Nosso primeiro teste será com a função `converts_json_to_db`:
 
 ```rust
-
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use super::*;
-    use actix_web::web::Json;
     use crate::{
         todo_api::model::{StateDb, TaskDb, TodoCardDb},
-        todo_api_web::model::{State, Task, TodoCard},
+        todo_api_web::model::todo::{State, Task, TodoCard},
     };
+    use actix_web::web::Json;
 
     #[test]
     fn converts_json_to_db() {
@@ -1138,7 +1139,10 @@ mod test {
             description: "description".to_string(),
             owner: owner,
             state: State::Done,
-            tasks: vec![Task {is_done: true, title: "title".to_string()}]
+            tasks: vec![Task {
+                is_done: true,
+                title: "title".to_string(),
+            }],
         });
         let expected = TodoCardDb {
             id: id,
@@ -1146,10 +1150,12 @@ mod test {
             description: "description".to_string(),
             owner: owner,
             state: StateDb::Done,
-            tasks: vec![TaskDb {is_done: true, title: "title".to_string()}]
+            tasks: vec![TaskDb {
+                is_done: true,
+                title: "title".to_string(),
+            }],
         };
-        assert_eq!(todo_json_to_db(json, id),
-                    expected);
+        assert_eq!(todo_json_to_db(json, id), expected);
     }
 }
 ```
@@ -1165,15 +1171,14 @@ mod test {
     fn task_db_to_db_val() {
         let actual = TaskDb {
             title: "blob".to_string(),
-            is_done: true
-        }.to_db_val();
+            is_done: true,
+        }
+        .to_db_val();
         let mut tasks_hash = HashMap::new();
-        tasks_hash.insert("title".to_string(), val!(S => Some("blob".to_string())));
+        tasks_hash.insert("title".to_string(), val!(S => "blob".to_string()));
         tasks_hash.insert("is_done".to_string(), val!(B => true));
         let expected = val!(M => tasks_hash);
-
         assert_eq!(actual, expected);
-        
     }
 }
 ```
@@ -1190,17 +1195,25 @@ A lógica do teste `task_db_to_db_val` é basicamente a mesma que a implementaç
             description: "description".to_string(),
             owner: id,
             state: StateDb::Done,
-            tasks: vec![TaskDb {is_done: true, title: "title".to_string()}]
-        }.into();
+            tasks: vec![TaskDb {
+                is_done: true,
+                title: "title".to_string(),
+            }],
+        }
+        .into();
         let mut expected = HashMap::new();
-        expected.insert("id".to_string(), val!(S => Some(id.to_string())));
-        expected.insert("title".to_string(), val!(S => Some("title".to_string())));
-        expected.insert("description".to_string(), val!(S => Some("description".to_string())));
-        expected.insert("owner".to_string(), val!(S => Some(id.to_string())));
-        expected.insert("state".to_string(), val!(S => Some(StateDb::Done.to_string())));
-        expected.insert("tasks".to_string(), 
-            val!(L => vec![TaskDb {is_done: true, title: "title".to_string()}.to_db_val()]));
-        
+        expected.insert("id".to_string(), val!(S => id.to_string()));
+        expected.insert("title".to_string(), val!(S => "title".to_string()));
+        expected.insert(
+            "description".to_string(),
+            val!(S => "description".to_string()),
+        );
+        expected.insert("owner".to_string(), val!(S => id.to_string()));
+        expected.insert("state".to_string(), val!(S => StateDb::Done.to_string()));
+        expected.insert(
+            "tasks".to_string(),
+            val!(L => vec![TaskDb {is_done: true, title: "title".to_string()}.to_db_val()]),
+        );
         assert_eq!(actual, expected);
     }
 ```
@@ -1208,15 +1221,21 @@ A lógica do teste `task_db_to_db_val` é basicamente a mesma que a implementaç
 Se executarmos `cargo test` enquanto o `make db` roda, teremos duas situações: uma em que a base de dados já está configurada e tudo ocorre normalmente e outra em que ela não está configurada e o teste falha. Para resolvermos esse problema, bastaria adicionar o `create_table` ao cenário de teste assim:
 
 ```rust
-#[actix_rt::test]
-async fn valid_todo_post() {
-    todo_server::todo_api::db::helpers::create_table();
-    let mut app = test::init_service(
-        App::new()
-            .configure(app_routes)
-    ).await;
-    // ...
-}
+ #[actix_web::test]
+    async fn valid_todo_post() {
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let req = test::TestRequest::post()
+            .uri("/api/create")
+            .insert_header((CONTENT_TYPE, "application/json"))
+            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
+        assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
+    }
 ```
 
 É bem claro para mim que um teste que precisa executar o contêiner do banco de dados para passar é bastante frágil. Assim vamos precisar fazer algumas modificações para tornar o teste passável. A mudança que vamos fazer é, na minha opinião, uma forma mais elegante de fazer mocks em rust, pois ela não necessita criar uma trait e uma struct para mockar uma função específica, basta definirmos que para modo de compilação em test, `#[cfg(test)]`, a função terá outro comportamento, geralmente evitando efeitos colaterais com base de dados. Agora, o que vai mudar é que nosso teste de controller deixará de estar presente na pasta `tests` e passará a ser um módulo `#[cfg(test)]` junto ao controller:
@@ -1238,23 +1257,19 @@ mod create_todo {
         // ...
     }
 
-    #[actix_rt::test]
+     #[actix_web::test]
     async fn valid_todo_post() {
-        let mut app = test::init_service(
-            App::new()
-                .configure(app_routes)
-        ).await;
-    
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
-            .set_payload(post_todo().as_bytes().to_owned())
+            .insert_header((CONTENT_TYPE, "application/json"))
+            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
 
-        let resp = test::read_response(&mut app, req).await;
-        println!("{:?}", resp);
-
-        let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
@@ -1265,37 +1280,31 @@ Assim, agora precisamos fazer com que nossa interação com o banco de dados sej
 ```rust
 // ...
 #[cfg(not(test))]
-pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
-    use rusoto_dynamodb::DynamoDb;
-    use crate::todo_api::db::helpers::client;
+pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
+    use crate::todo_api::db::helpers::TODO_CARD_TABLE;
 
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-
-    match client.put_item(put_item).sync() {
+    match client
+        .put_item()
+        .table_name(TODO_CARD_TABLE.to_string())
+        .set_item(Some(todo_card.clone().into()))
+        .send()
+        .await
+    {
         Ok(_) => Some(todo_card.id),
-        Err(_) => None,
+        Err(e) => {
+            println!("{:?}", e);
+            None
+        }
     }
 }
 
 #[cfg(test)]
-pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
-    let _ = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
+pub async fn put_todo(_client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
     Some(todo_card.id)
 }
 ```
 
-Veja que `put_todo` com `cfg(test)` ativado pula a etapa `client.put_item(put_item).sync()` e simplesmente retorna  um `Option<Uuid>`. 
-
-> No momento, a biblioteca rusoto dispõe de uma maneira muito primitiva de testar seus serviços, por isso, para o caso do DyanmoDB, não creio que ela seja suficiente para realizar um teste real.
+Veja que `put_todo` com `cfg(test)` ativado pula a etapa `match client.put_item().table_name(TODO_CARD_TABLE.to_string()).set_item(Some(todo_card.clone().into())).send().await` e simplesmente retorna  um `Option<Uuid>`. 
 
 Outro modo de fazer esse teste, utilizando `cfg`, é utilizar `features`, mas por ser um pouco mais sensível deixei para apresentar depois. Neste repositório, vamos utilizar `features` para testar os controllers, o que deixará o código mais limpo, porém mais difícil de gerenciar, podendo fazer com que uma feature indesejada suba para a produção. Assim, recomendo fortemente que os builds de produção utilizem a flag `--release` e que os `cfg` mapeie corretamente isso. Para utilizar essa feature, uma boa prática é adicioná-la ao campo `[features]` do `Cargo.toml`:
 
@@ -1315,32 +1324,30 @@ dynamo = []
 Além disso, precisamos gerar a nova função, muito semelhante ao `cfg(test)` de antes:
 
 ```rust
-// ...
+use crate::todo_api::model::TodoCardDb;
+use aws_sdk_dynamodb::Client;
+
 #[cfg(not(feature = "dynamo"))]
-pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
-    use crate::todo_api::db::helpers::client;
-    use rusoto_dynamodb::DynamoDb;
+pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
+    use crate::todo_api::db::helpers::TODO_CARD_TABLE;
 
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-
-    match client.put_item(put_item).sync() {
+    match client
+        .put_item()
+        .table_name(TODO_CARD_TABLE.to_string())
+        .set_item(Some(todo_card.clone().into()))
+        .send()
+        .await
+    {
         Ok(_) => Some(todo_card.id),
-        Err(_) => None,
+        Err(e) => {
+            println!("{:?}", e);
+            None
+        }
     }
 }
 
 #[cfg(feature = "dynamo")]
-pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
-    let _ = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
+pub async fn put_todo(_client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
     Some(todo_card.id)
 }
 ```
@@ -1402,17 +1409,19 @@ mod create_todo {
     // ...
     use crate::helpers::read_json;
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn valid_todo_post() {
-        // ...
-    
+        ...
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
+            .insert_header((CONTENT_TYPE, "application/json"))
             .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
 
-        // ...
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
