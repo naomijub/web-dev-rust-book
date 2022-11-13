@@ -2,7 +2,7 @@
 
 # Obtendo todas as Todo Cards inseridas
 
-Existem muitas abordagens para como vamos adicionar um novo endpoint no nosso sistema, mas a abordagem que eu gostaria de tratar aqui é a de começar de cima para baixo, ou seja, criamos um endpoint `GET` que lé todas as `TodoCard` e nos retorna elas no formato Json. Dessa vez vamos começar escrevendo um teste para este novo endpoint:
+Existem muitas abordagens para como vamos adicionar um novo endpoint no nosso sistema, mas a abordagem que eu gostaria de tratar aqui é a de começar de cima para baixo, ou seja, criamos um endpoint `GET` que lista todas as `TodoCard` e nos retorna elas no formato Json. Dessa vez vamos começar escrevendo um teste para este novo endpoint:
 
 ```rust
 mod read_all_todos {
@@ -14,18 +14,14 @@ mod read_all_todos {
         test, App,
         http::StatusCode,
     };
-    use actix_service::Service;
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_todo_index_ok() {
-        let mut app = test::init_service(
-            App::new()
-                .configure(app_routes)
-        ).await;
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
     
-        let req = test::TestRequest::with_uri("/api/index").to_request();
+        let req = test::TestRequest::get().uri("/api/index").to_request();
     
-        let resp = app.call(req).await.unwrap();
+        let resp = test::call_service(&mut app, req).await;
         assert_eq!(resp.status(), StatusCode::OK);
     }
 }
@@ -36,14 +32,12 @@ Felizmente, nosso teste falha retornanto um `NOT_FOUND` e nos obriga a implement
 ```rust
 pub fn app_routes(config: &mut web::ServiceConfig) {
     config.service(
-        web::scope("/")
-            .service(
-                web::scope("api/")
-                .route("create", web::post().to(create_todo))
-                .route("index", web::get().to(show_all_todo)))
-            .route("ping", web::get().to(pong))
-            .route("~/ready", web::get().to(readiness))
-            .route("", web::get().to(|| HttpResponse::NotFound())),
+        web::scope("")
+            .service(ping)
+            .service(readiness)
+            .service(create_todo)
+            .service(show_all_todo)
+            .default_service(web::to(|| HttpResponse::NotFound())),
     );
 }
 ```
@@ -51,6 +45,7 @@ pub fn app_routes(config: &mut web::ServiceConfig) {
 Note que agora estamos utilizando uma nova função controller chamada de `show_all_todo`, ela precisa ser incorporada no escopo da função, fazemos isso através de `use crate::todo_api_web::controller::todo::show_all_todo` e recebemos um aviso de que ela não existe, assim devemos implementá-la no módulo `src/todo_api_web/controller/todo.rs`:
 
 ```rust
+#[get("/api/index")]
 pub async fn show_all_todo() -> impl Responder {
     HttpResponse::Ok()
 }
@@ -59,44 +54,35 @@ pub async fn show_all_todo() -> impl Responder {
 Como nosso teste checa apenas o retorno do status `200`, isso é suficiente. Nosso próximo passo é implementar um teste um pouco mais robusto. Esse teste consiste em garantir que o JSON recebido possua um vetor de tamanho 1 após um post em `api/create` ser enviado:
 
 ```rust
-od read_all_todos {
-    use todo_server::todo_api_web::{
-        model::TodoCardsResponse,
-        routes::app_routes
-    };
-
-    use actix_web::{
-        test, App,
-        http::StatusCode,
-    };
-    use actix_service::Service;
+mod read_all_todos {
     use serde_json::from_str;
+    use todo_server::todo_api_web::{model::todo::TodoCardsResponse, routes::app_routes};
+
+    use actix_web::{body, http::StatusCode, test, App};
 
     use crate::helpers::read_json;
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_todo_index_ok() {
         // ...
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_todo_cards_count() {
-        let mut app = test::init_service(
-            App::new()
-                .configure(app_routes)
-        ).await;
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
     
         let post_req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
+            .insert_header(("Content-Type", "application/json"))
             .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
-
-        let _ = app.call(post_req).await.unwrap();
-        let req = test::TestRequest::with_uri("/api/index").to_request();
-        let resp = test::read_response(&mut app, req).await;
-
-        let todo_cards: TodoCardsResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();
+        
+        let _ = test::call_service(&mut app, post_req).await;
+        let get_req = test::TestRequest::get().uri("/api/index").to_request();
+        let resp_body = test::call_service(&mut app, get_req).await.into_body();
+        let bytes = body::to_bytes(resp_body).await.unwrap();
+        let todo_cards = from_str::<TodoCardsResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
+        
         assert_eq!(todo_cards.cards.len(), 1);
     }
 }
@@ -115,10 +101,14 @@ Note que no momento não precisamos nos preocupar com o tipo de resposta, soment
 
 ```rust
 //src/todo_api_web/controller/todo.rs
+#[get("/api/index")]
 pub async fn show_all_todo() -> impl Responder {
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&TodoCardsResponse{cards: vec![String::from("test")]}).expect("Failed to serialize todo cards"))
+    HttpResponse::Ok().content_type(ContentType::json()).body(
+        serde_json::to_string(&TodoCardsResponse {
+            cards: vec![String::from("test")],
+        })
+        .expect("Failed to serialize todo cards")
+    )
 }
 ```
 
@@ -128,13 +118,13 @@ Com este teste pronto, nosso próximo teste fica bastante simples, pois agora pr
 
 ```rust
 // ...
-use todo_server::todo_api_web::model::{State, Task, TodoCard};
+use todo_server::todo_api_web::model::todo::{State, Task, TodoCard};
 
 // ...
 
 pub fn mock_get_todos() -> Vec<TodoCard> {
     vec![TodoCard {
-        id: Some(uuid::Uuid::parse_str("be75c4d8-5241-4f1c-8e85-ff380c041664").unwrap()),
+        id: Some(uuid::Uuid::from_str("be75c4d8-5241-4f1c-8e85-ff380c041664").unwrap()),
         title: String::from("This is a card"),
         description: String::from("This is the description of the card"),
         owner: uuid::Uuid::parse_str("ae75c4d8-5241-4f1c-8e85-ff380c041442").unwrap(),
@@ -264,41 +254,22 @@ pub fn get_todos() -> Option<Vec<TodoCard>> {
 }
 ```
 
-Note que limitamos o `ScanInput` a `100i64`, isso se deve ao fato de que o Dynamo não vai responder mais de 100 itens. Se você precisar de mais, é importante realizar filtros no scan. Antes de implementarmos o `adapter`, seria bom dar uma olhada em como é um `ScanOutput`:
+Note que limitamos o `ScanInput` a `100i64`, isso se deve ao fato de que o Dynamo não vai responder mais de 100 itens. Se você precisar de mais, é importante realizar filtros no scan. Antes de implementarmos o `adapter`, seria bom dar uma olhada em como é o resultado do scan:
 
 ```rust
-ScanOutput { 
-    consumed_capacity: None, 
-    count: Some(2), 
-    items: Some([
-        {"title": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("title"), ss: None }, 
-        "description": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("descrition"), ss: None }, 
-        "owner": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("90e700b0-2b9b-4c74-9285-f5fc94764995"), ss: None }, 
-        "state": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("Done"), ss: None }, 
-        "id": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("646b670c-bb50-45a4-ba08-3ab684bc4e95"), ss: None }, 
-        "tasks": AttributeValue { b: None, bool: None, bs: None, l: Some([
-            AttributeValue { b: None, bool: None, bs: None, l: None, m: Some({
-                "is_done": AttributeValue { b: None, bool: Some(true), bs: None, l: None, m: None, n: None, ns: None, null: None, s: None, ss: None }, 
-                "title": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("blob"), ss: None }
-            }), 
-            n: None, ns: None, null: None, s: None, ss: None }]), m: None, n: None, ns: None, null: None, s: None, ss: None }
-        }, 
-        {"owner": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("90e700b0-2b9b-4c74-9285-f5fc94764995"), ss: None }, 
-        "description": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("descrition"), ss: None }, 
-        "id": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("23997c2c-cd10-477f-8838-e88f2f6d7e7d"), ss: None }, 
-        "state": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("Done"), ss: None }, 
-        "title": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("title"), ss: None }, 
-        "tasks": AttributeValue { b: None, bool: None, bs: None, l: Some([
-            AttributeValue { b: None, bool: None, bs: None, l: None, m: Some({
-                "title": AttributeValue { b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("blob"), ss: None }, 
-                "is_done": AttributeValue { b: None, bool: Some(true), bs: None, l: None, m: None, n: None, ns: None, null: None, s: None, ss: None }}), n: None, ns: None, null: None, s: None, ss: None }
-            ]),m: None, n: None, ns: None, null: None, s: None, ss: None }
-        }]), 
-    last_evaluated_key: None, 
-    scanned_count: Some(2) }
+[
+    {
+        "id": S("7d9b9e38-199e-46e1-939c-80e0b10e1674"), 
+        "owner": S("90e700b0-2b9b-4c74-9285-f5fc94764995"), 
+        "description": S("descrition"), 
+        "title": S("title"), 
+        "tasks": L([M({"title": S("blob"), 
+        "is_done": Bool(true)})]), 
+        "state": S("Done")
+    }
+]
 ```
-
-Agora podemos começar a implementar a função `scanoutput_to_todocards` e, para isso, vamos escrever o primeiro teste com apenas um `items` em `src/todo_api/adapters/mod.rs`:
+Onde S, L e Bool sao do tipo `aws_sdk_dynamodb::model::AttributeValue`. Agora podemos começar a implementar a função `scanoutput_to_todocards` e, para isso, vamos escrever o primeiro teste com apenas um `items` em `src/todo_api/adapters/mod.rs`:
 
 ```rust
 #[cfg(test)]
