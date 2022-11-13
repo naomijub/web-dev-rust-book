@@ -1327,7 +1327,7 @@ Além disso, precisamos gerar a nova função, muito semelhante ao `cfg(test)` d
 use crate::todo_api::model::TodoCardDb;
 use aws_sdk_dynamodb::Client;
 
-#[cfg(not(feature = "dynamo"))]
+#[cfg(feature = "dynamo")]
 pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
     use crate::todo_api::db::helpers::TODO_CARD_TABLE;
 
@@ -1346,7 +1346,7 @@ pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uu
     }
 }
 
-#[cfg(feature = "dynamo")]
+#[cfg(not(feature = "dynamo"))]
 pub async fn put_todo(_client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
     Some(todo_card.id)
 }
