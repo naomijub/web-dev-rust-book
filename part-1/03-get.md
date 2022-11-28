@@ -150,24 +150,23 @@ pub fn mock_get_todos() -> Vec<TodoCard> {
 Com nossa função implementada, podemos criar o novo cenário de teste no submódulo `read_all_todos`:
 
 ```rust
-#[actix_rt::test]
+ #[actix_web::test]
 async fn test_todo_cards_with_value() {
-    let mut app = test::init_service(
-        App::new()
-            .configure(app_routes)
-    ).await;
+    let mut app = test::init_service(App::new().configure(app_routes)).await;
 
     let post_req = test::TestRequest::post()
         .uri("/api/create")
-        .header("Content-Type", "application/json")
+        .insert_header(("Content-Type", "application/json"))
         .set_payload(read_json("post_todo.json").as_bytes().to_owned())
         .to_request();
 
-    let _ = app.call(post_req).await.unwrap();
+    let _ = test::call_service(&mut app, post_req).await;
     let req = test::TestRequest::with_uri("/api/index").to_request();
-    let resp = test::read_response(&mut app, req).await;
+    let resp_body = test::call_service(&mut app, req).await.into_body();
+    let bytes = body::to_bytes(resp_body).await.unwrap();
+    let todo_cards: TodoCardsResponse =
+        from_str(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
 
-    let todo_cards: TodoCardsResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();
     assert_eq!(todo_cards.cards, mock_get_todos());
 }
 ```
@@ -184,12 +183,16 @@ pub struct TodoCardsResponse {
 Também é necessário, para fins de teste, implementarmos a trait `PartialEq` para todas as structs, e enums, derivadas de `TodoCardsResponse`. Com essa mudança, precisamos modificar a lógica do nosso controller já que agora é necessário que ele busque `TodoCard`s no banco. Faremos isso pela função `get_todos`, que retornará `Vec<TodoCard>`. Caso o `match` retorne, não podemos enviar um erro `500`:
 
 ```rust
+#[get("/api/index")]
 pub async fn show_all_todo() -> impl Responder {
-    match get_todos() {
+    let client = get_client().await;
+    let resp = get_todos(&client).await;
+    match resp {
         None => HttpResponse::InternalServerError().body("Failed to read todo cards"),
-        Some(todos) => HttpResponse::Ok()
-            .content_type("application/json")
-            .body(serde_json::to_string(&TodoCardsResponse{cards: todos}).expect("Failed to serialize todo cards")),
+        Some(todos) => HttpResponse::Ok().content_type("application/json").body(
+            serde_json::to_string(&TodoCardsResponse { cards: todos })
+                .expect("Failed to serialize todo cards"),
+        ),
     }
 }
 ```
@@ -198,15 +201,8 @@ Agora precisamos implementar a função `get_todos`, mas antes vamos implementar
 
 ```rust
 #[cfg(feature = "dynamo")]
-pub fn get_todos() -> Option<Vec<TodoCard>> {
-    use crate::todo_api_web::model::{State, Task};
-    use rusoto_dynamodb::DynamoDb;
-
-    let _ = ScanInput {
-        limit: Some(100i64),
-        table_name: TODO_CARD_TABLE.to_string(),
-        ..ScanInput::default()
-    };
+pub async fn get_todos(_client: &Client) -> Option<Vec<TodoCard>> {
+    use crate::todo_api_web::model::todo::{State, Task};
 
     Some(vec![TodoCard {
         id: Some(uuid::Uuid::parse_str("be75c4d8-5241-4f1c-8e85-ff380c041664").unwrap()),
@@ -232,29 +228,30 @@ pub fn get_todos() -> Option<Vec<TodoCard>> {
 }
 ```
 
-Note a presença da struct `ScanInput`. Ela está presente como forma de garantir em teste que a construção dela está coerente. Ao rodarmos o teste (comente o `#[cfg(feature = "dynamo")]`), obtemos sucesso! Agora podemos partir para a leitura da base de dados de fato. Nossa função de `get_todos` vai precisar de algumas mudanças como um `let client = client()` e fazer esse `client` executar um `scan` no banco de dados com o valor de `scan_item`. Em caso de `Err` no `match` retornamos `None` e em caso de sucesso precisamos passar a função por um `adapter` que transforma um `ScanOutput` em um vetor de `TodoCard`:
+Ao rodarmos o teste (comente o `#[cfg(feature = "dynamo")]`), obtemos sucesso! Agora podemos partir para a leitura da base de dados de fato. Nossa função de `get_todos` vai precisar de algumas mudanças como receber um `client` e executar um `scan` no banco de dados na tabela `TODO_CARD_TABLE`. Em caso de `Err` no `match` retornamos `None` e em caso de sucesso precisamos passar a função por um `adapter` que transforma um `scan_output` em um vetor de `TodoCard`:
 
 ```rust
 #[cfg(not(feature = "dynamo"))]
-pub fn get_todos() -> Option<Vec<TodoCard>> {
-    use crate::todo_api::db::helpers::client;
-    use rusoto_dynamodb::DynamoDb;
+pub async fn get_todos(client: &Client) -> Option<Vec<TodoCard>> {
+    use crate::todo_api::adapter;
 
-    let client = client();
-    let scan_item = ScanInput {
-        limit: Some(100i64),
-        table_name: TODO_CARD_TABLE.to_string(),
-        ..ScanInput::default()
-    };
+    let scan_output = client
+        .scan()
+        .table_name(TODO_CARD_TABLE.to_string())
+        .limit(100i32)
+        .send()
+        .await;
 
-    match client.scan(scan_item).sync() {
-        Ok(resp) => Some(adapter::scanoutput_to_todocards(resp)),
+    match scan_output {
+        Ok(dbitems) => Some(adapter::scanoutput_to_todocards(
+            dbitems.items().unwrap().to_vec(),
+        )),
         Err(_) => None,
     }
 }
 ```
 
-Note que limitamos o `ScanInput` a `100i64`, isso se deve ao fato de que o Dynamo não vai responder mais de 100 itens. Se você precisar de mais, é importante realizar filtros no scan. Antes de implementarmos o `adapter`, seria bom dar uma olhada em como é o resultado do scan:
+Note que limitamos o scan a `100i32`, isso se deve ao fato de que o Dynamo não vai responder mais de 100 itens. Se você precisar de mais, é importante realizar filtros no scan. Antes de implementarmos o `adapter`, seria bom dar uma olhada em como é o resultado do scan:
 
 ```rust
 [
@@ -274,49 +271,53 @@ Onde S, L e Bool sao do tipo `aws_sdk_dynamodb::model::AttributeValue`. Agora po
 ```rust
 #[cfg(test)]
 mod scan_to_cards {
+    use aws_sdk_dynamodb::model::AttributeValue;
+
     use super::scanoutput_to_todocards;
-    use crate::todo_api_web::model::{Task, TodoCard, State};
-    use rusoto_dynamodb::ScanOutput;
+    use crate::todo_api_web::model::todo::{State, Task, TodoCard};
 
-    fn scan_with_one() -> ScanOutput {
+    fn scan_with_one() -> Option<Vec<std::collections::HashMap<String, AttributeValue>>> {
         let mut tasks_hash = std::collections::HashMap::new();
-        tasks_hash.insert("title".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("blob".to_string()), ss: None });
-        tasks_hash.insert("is_done".to_string(), AttributeValue{ b: None, bool: Some(true), bs: None, l: None, m: None, n: None, ns: None, null: None, s: None, ss: None });
-        let mut hash = std::collections::HashMap::new();
-        hash.insert("title".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("title".to_string()), ss: None });
-        hash.insert("description".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("description".to_string()), ss: None });
-        hash.insert("owner".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()), ss: None });
-        hash.insert("id".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()), ss: None });
-        hash.insert("state".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("Done".to_string()), ss: None });
-        hash.insert("tasks".to_string(), AttributeValue { b: None, bool: None, bs: None, l: Some(vec![
-            AttributeValue { b: None, bool: None, bs: None, l: None, m: Some(tasks_hash), n: None, ns: None, null: None, s: None, ss: None }]), m: None, n: None, ns: None, null: None, s: None, ss: None });
+        tasks_hash.insert("title".to_string(), AttributeValue::S("blob".to_string()));
+        tasks_hash.insert("is_done".to_string(), AttributeValue::Bool(true));
 
-        ScanOutput { 
-            consumed_capacity: None, 
-            count: Some(1), 
-            items: Some(vec![hash]), 
-            last_evaluated_key: None, 
-            scanned_count: Some(1) }
+        let mut hash = std::collections::HashMap::new();
+        hash.insert("title".to_string(), AttributeValue::S("title".to_string()));
+        hash.insert(
+            "description".to_string(),
+            AttributeValue::S("description".to_string()),
+        );
+        hash.insert(
+            "owner".to_string(),
+            AttributeValue::S("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()),
+        );
+        hash.insert(
+            "id".to_string(),
+            AttributeValue::S("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()),
+        );
+        hash.insert("state".to_string(), AttributeValue::S("Done".to_string()));
+        hash.insert(
+            "tasks".to_string(),
+            AttributeValue::L(vec![AttributeValue::M(tasks_hash)]),
+        );
+
+        Some(vec![hash])
     }
 
     #[test]
     fn scanoutput_has_one_item() {
         let scan = scan_with_one();
-        let todos = vec![
-            TodoCard {
-                title: "title".to_string(),
-                description: "description".to_string(),
-                state: State::Done,
-                id: Some(uuid::Uuid::parse_str("646b670c-bb50-45a4-ba08-3ab684bc4e95").unwrap()),
-                owner: uuid::Uuid::parse_str("90e700b0-2b9b-4c74-9285-f5fc94764995").unwrap(),
-                tasks: vec![
-                    Task {
-                        is_done: true,
-                        title: "blob".to_string()
-                    }
-                ]
-            }
-        ];
+        let todos = vec![TodoCard {
+            title: "title".to_string(),
+            description: "description".to_string(),
+            state: State::Done,
+            id: Some(uuid::Uuid::parse_str("646b670c-bb50-45a4-ba08-3ab684bc4e95").unwrap()),
+            owner: uuid::Uuid::parse_str("90e700b0-2b9b-4c74-9285-f5fc94764995").unwrap(),
+            tasks: vec![Task {
+                is_done: true,
+                title: "blob".to_string(),
+            }],
+        }];
 
         assert_eq!(scanoutput_to_todocards(scan), todos)
     }
@@ -326,99 +327,68 @@ mod scan_to_cards {
 Agora podemos finalmente implementar nossa função `scanoutput_to_todocards` para o caso de 1 `items`:
 
 ```rust
-pub fn scanoutput_to_todocards(scan: ScanOutput) -> Vec<TodoCard> {
-    let item = scan.items.unwrap()[0].to_owned();
+pub fn scanoutput_to_todocards(scan: Vec<HashMap<String, AttributeValue>>) -> Vec<TodoCard> {
+    let item = scan[0].to_owned();
+    let id = item.get("id").unwrap().as_s().unwrap();
+    let owner = item.get("owner").unwrap().as_s().unwrap();
+    let title = item.get("title").unwrap().as_s().unwrap();
+    let description = item.get("description").unwrap().as_s().unwrap();
+    let state = item.get("state").unwrap().as_s().unwrap();
+    let tasks = item.get("tasks").unwrap().as_l().unwrap();
 
     vec![TodoCard {
-        id: Some(uuid::Uuid::parse_str(&item.get("id").unwrap().s.clone().unwrap()).unwrap()),
-        owner: uuid::Uuid::parse_str(&item.get("owner").unwrap().s.clone().unwrap()).unwrap(),
-        title: item.get("title").unwrap().s.clone().unwrap(),
-        description: item.get("description").unwrap().s.clone().unwrap(),
-        state: State::from(item.get("state").unwrap().s.clone().unwrap()),
-        tasks: item .get("tasks").unwrap().l .clone().unwrap()
+        id: Some(uuid::Uuid::parse_str(id).unwrap()),
+        owner: uuid::Uuid::parse_str(owner).unwrap(),
+        title: title.to_string(),
+        description: description.to_string(),
+        state: State::from(state),
+        tasks: tasks
             .iter()
             .map(|t| Task {
-                title: t.clone().m.unwrap().get("title").unwrap()
-                    .s.clone().unwrap(),
-                is_done: t.clone().m.unwrap().get("is_done").unwrap()
-                    .bool.clone().unwrap(),
+                title: t
+                    .as_m()
+                    .unwrap()
+                    .get("title")
+                    .unwrap()
+                    .as_s()
+                    .unwrap()
+                    .to_string(),
+                is_done: *t.as_m().unwrap().get("is_done").unwrap().as_bool().unwrap(),
             })
             .collect::<Vec<Task>>(),
     }]
 }
 ```
 
-Infelizmente o código de `scanoutput_to_todocards` conta com muitas referências e tipos `Option`, o que nos força a ter um excesso de `clone()` e `unwrap()`, mas basicamente estamos navegando por dentro dos tipos de `AttributeValue` e, quando o tipo é um `HashMap`, utilizamos `get`. Agora podemos testar o caso para um `scan` com dois conjuntos de `AttributeValue`. Para isso, vamos isolar a criação dos `HashMap` em `scan_with_one`:
+Infelizmente o código de `scanoutput_to_todocards` conta com muitas referências e tipos `Option`, o que nos força a ter um excesso de `unwrap()`, mas basicamente estamos navegando por dentro dos tipos de `AttributeValue` e, quando o tipo é um `HashMap`, utilizamos `get`. Agora podemos testar o caso para um `scan` com dois conjuntos de `AttributeValue`. Para isso, vamos isolar a criação dos `HashMap` em `scan_with_one`:
 
 ```rust
-fn attr_values() -> std::collections::HashMap<String, AttributeValue> {
-        let mut tasks_hash = std::collections::HashMap::new();
-        tasks_hash.insert(
-            "title".to_string(),
-            AttributeValue {
-                b: None, bool: None, bs: None, l: None, m: None, n: None, 
-                ns: None, null: None, s: Some("blob".to_string()), ss: None,
-            },
-        );
-        tasks_hash.insert(
-            "is_done".to_string(),
-            AttributeValue {
-                b: None, bool: Some(true), bs: None, l: None,
-                m: None, n: None, ns: None, null: None, s: None,  ss: None,
-            },
-        );
-        let mut hash = std::collections::HashMap::new();
-        hash.insert(
-            "title".to_string(),
-            AttributeValue {
-                b: None, bool: None, bs: None, l: None, m: None, n: None,
-                ns: None, null: None, s: Some("title".to_string()), ss: None,
-            },
-        );
-        hash.insert(
-            "description".to_string(),
-            AttributeValue {
-                b: None, bool: None, bs: None, l: None, m: None, n: None,
-                ns: None, null: None,s: Some("description".to_string()), ss: None,
-            },
-        );
-        hash.insert(
-            "owner".to_string(),
-            AttributeValue {
-                b: None, bool: None, bs: None, l: None, m: None, n: None,
-                ns: None, null: None, s: Some("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()),
-                ss: None,
-            },
-        );
-        hash.insert(
-            "id".to_string(),
-            AttributeValue {
-                b: None, bool: None, bs: None, l: None, m: None, n: None,
-                ns: None, null: None, s: Some("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()),
-                ss: None,
-            },
-        );
-        hash.insert(
-            "state".to_string(),
-            AttributeValue {
-                b: None, bool: None, bs: None, l: None, m: None, n: None,
-                ns: None, null: None, s: Some("Done".to_string()), ss: None,
-            },
-        );
-        hash.insert(
-            "tasks".to_string(),
-            AttributeValue {
-                b: None, bool: None, bs: None,
-                l: Some(vec![AttributeValue {
-                    b: None, bool: None, bs: None, l: None,
-                    m: Some(tasks_hash), n: None, ns: None,
-                    null: None, s: None, ss: None,
-                }]),
-                m: None, n: None, ns: None, null: None, s: None,  ss: None,
-            },
-        );
-        hash
-    }
+fn attr_values() -> HashMap<String, AttributeValue> {
+    let mut tasks_hash = HashMap::new();
+    tasks_hash.insert("is_done".to_string(), AttributeValue::Bool(true));
+    tasks_hash.insert("title".to_string(), AttributeValue::S("blob".to_string()));
+    let mut hash = HashMap::new();
+    hash.insert("title".to_string(), AttributeValue::S("title".to_string()));
+    hash.insert(
+        "description".to_string(),
+        AttributeValue::S("description".to_string()),
+    );
+    hash.insert(
+        "owner".to_string(),
+        AttributeValue::S("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()),
+    );
+    hash.insert(
+        "id".to_string(),
+        AttributeValue::S("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()),
+    );
+    hash.insert("state".to_string(), AttributeValue::S("Done".to_string()));
+    hash.insert(
+        "tasks".to_string(),
+        AttributeValue::L(vec![AttributeValue::M(tasks_hash)]),
+    );
+    hash
+}
+
 ```
 
 Assim a função `scan_with_one` fica:
@@ -427,13 +397,14 @@ Assim a função `scan_with_one` fica:
 fn scan_with_one() -> ScanOutput {
     let hash = attr_values();
 
-    ScanOutput {
-        consumed_capacity: None,
-        count: Some(1),
-        items: Some(vec![hash]),
-        last_evaluated_key: None,
-        scanned_count: Some(1),
-    }
+    let mut output = ScanOutput::builder().build();
+    output.consumed_capacity = None;
+    output.count = 1;
+    output.items = Some(vec![hash]);
+    output.scanned_count = 1;
+    output.last_evaluated_key = None;
+
+    output
 }
 ```
 
@@ -441,16 +412,17 @@ E podemos fazer a `scan_with_two` ser:
 
 ```rust
 fn scan_with_two() -> ScanOutput {
-        let hash = attr_values();
+    let hash = attr_values();
+    let mut output = ScanOutput::builder().build();
 
-        ScanOutput {
-            consumed_capacity: None,
-            count: Some(2),
-            items: Some(vec![hash.clone(), hash]),
-            last_evaluated_key: None,
-            scanned_count: Some(2),
-        }
-    }
+    output.consumed_capacity = None;
+    output.count = 2;
+    output.items = Some(vec![hash.clone(), hash]);
+    output.scanned_count = 2;
+    output.last_evaluated_key = None;
+
+    output
+}
 ```
 
 E assim já implementamos o seguinte teste (lembre-se de adicionar a trait `Clone` a `TodoCard` e seus derivados):
@@ -476,29 +448,45 @@ fn scanoutput_has_two_items() {
 }
 ```
 
-Nosso teste falha e agora nos permite modificar a função `scanoutput_to_todocards` para retornar um vetor com todos os `TodoCard`s contidos em `ScanOutput`:
+Nosso teste falha e agora nos permite modificar a função `scanoutput_to_todocards` para retornar um vetor com todos os `TodoCard`s contidos em um scan output:
 
 ```rust
-pub fn scanoutput_to_todocards(scan: ScanOutput) -> Vec<TodoCard> {
-    scan.items.unwrap()
+pub fn scanoutput_to_todocards(output: ScanOutput>) -> Vec<TodoCard> {
+    output
+        .items()
+        .unwrap()
         .into_iter()
-        .map(|item| TodoCard {
-            id: Some(uuid::Uuid::parse_str(&item.get("id").unwrap().s.clone().unwrap()).unwrap()),
-            owner: uuid::Uuid::parse_str(&item.get("owner").unwrap().s.clone().unwrap()).unwrap(),
-            title: item.get("title").unwrap().s.clone().unwrap(),
-            description: item.get("description").unwrap().s.clone().unwrap(),
-            state: State::from(item.get("state").unwrap().s.clone().unwrap()),
-            tasks: item.get("tasks").unwrap().l.clone().unwrap()
-                .iter()
-                .map(|t| Task {
-                    title: t.clone().m.unwrap().get("title")
-                        .unwrap().s.clone().unwrap(),
-                    is_done: t.clone().m.unwrap().get("is_done")
-                        .unwrap().bool.clone().unwrap(),
-                })
-                .collect::<Vec<Task>>(),
+        .map(|item| {
+            let id = item.get("id").unwrap().as_s().unwrap();
+            let owner = item.get("owner").unwrap().as_s().unwrap();
+            let title = item.get("title").unwrap().as_s().unwrap();
+            let description = item.get("description").unwrap().as_s().unwrap();
+            let state = item.get("state").unwrap().as_s().unwrap();
+            let tasks = item.get("tasks").unwrap().as_l().unwrap();
+
+            TodoCard {
+                id: Some(uuid::Uuid::parse_str(id).unwrap()),
+                owner: uuid::Uuid::parse_str(owner).unwrap(),
+                title: title.to_string(),
+                description: description.to_string(),
+                state: State::from(state),
+                tasks: tasks
+                    .iter()
+                    .map(|t| Task {
+                        title: t
+                            .as_m()
+                            .unwrap()
+                            .get("title")
+                            .unwrap()
+                            .as_s()
+                            .unwrap()
+                            .to_string(),
+                        is_done: *t.as_m().unwrap().get("is_done").unwrap().as_bool().unwrap(),
+                    })
+                    .collect::<Vec<Task>>(),
+            }
         })
-        .collect::<Vec<TodoCard>>()
+        .collect()
 }
 ```
 
