@@ -81,13 +81,13 @@ E seu funcionamento seria:
 ![Endpoint `Not Found` para a rota `/`](../imagens/notfound.png)
 
 Agora podemos começar a descrever o endpoint `/ping`: 
-1. A primeira coisa que vemos é a diretiva `use` associada a lib `actix_web`. Essa dirtiva nos permite disponibilizar no nosso código as funções e estruturas de `actix_web` para uso posterior, assim a diretiva `use actix_web::HttpServer` disponibilizaria a estrutura `HttpServer` para usarmos. 
-2. Depois vemos a função `async fn ping() -> impl Responder`. Essa função é uma função assíncrona, devido as palavras reservadas `async fn`, cujo nome é `ping`, recebe nenhum argumento `()` e como tipo de resposta implementa a trait `Responder`, que tem como tipo de retorno `Future<Output = Result<Response, Self::Error>>`. A resposta de `ping` é um status code `Ok()` com um `body("pong")`, porém seria possível também implementar com a função `with_status` da trait `Responder`, ficando `"pong".with_status(StatusCode::NotFound)`, que seria classificado como um `CustomResponder`, ou um `Responder` customizado.
-3. a seguir encontramos a macro `#[actix_web::main]`. A função dessa macro é executar qualquer função marcada como `async` no runtime de actix.
-4. Agora temos a função de execução `main` como `async fn main() -> std::io::Result<()> `. Assim, essa macro gera o código necessário para que nossa função `main` esteja conforme o padrão de funções `main` do Rust.
+1. A primeira coisa que vemos é a diretiva `use` associada a lib `actix_web`. Essa diretiva nos permite disponibilizar no nosso código as funções e estruturas de `actix_web` para uso posterior, assim a diretiva `use actix_web::HttpServer` disponibilizaria a estrutura `HttpServer` para usarmos. 
+2. Depois vemos a função `async fn ping() -> impl Responder`. Essa função é uma função assíncrona, devido as palavras reservadas `async fn`, cujo nome é `ping`, recebe nenhum argumento `()` e como tipo de resposta implementa a trait `Responder`, que tem como tipo de retorno `Future<Output = Result<Response, Self::Error>>`. A resposta de `ping` é um status code `Ok()` com um `body("pong")`, porém seria possível também implementar com a função `with_status` da trait `Responder`, ficando `"pong".with_status(StatusCode::Ok)`, que seria classificado como um `CustomResponder`, ou um `Responder` customizado.
+3. A seguir encontramos a macro `#[actix_web::main]`, que é habilitada por padrão (https://docs.rs/actix-web/latest/actix_web/#crate-features). A função dessa macro é executar qualquer função marcada como `async` no runtime de actix.
+4. Agora temos a função de execução `main` como `async fn main() -> std::io::Result<()> `. Assim, essa [macro](https://docs.rs/actix-web/latest/actix_web/attr.main.html) gera o código necessário para que nossa função `main` esteja conforme o padrão de funções `main` do Rust .
 5. A linha `HttpServer::new(|| {..})` permite criar um servidor HTTP com uma `application factory`, assim como permite configurar a instância do servidor, como `workers` e `bind`, que veremos a seguir.
-6. Assim, a linha `App::new().service(..)` é um `application builder` baseado no padrão *builder* para o `App`, que é uma struct correspondente a aplicação do actix-web, seu objetivo é configurar rotas e settings padrões. A função `service` registra um serviço no servidor.
-7. A rota do serviço `ping` é definida pela macros `#[get("/ping")]`.
+6. A linha `App::new().service(..)` é um `application builder` baseado no padrão *builder* para o `App`, que é uma struct correspondente a aplicação do actix-web, seu objetivo é configurar rotas e settings padrões. A função `service` registra um serviço no servidor.
+7. A rota do serviço `ping` é definida pela macro `#[get("/ping")]`.
 8. O módulo `web` possui uma série de funções auxiliares e e tipos auxiliares para o actix-web.
 9. Depois disso, vemos `workers(6)`, uma função de `HttpServer` que define a quantidade de threads trabalhadoras que estarão envolvidas nesse executável. Por padrão, o valor de `workers` é a quantidade de CPUs lógicas disponíveis.
 10. Agora temos o `bind`, que recebe o IP e a porta a qual esse servidor se conectará.
@@ -120,17 +120,21 @@ O primeiro passo para essa prova é definir a rota que vamos chamar, no caso `/~
 
 ```rust
 App::new()
-    .service(readiness) 
+    .service(readiness)
+    .service(healthcheck)
     .service(ping) 
     .default_service(web::to(|| HttpResponse::NotFound())) 
 ```
 
-Agora temos que implementar a funcao `readiness`:
+Agora temos que implementar a função `readiness`:
 
 ```rust
 #[get("/~/ready")]
 pub async fn readiness() -> impl Responder {
-    let process = std::process::Command::new("sh").arg("-c").arg("echo hello").output();
+    let process = std::process::Command::new("sh")
+        .arg("-c")
+        .arg("echo hello")
+        .output();
     match process {
         Ok(_) => HttpResponse::Accepted(),
         Err(_) => HttpResponse::InternalServerError()
