@@ -124,7 +124,7 @@ mod create_todo {
 
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header((CONTENT_TYPE, "application/json"))
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(post_todo().as_bytes().to_owned())
             .to_request();
 
@@ -170,12 +170,12 @@ Note duas mudanças na definição do `App`: nossa rota possui um padrão difere
 ```rust
 let req = test::TestRequest::post()
     .uri("/api/create")
-    .header("Content-Type", "application/json")
+    .insert_header((CONTENT_TYPE, ContentType::json()))
     .set_payload(post_todo().as_bytes().to_owned())
     .to_request();
 ```
 
-Veja que `TestRequest` agora instancia um tipo `POST` antes de adicionar informações ao seu builder, `TestRequest::post()`. As duas outras mudanças são a adição das funções `header` e `set_payload`, `.header("Content-Type", "application/json").set_payload(post_todo().as_bytes().to_owned())`. `header` define o tipo de conteúdo que estamos enviando e sua ausência nesse caso pode implicar em uma resposta com o status `400`. `set_payload` recebe um array de bytes com o conteúdo do `payload`, ou seja `post_todo`.
+Veja que `TestRequest` agora instancia um tipo `POST` antes de adicionar informações ao seu builder, `TestRequest::post()`. As duas outras mudanças são a adição das funções `header` e `set_payload`, `.header("Content-Type", ContentType::json()).set_payload(post_todo().as_bytes().to_owned())`. `header` define o tipo de conteúdo que estamos enviando e sua ausência nesse caso pode implicar em uma resposta com o status `400`. `set_payload` recebe um array de bytes com o conteúdo do `payload`, ou seja `post_todo`.
 
 ```rust
 let resp = test::call_service(&mut app, req).await;
@@ -391,7 +391,7 @@ mod create_todo {
 
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header((CONTENT_TYPE, "application/json"))
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(post_todo().as_bytes().to_owned())
             .to_request();
 
@@ -459,7 +459,7 @@ actix-service = "1.0.5"
 
 Com a biblioteca `aws-sdk-dynamodb` disponível, podemos começar a pensar em como nos comunicar com o DynamoDB. Podemos fazer isso adicionando um módulo `helpers` dentro de `todo_api/db` e criando uma função que retorna o cliente:
 
-Nota: Para utilizar o dynamodb localmente, deve ser criado um arquivo de configuracao contendo uma região e credenciais (que não precisam ser validas) da AWS em `~/.aws/config` contendo:
+Nota: Para utilizar o dynamodb localmente, deve ser criado um arquivo de configuração contendo uma região e credenciais (que não precisam ser validas) da AWS em `~/.aws/config` contendo:
 
 ```code
 [profile localstack]
@@ -525,7 +525,7 @@ pub async fn create_table() {
     }
 }
 ```
-Para testar precisamos executar o comando `make db`. Em outro terminal, precisamos setar uma variavel de ambiente para a `aws-config` utilizar o profile `localstack` que adicionamos em `~/.aws/config`, para isso usamos `export AWS_PROFILE=localstack` (no osx ou linux). Depois atualizamos a main com o cdigo abaixo e executamos em seguida, no mesmo terminal aonde setamos a variavel de ambiente `AWS_PROFILE` executamos `cargo build && cargo run`.
+Para testar precisamos executar o comando `make db`. Iremos seguir a [documentação](https://docs.aws.amazon.com/sdk-for-rust/latest/dg/dynamodb-local.html) do aws-sdk-rust para configurar o DynamoDB local. Em outro terminal, precisamos setar uma variavel de ambiente para a `aws-config` utilizar o profile `localstack` que adicionamos em `~/.aws/config`, para isso usamos `export AWS_PROFILE=localstack` (no osx ou linux). Depois atualizamos a main com o cdigo abaixo e executamos em seguida, no mesmo terminal aonde setamos a variavel de ambiente `AWS_PROFILE` executamos `cargo build && cargo run`. 
 
 ```rust
 // main.rs
@@ -670,22 +670,32 @@ pub async fn create_table() {
     }
 }
 
-async fn create_table_input(client: &Client) {
-    let table_name = TODO_CARD_TABLE.to_string();
-    let ad = AttributeDefinition::builder()
-        .attribute_name("id")
-        .attribute_type(ScalarAttributeType::S)
-        .build();
-
-    let ks = KeySchemaElement::builder()
+fn build_key_schema() -> KeySchemaElement {
+    KeySchemaElement::builder()
         .attribute_name("id")
         .key_type(KeyType::Hash)
-        .build();
+        .build()
+}
 
-    let pt = ProvisionedThroughput::builder()
+fn build_provisioned_throughput() -> ProvisionedThroughput {
+    ProvisionedThroughput::builder()
         .read_capacity_units(1)
         .write_capacity_units(1)
-        .build();
+        .build()
+}
+
+fn build_attribute_definition() -> AttributeDefinition {
+    AttributeDefinition::builder()
+        .attribute_name("id")
+        .attribute_type(ScalarAttributeType::S)
+        .build()
+}
+
+async fn create_table_input(client: &Client) {
+    let table_name = TODO_CARD_TABLE.to_string();
+    let ad = build_attribute_definition();
+    let ks = build_key_schema();
+    let pt = build_provisioned_throughput();
 
     match client
         .create_table()
@@ -697,7 +707,7 @@ async fn create_table_input(client: &Client) {
         .await
     {
         Ok(output) => {
-            println!("Output: {:?}", output);    
+            println!("Output: {:?}", output);
         }
         Err(error) => {
             println!("Error: {:?}", error);
@@ -787,7 +797,7 @@ pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
     match put_todo(&client, todo_card).await {
         None => HttpResponse::BadRequest().body("Failed to create todo card"),
         Some(id) => HttpResponse::Created()
-            .content_type("application/json")
+            .content_type(ContentType::json())
             .body(serde_json::to_string(&TodoIdResponse::new(id)).expect("Failed to serialize todo card"))
     }
 }
@@ -817,7 +827,7 @@ pub async fn put_todo(client: &Client, todo_card: TodoCardDb) ->  Option<uuid::U
 
 Veja que nosso controller ficou muito mais funcional agora. Ele recebe um JSON do tipo `TodoCard`, transforma esse JSON em um `TodoCardDb` e envia para a função `put_todo` inserir no banco de dados. Caso ocorra algum problema com a inserção fazemos pattern matching com o `None` e retornamos algo como `HttpResponse::BadRequest()` ou `HttpResponse::InternalServerError()`, mas caso o retorno seja um id em `Some`, retornamos um JSON contendo `TodoIdResponse`. Note que foi necessário adicionar a função `body` ao `HttpResponse::BadRequest()` para garantir que os dois pattern matchings tivessem o mesmo tipo de retorno `Response`, em vez de `ResponseBuilder`. 
 
-Se você estiver utilizando o `rls` do rust, vai perceber que o `into` de `item: todo_card.clone().into(),` está destacado, isso se deve ao fato de que precisamos implementar a função `into` para o tipo `TodoCardDB` de forma que retorne `HashMap<String, AttributeValue>`. Para isso, utilizamos a declaração `impl Into<HashMap<String, AttributeValue>> for TodoCardDb` com a seguinte implementação:
+Se você estiver utilizando o `rust-analyzer` do rust, vai perceber que o `into` de `item: todo_card.clone().into(),` está destacado, isso se deve ao fato de que precisamos implementar a função `into` para o tipo `TodoCardDB` de forma que retorne `HashMap<String, AttributeValue>`. Para isso, utilizamos a declaração `impl Into<HashMap<String, AttributeValue>> for TodoCardDb` com a seguinte implementação:
 
 ```rust
 // src/todo_api/model/mod.rs
@@ -1078,7 +1088,7 @@ pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
     match put_todo(todo_card) {
         None => HttpResponse::BadRequest().body("Failed to create todo card"),
         Some(id) => HttpResponse::Created()
-            .content_type("application/json")
+            .content_type(ContentType::json())
             .body(serde_json::to_string(&TodoIdResponse::new(id)).expect("Failed to serialize todo card"))
     }
 }
@@ -1226,7 +1236,7 @@ Se executarmos `cargo test` enquanto o `make db` roda, teremos duas situações:
         let mut app = test::init_service(App::new().configure(app_routes)).await;
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header((CONTENT_TYPE, "application/json"))
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
 
@@ -1262,7 +1272,7 @@ mod create_todo {
         let mut app = test::init_service(App::new().configure(app_routes)).await;
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header((CONTENT_TYPE, "application/json"))
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
 
@@ -1414,7 +1424,7 @@ mod create_todo {
         ...
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header((CONTENT_TYPE, "application/json"))
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
 
