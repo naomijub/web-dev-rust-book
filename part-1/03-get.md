@@ -73,7 +73,7 @@ mod read_all_todos {
     
         let post_req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header(("Content-Type", "application/json"))
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
         
@@ -156,7 +156,7 @@ async fn test_todo_cards_with_value() {
 
     let post_req = test::TestRequest::post()
         .uri("/api/create")
-        .insert_header(("Content-Type", "application/json"))
+        .insert_header((CONTENT_TYPE, ContentType::json()))
         .set_payload(read_json("post_todo.json").as_bytes().to_owned())
         .to_request();
 
@@ -189,10 +189,9 @@ pub async fn show_all_todo() -> impl Responder {
     let resp = get_todos(&client).await;
     match resp {
         None => HttpResponse::InternalServerError().body("Failed to read todo cards"),
-        Some(todos) => HttpResponse::Ok().content_type("application/json").body(
-            serde_json::to_string(&TodoCardsResponse { cards: todos })
-                .expect("Failed to serialize todo cards"),
-        ),
+        Some(cards) => HttpResponse::Ok()
+            .content_type(ContentType::json())
+            .body(serde_json::to_string(&TodoCardsResponse { cards }).expect(ERROR_SERIALIZE)),
     }
 }
 ```
@@ -277,29 +276,33 @@ mod scan_to_cards {
     use crate::todo_api_web::model::todo::{State, Task, TodoCard};
 
     fn scan_with_one() -> Option<Vec<std::collections::HashMap<String, AttributeValue>>> {
-        let mut tasks_hash = std::collections::HashMap::new();
-        tasks_hash.insert("title".to_string(), AttributeValue::S("blob".to_string()));
-        tasks_hash.insert("is_done".to_string(), AttributeValue::Bool(true));
+        let tasks = vec![
+            ("is_done".to_string(), AttributeValue::Bool(true)),
+            ("title".to_string(), AttributeValue::S("blob".to_string())),
+        ];
+        let tasks_hash = HashMap::<String, AttributeValue>::from_iter(tasks);
 
-        let mut hash = std::collections::HashMap::new();
-        hash.insert("title".to_string(), AttributeValue::S("title".to_string()));
-        hash.insert(
-            "description".to_string(),
-            AttributeValue::S("description".to_string()),
-        );
-        hash.insert(
-            "owner".to_string(),
-            AttributeValue::S("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()),
-        );
-        hash.insert(
-            "id".to_string(),
-            AttributeValue::S("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()),
-        );
-        hash.insert("state".to_string(), AttributeValue::S("Done".to_string()));
-        hash.insert(
-            "tasks".to_string(),
-            AttributeValue::L(vec![AttributeValue::M(tasks_hash)]),
-        );
+        let values = vec![
+            ("title".to_string(), AttributeValue::S("title".to_string())),
+            (
+                "description".to_string(),
+                AttributeValue::S("description".to_string()),
+            ),
+            (
+                "owner".to_string(),
+                AttributeValue::S("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()),
+            ),
+            (
+                "id".to_string(),
+                AttributeValue::S("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()),
+            ),
+            ("state".to_string(), AttributeValue::S("Done".to_string())),
+            (
+                "tasks".to_string(),
+                AttributeValue::L(vec![AttributeValue::M(tasks_hash)]),
+            ),
+        ];
+        let hash = HashMap::<String, AttributeValue>::from_iter(values);
 
         Some(vec![hash])
     }
@@ -319,7 +322,7 @@ mod scan_to_cards {
             }],
         }];
 
-        assert_eq!(scanoutput_to_todocards(scan), todos)
+        assert_eq!(scanoutput_to_todocards(scan).unwrap(), todos)
     }
 }
 ```
@@ -360,7 +363,7 @@ pub fn scanoutput_to_todocards(scan: Vec<HashMap<String, AttributeValue>>) -> Ve
 }
 ```
 
-Infelizmente o código de `scanoutput_to_todocards` conta com muitas referências e tipos `Option`, o que nos força a ter um excesso de `unwrap()`, mas basicamente estamos navegando por dentro dos tipos de `AttributeValue` e, quando o tipo é um `HashMap`, utilizamos `get`. Agora podemos testar o caso para um `scan` com dois conjuntos de `AttributeValue`. Para isso, vamos isolar a criação dos `HashMap` em `scan_with_one`:
+Em `scanoutput_to_todocards`, estamos navegando por dentro dos tipos de `AttributeValue` e, quando o tipo é um `HashMap`, utilizamos `get`. Agora podemos testar o caso para um `scan` com dois conjuntos de `AttributeValue`. Para isso, vamos isolar a criação dos `HashMap` em `scan_with_one`:
 
 ```rust
 fn attr_values() -> HashMap<String, AttributeValue> {
@@ -444,49 +447,50 @@ fn scanoutput_has_two_items() {
     };
     let todos = vec![todo.clone(), todo];
 
-    assert_eq!(scanoutput_to_todocards(scan), todos)
+    assert_eq!(scanoutput_to_todocards(scan).unwrap(), todos)
 }
 ```
 
 Nosso teste falha e agora nos permite modificar a função `scanoutput_to_todocards` para retornar um vetor com todos os `TodoCard`s contidos em um scan output:
 
 ```rust
-pub fn scanoutput_to_todocards(output: ScanOutput>) -> Vec<TodoCard> {
-    output
-        .items()
-        .unwrap()
-        .into_iter()
-        .map(|item| {
-            let id = item.get("id").unwrap().as_s().unwrap();
-            let owner = item.get("owner").unwrap().as_s().unwrap();
-            let title = item.get("title").unwrap().as_s().unwrap();
-            let description = item.get("description").unwrap().as_s().unwrap();
-            let state = item.get("state").unwrap().as_s().unwrap();
-            let tasks = item.get("tasks").unwrap().as_l().unwrap();
+pub fn scanoutput_to_todocards(output: ScanOutput) -> Option<Vec<TodoCard>> {
+    Some(
+        output
+            .items()?
+            .into_iter()
+            .map(|item| {
+                let id = item.get("id").unwrap().as_s().unwrap();
+                let owner = item.get("owner").unwrap().as_s().unwrap();
+                let title = item.get("title").unwrap().as_s().unwrap();
+                let description = item.get("description").unwrap().as_s().unwrap();
+                let state = item.get("state").unwrap().as_s().unwrap();
+                let tasks = item.get("tasks").unwrap().as_l().unwrap();
 
-            TodoCard {
-                id: Some(uuid::Uuid::parse_str(id).unwrap()),
-                owner: uuid::Uuid::parse_str(owner).unwrap(),
-                title: title.to_string(),
-                description: description.to_string(),
-                state: State::from(state),
-                tasks: tasks
-                    .iter()
-                    .map(|t| Task {
-                        title: t
-                            .as_m()
-                            .unwrap()
-                            .get("title")
-                            .unwrap()
-                            .as_s()
-                            .unwrap()
-                            .to_string(),
-                        is_done: *t.as_m().unwrap().get("is_done").unwrap().as_bool().unwrap(),
-                    })
-                    .collect::<Vec<Task>>(),
-            }
-        })
-        .collect()
+                TodoCard {
+                    id: Some(uuid::Uuid::parse_str(id).unwrap()),
+                    owner: uuid::Uuid::parse_str(owner).unwrap(),
+                    title: title.to_string(),
+                    description: description.to_string(),
+                    state: State::from(state),
+                    tasks: tasks
+                        .iter()
+                        .map(|t| Task {
+                            title: t
+                                .as_m()
+                                .unwrap()
+                                .get("title")
+                                .unwrap()
+                                .as_s()
+                                .unwrap()
+                                .to_string(),
+                            is_done: *t.as_m().unwrap().get("is_done").unwrap().as_bool().unwrap(),
+                        })
+                        .collect::<Vec<Task>>(),
+                }
+            })
+            .collect(),
+    )
 }
 ```
 
