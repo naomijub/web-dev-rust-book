@@ -1,6 +1,6 @@
 [Anterior](./03-get.md) | [Topo](https://github.com/naomijub/web-dev-rust-book/blob/master/book.md) | [Próximo](./05-auth.md)
 
-# Tornando nosso serviço mais realístico
+# Tornam nosso serviço mais realístico
 
 Agora vamos aplicar uma série de mudanças em nosso servidor para deixá-lo mais robusto. Algumas dessas mudanças incluem sistemas de logs, conteinerizar a aplicação, tornar ela fault tolerante, headers padrões e mais. Para isso, vamos começar com o mais simples e indispensável, o sistema de logs.
 
@@ -8,7 +8,7 @@ Agora vamos aplicar uma série de mudanças em nosso servidor para deixá-lo mai
 
 O primeiro passo para começarmos a entender logs em Rust é darmos uma olhada na crate responsável por isso. A crate que vamos utilizar é a `log = "0.4.8"`, que implementa sua lógica de logs de acordo com a ideia de que um log consiste em um `alvo`, um `nível` e um `corpo`. O alvo é uma string que define o caminho do módulo no qual o requerimento do log é necessário. O nível é a severidade do log, `error`, `warn`, `info`, `debug` e `trace`, e o corpo é o conteúdo que o log apresenta. 
 
-A crate que vamos utilizar nos disponibiliza cinco macros para isso: ` error!, warn!, info!, debug!, trace!`, dentre as quais `error` é a mais severa e `trace` a menos severa. As macros funcionam de forma muito similar ao `println!`, assim a forma de utilizá-las é bastante intuitiva. Outra questão importante é que o sistema de logs deve ser inicializado apenas uma vez por outra crate, a mais comum delas é a `env_logger = "0.9.0"`. Um exemplo rápido de como ficaria a combinação dessas duas é:
+A crate que vamos utilizar nos disponibiliza cinco macros para isso: ` error!, warn!, info!, debug!, trace!`, dentre as quais `error` é a mais severa e `trace` a menos severa. As macros funcionam de forma muito similar ao `println!`, assim a forma de utilizá-las é bastante intuitiva. Outra questão importante é que o sistema de logs deve ser inicializado apenas uma vez por outra crate, a mais comum delas é a `env_logger = "0.7.1"`. Um exemplo rápido de como ficaria a combinação dessas duas é:
 
 ```rust
 #[macro_use]
@@ -25,7 +25,7 @@ fn main() {
 
 ### Inicializando o sistema de Logs
 
-Para inicializar nosso sistema de logs, precisamos adicionar a crate `env_logger` ao nosso `[dependencies]` do `Cargo.toml`, o `env_logger = "0.9.0"`. Com a crate disponível, podemos importar o `env_logger` para o contexto do arquivo `main.rs` com `use env_logger;` e inicializá-lo com `env_logger::init()` conforme o código a seguir:
+Para inicializar nosso sistema de logs, precisamos adicionar a crate `env_logger` ao nosso `[dependencies]` do `Cargo.toml`, o `env_logger = "0.7.1"`. Com a crate disponível, podemos importar o `env_logger` para o contexto do arquivo `main.rs` com `use env_logger;` e inicializá-lo com `env_logger::init()` conforme o código a seguir:
 
 ```rust
 // ...
@@ -38,7 +38,7 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-Com isso o código parece compilar, mas não conseguimos ver logs no console quando executamos um `curl`. Isso se deve ao fato de que precisamos informar ao `actix_web` que queremos que logs de algum nível sejam disponibilizados. Para isso, devemos incluir a linha `std::env::set_var("RUST_LOG", "actix_web=info");` antes de `env_logger::init();` na função `main` para habilitar logs de `error` a `info`. Além disso, precisamos disponibilizar o middleware `Logger` com a forma como queremos o log, note que o middleware pertence à crate `actix_web`em `use actix_web::middleware::Logger;`:
+Com isso o c;odigo parece compilar, mas não conseguimos ver logs no console quando executamos um `curl`. Isso se deve ao fato de que precisamos informar ao `actix_web` que queremos que logs de algum nível sejam disponibilizados. Para isso, devemos incluir a linha `std::env::set_var("RUST_LOG", "actix_web=info");` antes de `env_logger::init();` na função `main` para habilitar logs de `error` a `info`. Além disso, precisamos disponibilizar o middleware `Logger` com a forma como queremos o log, note que o middleware pertence à crate `actix_web`em `use actix_web::middleware::Logger;`:
 
 ```rust
 // ...
@@ -46,27 +46,27 @@ use actix_web::middleware::Logger;
 use env_logger;
 // ...
 
-#[actix_web::main]
+#[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
-    create_table().await;
+    create_table();
     
     HttpServer::new(|| {
         App::new()
-            .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D"))
-            .configure(app_routes)
-            .default_service(web::to(|| HttpResponse::NotFound()))
+        .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D"))
+        .configure(app_routes)
     })
-    .workers(num_cpus::get() - 2)
-    .bind(("localhost", 4004))
+    .workers(num_cpus::get() + 2)
+    .bind("127.0.0.1:4000")
     .unwrap()
     .run()
     .await
 }
+
 ```
 
-Se fizermos um `POST curl` agora no endpoint `/api/create` vamos ver o seguinte log no terminal aonde o servidor está rodando:
+Se fizermos um `POST curl` agora no endpoint `/api/create` vamos receber o seguinte log:
 
 ```
 [2020-02-08T01:41:32Z INFO  actix_web::middleware::logger] IP:127.0.0.1:54089 DATETIME:2020-02-07T22:41:32-03:00 REQUEST:"POST /api/create HTTP/1.1" STATUS: 201 DURATION:33.976000
@@ -98,42 +98,34 @@ Para adicionar os logs ao nosso código, vamos utilizar duas macros `error!` e `
 ```rust
 use log::{debug, error};
 // ...
-pub async fn create_table() {
-    let client = get_client().await;
-    match client.list_tables().send().await {
+
+pub fn create_table() {
+    let client = client();
+    let list_tables_input: ListTablesInput = Default::default();
+
+    match client.list_tables(list_tables_input).sync() {
         Ok(list) => {
             match list.table_names {
                 Some(table_vec) => {
                     if table_vec.len() > 0 {
-                         error!("Table already exists and has more then one item");
+                        error!("Table already exists and has more then one item");
                     } else {
-                        create_table_input(&client).await
+                        create_table_input()
                     }
                 }
-                None => create_table_input(&client).await,
+                None => create_table_input(),
             };
         }
         Err(_) => {
-            create_table_input(&client).await;
+            create_table_input();
         }
     }
 }
 
-async fn create_table_input(client: &Client) {
-    let table_name = TODO_CARD_TABLE.to_string();
-    let ad = build_attribute_definition();
-    let ks = build_key_schema();
-    let pt = build_provisioned_throughput();
+fn create_table_input() {
+    // ...
 
-    match client
-        .create_table()
-        .table_name(table_name)
-        .key_schema(ks)
-        .attribute_definitions(ad)
-        .provisioned_throughput(pt)
-        .send()
-        .await
-    {
+    match client.create_table(create_table_input).sync() {
         Ok(output) => {
             debug!("Table created {:?}", output);
         }
@@ -151,18 +143,14 @@ Outro lugar em que podemos aplicar logs é no arquivo `src/todo_api/db/todo.rs`,
 use log::{debug, error};
 
 #[cfg(not(feature = "dynamo"))]
-pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
-    match client
-        .put_item()
-        .table_name(TODO_CARD_TABLE.to_string())
-        .set_item(Some(todo_card.clone().into()))
-        .send()
-        .await
-    {
+pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
+    // ...
+
+    match client.put_item(put_item).sync() {
         Ok(_) => {
             debug!("item created with id {:?}", todo_card.id);
             Some(todo_card.id)
-        }
+        },
         Err(e) => {
             error!("error when creating item {:?}", e);
             None
@@ -170,63 +158,183 @@ pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uu
     }
 }
 
-
 #[cfg(not(feature = "dynamo"))]
-pub async fn get_todos(client: &Client) -> Option<Vec<TodoCard>> {
+pub fn get_todos() -> Option<Vec<TodoCard>> {
     // ...
-    match scan_output {
-        Ok(dbitems) => {
-            let res = adapter::scanoutput_to_todocards(dbitems)?.to_vec();
-            debug!("Scanned {:?} todo cards", dbitems);
-            Some(res)
-        }
+
+    match client.scan(scan_item).sync() {
+        Ok(resp) => {
+            let todocards = adapter::scanoutput_to_todocards(resp);
+            debug!("Scanned {:?} todo cards", todocards);
+            Some(todocards)
+        },
         Err(e) => {
             error!("Could not scan todocards due to error {:?}", e);
             None
-        }
+        },
     }
 }
 ```
 
-Note que nos casos de `Err` agora estamos logando o motivo com `e`. O último passo para este momento é adicionar logs aos controllers em `src/todo_api_web/controllers/todo.rs`:
+Note que nos casos de `Err` agora estamos logando o motivo com `e`. O úmtimo passo para este momento é adicionar logs aos controllers em `src/todo_api_web/controllers/todo.rs`:
 
 ```rust
 use log::{error};
 // ...
 
-#[post("/api/create")]
 pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
-    let id = Uuid::new_v4();
-    let todo_card = adapter::todo_json_to_db(info, id);
-    let client = get_client().await;
-    match put_todo(&client, todo_card).await {
+    let todo_card = adapter::todo_json_to_db(info, uuid::Uuid::new_v4());
+
+    match put_todo(todo_card) {
         None => {
             error!("Failed to create todo card");
-            HttpResponse::BadRequest().body(ERROR_CREATE)
-        }
+            HttpResponse::BadRequest().body("Failed to create todo card")
+        },
         Some(id) => HttpResponse::Created()
-            .content_type(ContentType::json())
-            .body(serde_json::to_string(&TodoIdResponse::new(id)).expect(ERROR_SERIALIZE)),
+            .content_type("application/json")
+            .body(serde_json::to_string(&TodoIdResponse::new(id)).expect("Failed to serialize todo card"))
     }
 }
 
-#[get("/api/index")]
 pub async fn show_all_todo() -> impl Responder {
-    let client = get_client().await;
-    let resp = get_todos(&client).await;
-    match resp {
+    match get_todos() {
         None => {
             error!("Failed to read todo cards");
-            HttpResponse::InternalServerError().body(ERROR_READ)
-        }
-        Some(cards) => HttpResponse::Ok()
-            .content_type(ContentType::json())
-            .body(serde_json::to_string(&TodoCardsResponse { cards }).expect(ERROR_SERIALIZE)),
+            HttpResponse::InternalServerError().body("Failed to read todo cards")
+        },
+        Some(todos) => HttpResponse::Ok()
+            .content_type("application/json")
+            .body(serde_json::to_string(&TodoCardsResponse{cards: todos}).expect("Failed to serialize todo cards")),
     }
 }
 ```
 
 Note que adicionamos somente a opção de `error` já que o `None => {...}` é a única resposta que pode conter diversas razões, pelo fato do `Some` já estar mapeado em `put_todo` e `get_todos`.
+
+## Tornando nosso sistema tolerância a falha
+
+Erlang possui um sistema de tolerância a falhas inspirado em sistemas de atores bastante poderosos e versáteis. Assim a comunidade Rust desenvolveu uma crate que ajuda esse sistema. A crate é chamada de `bastion` e depende de outra crate chamada `fort`, que disponibiliza o runtime, para que `bastion` funcione. **Lembre-se de que adicionar runtimes implica em um aumento de consumo de memória e tamanho de executável**, mas vamos seguir com essa abordagem. Assim adicionamos as duas crates ao nosso `[dependencies]` do `Cargo.toml`:
+
+```toml
+[dependencies]
+# ...
+fort = "0.3"
+bastion = "0.3"
+```
+
+Para utilizarmos a crate `fort`, precisamos habilitar o runtime de `bastion` com a macro `#[fort::root]` e modificar a chamada da `main`. Fazemos isso modificando a antiga função `main` para se chamar `web_main` ou `actix_main`, e chamamos ela da instância `main` na qual o `bastion` está disponível:
+
+```rust
+// ...
+use bastion::prelude::*;
+
+
+#[actix_rt::main]
+async fn web_main() -> Result<(), std::io::Error> {
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+    create_table();
+    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D"))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind("127.0.0.1:4000")
+    .unwrap()
+    .run()
+    .await
+}
+
+#[fort::root]
+async fn main(_: BastionContext) -> Result<(), ()> {
+    let _ = web_main();
+    Ok(())
+}
+```
+
+Note que a função `main` também é declarada como `async`, isso é um requerimento de `fort::root`. Assim, ao executarmos `cargo run` o sistema vai se reiniciar mesmo que utilizemos `crtl+c`. Inclusive outro teste que podemos fazer é adicionar um `panic!` antes do `Ok(())`, que interromperá a thread a cada ciclo:
+
+```rust
+#[fort::root]
+async fn main(_: BastionContext) -> Result<(), ()> {
+    let _ = web_main();
+    panic!("Holy shit");
+    Ok(())
+}
+```
+
+Note que neste caso, ao tentarmos utilizar um extra `ctrl+c` recebemos o seguinte erro:
+
+```
+Panic in Arbiter thread.
+thread 'bastion-async-thread' panicked at 'env_logger::init should not be called after logger initialized: SetLoggerError(())', src/libcore/result.rs:1165:5
+```
+
+Com isso, podemos concluir que as funções `std::env::set_var("RUST_LOG", "actix_web=info")`, `env_logger::init()` e `create_table()` não precisam estar dentro da função `web_main()`:
+
+```rust
+#[actix_rt::main]
+async fn web_main() -> Result<(), std::io::Error> {    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D"))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind("127.0.0.1:4000")
+    .unwrap()
+    .run()
+    .await
+}
+
+#[fort::root]
+async fn main(_: BastionContext) -> Result<(), ()> {
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+    create_table();
+    
+    let _ = web_main();
+
+    Ok(())
+}
+```
+
+Na macro `fort::root`, existe um atributo a mais que podemos passar, o `redundancy`. Este atributo espera um valor do tipo inteiro positivo e, para utilizá-lo, basta adicionar `#[fort::root(redundancy = 2)]`. O atributo `redundancy` corresponde ao número de elementos que este grupo vai ter, no nosso caso a quantidade de `web_main()` que vamos iniciar, valor padrão de `redundancy` é `1`.
+
+No momento, precisamos ter cuidado, pois já estabelecemos uma quantidade de `workers` igual a `num_cpus::get() + 2` e isso faz com que não sobrem muitos cores para iniciarmos processos. Uma possível solução para o `redundancy` seria iniciá-lo em diferentes máquinas distribuídas, mas essa crate de `bastion` ainda não está estável. Outra possível forma de limitar o tamanho dos `workers` para poder tirar proveito do `redundancy` é definir no `HttpServer` a quantidade máxima de conexões que cada `worker` pode estabelecer com a função `maxconn`, seu valor padrão é `25k`. Um exemplo fictício seria:
+
+```rust
+#[actix_rt::main]
+async fn web_main() -> Result<(), std::io::Error> {    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D"))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() - 2)
+    .maxconn(30000)
+    .bind("127.0.0.1:4000")
+    .unwrap()
+    .run()
+    .await
+}
+
+#[fort::root(redundancy = 10)]
+async fn main(_: BastionContext) -> Result<(), ()> {
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+    create_table();
+    
+    let _ = web_main();
+
+    Ok(())
+}
+```
+> A crate que, no momento em que escrevi este livro, estava sendo desenvolvida para instâncias remotas do `bastion` pode ser encontrada no link https://github.com/bastion-rs/artillery.
+
+Agora podemos evoluir nosso código para facilitar nossa vida quando executamos um processo que se recusa a terminar, faremos isso com containers docker.
 
 ## Incluindo Docker
 
@@ -270,17 +378,8 @@ O objetivo desse segundo `Dockerfile` é diminuir o tempo de execução do cont�
 Com este container pronto, podemos começar a pensar em como utilizar os dois containers (DynamoDB e `todo_server`) em conjunto. Faremos isso com `docker-compose.yml`:
 
 ```yml
-version: '3.8'
+version: "3.7"
 services:
-  dynamodb-local:
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
-    image: amazon/dynamodb-local
-    container_name: dynamodb-local
-    ports:
-      - "8000:8000"
-    volumes:
-      - "./docker/dynamodb:/home/dynamodblocal/data"
-    working_dir: /home/dynamodblocal
   web:
     build:
       context: .
@@ -288,59 +387,117 @@ services:
     command: cargo run
     ports:
       - "4000:4000"
-    depends_on:
-      - "dynamodb-local"
-    links:
-      - "dynamodb-local"
+    cap_drop:
+      - all
+    cap_add:
+      - NET_BIND_SERVICE
     environment:
-      # Since we are using dynamodb local, the IAM authentication mechanism is not used at all. 
-      # That is, whichever credentials you provide, it will be accepted
-      AWS_ACCESS_KEY_ID: 'MYID'
-      AWS_SECRET_ACCESS_KEY: 'MYSECRET'
-      AWS_REGION: 'us-east-1'
-      DYNAMODB_ENDPOINT: 'dynamodb-local'
+      - AWS_ACCESS_KEY_ID=foo
+      - AWS_SECRET_ACCESS_KEY=bar
+      - AWS_REGION=julia-home
+      - AWS_DYNAMODB_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - dynamodb
+    links:
+      - dynamodb
+    networks:
+      internal_net:
+        ipv4_address: 172.21.1.2
+
+  dynamodb:
+    container_name: "dynamodb"
+    image: amazon/dynamodb-local
+    ports:
+      - "8000:8000"
+    networks:
+      internal_net:
+        ipv4_address: 172.21.1.1
+    environment:
+      - ./Djava.library.path=./DynamoDBLocal_lib
+    volumes:
+      - dynamodata:/home/dynamodblocal/
+    working_dir: /home/dynamodblocal/
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ."
+
+networks:
+  internal_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  dynamodata:
 ```
-Nosso `docker-compose` precisa de duas chaves principais: `version`, que corresponde à versão do compose, `services`, que corresponde aos contêineres que vamos rodar. Em `services`, precisamos declarar dois contêineres `web`, os quais conterão nossa aplicação e o contêiner `dynamodb`, que conterá a imagem do **DynamoDB** e veio (desse tutorial)[https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.DownloadingAndRunning.html]. O contêiner `dynamodb` possui as seguintes chaves:
+
+Nosso `docker-compose` precisa de quatro chaves principais: `version`, que corresponde à versão do compose, `services`, que corresponde aos contêineres que vamos rodar, `networks` é a configuração de rede que vamos utilizar, e `volumes` são os volumes compartilhados com os contêineres. A configuração de `networks` simplesmente define uma rede interna com `internal_net` e uma range de subnets em `subnet: 172.21.0.0/16`. Em `services`, precisamos declarar dois contêineres `web`, os quais conterão nossa aplicação e o contêiner `dynamodb`, que conterá a imagem do **DynamoDB**. O contêiner `dynamodb` possui as seguintes chaves:
 
 * `container_name`: é o nome do contêiner, no nosso caso `dynamodb`.
 * `image`: a fonte da imagem que estamos utilizando, no caso do DynamoDB é `amazon/dynamodb-local`.
 * `ports`: o mapeamento de portas de dentro do contêiner para fora, `8000:8000`.
+* `networks`: a definição do IP que vamos utilizar, `ipv4_address: 172.21.1.1`.
+* `environment`: configurações de ambiente, `./Djava.library.path=./DynamoDBLocal_lib`, relevante para o dynamo.
 * `volumes`: volumes disponíveis para o dynamo utilizar, `dynamodata:/home/dynamodblocal/`.
 * `working_dir`: diretório no qual o dynamo executará, `/home/dynamodblocal/`.
 * `command`: para inicializar o dynamo `"-jar DynamoDBLocal.jar -sharedDb -dbPath ."`.
 
-Depois disso temos o `web` que irá rodar a todo API, que não vou repetir algumas chaves:
+Depois disso temos o `web`, que não vou repetir algumas chaves:
 
 * `build`: o contexto de criação da imagem, `context: .`. No caso, estamos passando um dockerfile chamado `Dockerfile` `dockerfile: Dockerfile`.
 * `command`: executamos o comando `cargo run` para essa aplicação.
-* `environment`: para executar o DynamoDB dessa forma precisamos adicionar algumas variáveis de ambiente para que o `client` configure suas credenciais,
-de acordo com https://docs.aws.amazon.com/sdk-for-rust/latest/dg/dynamodb-local.html.
-    - `AWS_ACCESS_KEY_ID=AKIDLOCALSTACK`
-    - `AWS_SECRET_ACCESS_KEY=localstacksecret`
-    - `AWS_REGION=us-east-1`
-    - `DYNAMODB_ENDPOINT=dynamodb-local` 
-Usaremos a variável de ambiente `DYNAMODB_ENDPOINT` para saber qual address iremos usar quando inicializarmos
-o dynamodb client na nossa API. Faremos a seguinte mudança na função `get_client`:
+* `cap_drop` e `cap_add`: correspondem a capacidade de um container de remover ou de adicionar capacidades.
+* `environment`: para executar o DynamoDB dessa forma precisamos adicionar algumas variáveis de ambiente para que o `client` configure suas credenciais.
+    - `AWS_ACCESS_KEY_ID=foo`
+    - `AWS_SECRET_ACCESS_KEY=bar`
+    - `AWS_REGION=julia-home`
+    - `AWS_DYNAMODB_ENDPOINT=http://dynamodb:8000`
+* `depends_on`: define a ordem na qual os serviços devem ser inicializados, assim `dynamodb` é inicializado antes de `web`
+* `links`: forma legada de fazer com que dois serviços estejam conectados, atualmente bastaria o `networks`, mas coloquei como exemplo. No caso de `links` e `networks` estarem definidos, é preciso que ambos estejam na mesma rede.
+
+Se executarmos `docker-compose up`, veremos que nossos serviços são inicializados, porém, quando fazemos um request, ocorre uma falha de comunicação. Para resolver essa falha, precisamos alterar nosso cliente para que ele se conecte às configurações da rede do `docker-compose`. Para isso, podemos criar um novo cliente e fazer com que o antigo execute somente com a feature `dynamo` ativada:
 
 ```rust
 // src/todo_api/db/helpers.rs
-pub async fn get_client() -> Client {
-    let config = aws_config::load_from_env().await;
-
-    let addr = if let Ok(db_endpoint) = std::env::var("DYNAMODB_ENDPOINT") {
-        format!("http://{}:8000", db_endpoint)
-    } else {
-        "http://0.0.0.0:8000".to_string()
-    };
-
-    let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
-        .endpoint_resolver(Endpoint::immutable(addr.parse().expect("Invalid URI")))
-        .build();
-    Client::from_conf(dynamodb_local_config)
+// ...
+#[cfg(feature = "dynamo")]
+pub fn client() -> DynamoDbClient {
+    DynamoDbClient::new(Region::Custom {
+        name: String::from("us-east-1"),
+        endpoint: String::from("http://localhost:8000"),
+    })
 }
+
+#[cfg(not(feature = "dynamo"))]
+pub fn client() -> DynamoDbClient {
+    DynamoDbClient::new(Region::Custom {
+        name: String::from("julia-home"),
+        endpoint: String::from("http://dynamodb:8000"),
+    })
+}
+// ...
 ```
-* `depends_on`: define a ordem na qual os serviços devem ser inicializados, assim `dynamodb` é inicializado antes de `web`
-* `links`: forma legada de fazer com que dois serviços estejam conectados, atualmente bastaria o `networks`, mas coloquei como exemplo. No caso de `links` e `networks` estarem definidos, é preciso que ambos estejam na mesma rede.
+
+Além disso, precisamos alterar o `bind` de nosso servidor para expor o serviço para fora do container:
+
+```rust
+// ...
+
+#[actix_rt::main]
+async fn web_main() -> Result<(), std::io::Error> {    
+    HttpServer::new(|| {
+        App::new()
+        .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D"))
+        .configure(app_routes)
+    })
+    .workers(num_cpus::get() + 2)
+    .bind("0.0.0.0:4000")
+    .unwrap()
+    .run()
+    .await
+}
+
+// ...
+```
 
 Se tivéssemos as configurações de produção, poderíamos criar a feature `compose` para utilizar com o `docker-compose`. Se executarmos o código agora com `docker-compose up --build` e, em seguida, um `curl`, tudo voltará a funcionar como antes. Outra coisa que podemos fazer agora é atualizar nosso Makefile para incluir o `docker-compose`:
 
@@ -361,6 +518,7 @@ down:
 	docker-compose down
 ```
 
+
 ## Headers padrões
 
 Outro ponto que acredito ser importante é o uso de headers para identificar os requests nos logs. Costumo ver o padrão de um header chamado `x-request-id` cujo valor é um `uuid`. Para implementarmos esse padrão com o actix, precisamos utilizar um middleware que felizmente a equipe do actix já disponibilizou para nós, o `actix_web::middleware::DefaultHeaders`. Para isso, precisamos disponibilizá-lo no escopo com `use` e depois passar essa informação para um `wrap`. A forma de utilizar esses headers padrões é `DefaultHeaders::new().header("X-Version", "0.2")`, isto é, criamos um novo header com `DefaultHeaders::new()` e depois chamamos a função `header` para adicionar um header com os argumentos-chave e valor do tipo string:
@@ -370,12 +528,10 @@ Outro ponto que acredito ser importante é o uso de headers para identificar os 
 // ...
 HttpServer::new(|| {
     App::new()
-        .wrap(DefaultHeaders::new().add(("x-request-id", Uuid::new_v4().to_string())))
-        .wrap(Logger::new(
-            "IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D",
-        ))
-        .configure(app_routes)
-    })
+    .wrap(DefaultHeaders::new().header("x-request-id", Uuid::new_v4().to_string()))
+    .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D"))
+    .configure(app_routes)
+})
 // ...
 ```
 
@@ -385,10 +541,10 @@ Além disso, precisamos definir o header no `Logger`, para isso usamos a chave `
 // ...
 HttpServer::new(|| {
     App::new()
-        .wrap(DefaultHeaders::new().add(("x-request-id", Uuid::new_v4().to_string())))
-        .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
-        .configure(app_routes)
-    })
+    .wrap(DefaultHeaders::new().header("x-request-id", Uuid::new_v4().to_string()))
+    .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
+    .configure(app_routes)
+})
 // ...
 ```
 
@@ -405,52 +561,40 @@ Nosso próximo passo vem de uma necessidade de refactor e preparação para o c�
 Assim, nosso primeiro passo é descrever a o modelo de `Clients` em `src/todo_api_web/model/http.rs`:
 
 ```rust
-use aws_sdk_dynamodb::Client;
-
-use crate::todo_api::db::helpers::get_client;
+use crate::todo_api::db::helpers::client;
 
 #[derive(Clone)]
 pub struct Clients {
-    pub dynamo: Client,
+    pub dynamo: rusoto_dynamodb::DynamoDbClient,
 }
 
 impl Clients {
-    pub async fn new() -> Self {
-        Self {
-            dynamo: get_client().await,
-        }
+    pub fn new() -> Self {
+        Self { dynamo: client() }
     }
 }
-
 ```
 
-Agora podemos utilizar a função `app_data` em `HttpServer` para passar Clients como argumento. Fazemos isso com `Clients::new()`:
+Agora podemos utilizar a função `data` em `HttpServer` para passar Clients como argumento. Fazemos isso com `Clients::new()`:
 
 ```rust
 // ...
-use todo_server::{
-    todo_api::db::helpers::create_table,
-    todo_api_web::{model::http::Clients, routes::app_routes},
+use todo_api_web::{
+    routes::app_routes,
+    model::http::Clients,
 };
 
-#[actix_web::main]
-async fn main() -> Result<(), std::io::Error> {
-    std::env::set_var("RUST_LOG", "actix_web=info");
-    env_logger::init();
-
-    let client = web::Data::new(Clients::new().await);
-    create_table(&client.dynamo.clone()).await;
-
-    HttpServer::new(move|| {
+#[actix_rt::main]
+async fn web_main() -> Result<(), std::io::Error> {  
+    HttpServer::new(|| {
         App::new()
-            .app_data(client.clone())
-            .wrap(DefaultHeaders::new().add(("x-request-id", Uuid::new_v4().to_string())))
-            .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
-            .configure(app_routes)
+        .data(Clients::new())
+        .wrap(DefaultHeaders::new().header("x-request-id", Uuid::new_v4().to_string()))
+        .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
+        .configure(app_routes)
     })
-    .workers(num_cpus::get() - 2)
-    .max_connections(30000)
-    .bind(("0.0.0.0", 4000))
+    .workers(num_cpus::get() + 2)
+    .bind("0.0.0.0:4000")
     .unwrap()
     .run()
     .await
@@ -462,76 +606,124 @@ Com isso temos `Clients` disponível no nos nossos controllers, para isso adicio
 
 ```rust
 // ...
-use crate::todo_api_web::model::http::Clients;
+use crate::{
+    // ...
+    todo_api_web::model::{
+        http::Clients,
+        TodoCard, TodoIdResponse, TodoCardsResponse
+    }
+};
 
-#[post("/api/create")]
+
 pub async fn create_todo(state: web::Data<Clients>, info: web::Json<TodoCard>) -> impl Responder {
-    let id = Uuid::new_v4();
-    let todo_card = adapter::todo_json_to_db(info, id);
-    let client = state.dynamo.clone();
-//...
+    let todo_card = adapter::todo_json_to_db(info, uuid::Uuid::new_v4());
+
+    match put_todo(state.dynamo.clone(), todo_card) {
+        // ...
+    }
 }
 
-#[get("/api/index")]
 pub async fn show_all_todo(state: web::Data<Clients>) -> impl Responder {
-    let client = state.dynamo.clone();
-    //...
+    match get_todos(state.dynamo.clone()) {
+        // ...
+    }
 }
 ```
 
-As funcões `put_todo` e `get_todos` ja esperam um argumento do tipo `aws_sdk_dynamodb::Client` então
-não será preciso modificar elas.
-
-Feito isso, devemos adicionar o novo client a todos os testes de integração, pois esse argumento é esperado nas funções de controller. Um exemplo seria:
+Agora precisamos que as funcões `put_todo` e `get_todos` tenham como argumentos um `client :rusoto_dynamo::DynamoDbClient`:
 
 ```rust
-    #[actix_web::test]
-    async fn test_todo_cards_count() {
-        let client = web::Data::new(Clients::new().await);
-        let mut app =
-            test::init_service(App::new().app_data(client.clone()).configure(app_routes)).await;
-    //...
+// ...
+use rusoto_dynamodb::{DynamoDbClient, PutItemInput, ScanInput};
+
+#[cfg(not(feature = "dynamo"))]
+pub fn put_todo(client: DynamoDbClient, todo_card: TodoCardDb) -> Option<Uuid> {
+    use rusoto_dynamodb::DynamoDb;
+
+    let put_item = PutItemInput {
+        table_name: TODO_CARD_TABLE.to_string(),
+        item: todo_card.clone().into(),
+        ..PutItemInput::default()
+    };
+
+    match client.put_item(put_item).sync() {
+        // ...
+    }
+}
+
+#[cfg(not(feature = "dynamo"))]
+pub fn get_todos(client: DynamoDbClient) -> Option<Vec<TodoCard>> {
+    use rusoto_dynamodb::DynamoDb;
+
+    let scan_item = ScanInput {
+        limit: Some(100i64),
+        table_name: TODO_CARD_TABLE.to_string(),
+        ..ScanInput::default()
+    };
+
+    match client.scan(scan_item).sync() {
+        // ...
+    }
+}
+
+#[cfg(feature = "dynamo")]
+pub fn get_todos(_: DynamoDbClient) -> Option<Vec<TodoCard>> {
+    // ...
+}
+
+#[cfg(feature = "dynamo")]
+pub fn put_todo(_: DynamoDbClient, todo_card: TodoCardDb) -> Option<Uuid> {
+    // ...
+}
+```
+
+Feito isso, devemos adicionar `.data(Clients::new())` a todos os testes de integração, pois esse argumento é esperado nas funções de controller. Um exemplo seria:
+
+```rust
+#[actix_rt::test]
+    async fn test_todo_cards_with_value() {
+        let mut app = test::init_service(
+            App::new()
+                .data(Clients::new())
+                .configure(app_routes)
+        ).await;
+    
+        // ...
+        assert_eq!(todo_cards.cards, mock_get_todos());
     }
 ```
 
 ### Serializando o Response
 
-Até o momento estávamos utilizando o formato de criação de `HttpResponse` da seguinte maneira `HttpResponse::Ok().content_type("application/json").body(serde_json::to_string(&struct).expect("Failed to serialize todo cards"))`, mas existe uma forma que pode simplificar nossa vida por nos permitir delegar a chamada de `serde_json`. Esse formato substitui o `.body(...)` por `.json(...)`. A vantagem de se utilizar esse formato é que ele reduz a quantidade de código que nós devemos manter, delegando ao actix essa responsabilidade. Nos capítulos introdutórios do livro, falamos que o actix estava com muita vantagem em relação a outros frameworks nos benchmarks da TechEmpower, porém, no caso de serialização JSON, existem alguns frameworks C/C++ à sua frente, inclusive a crate `hyper`. O Objetivo de `body` é principalmente enviar mensagens sem dados estruturados ou estruturados em outros formatos como [Edn](https://crates.io/crates/edn-rs).
+Até o momento estávamos utilizando o formato de criação de `HttpResponse` da seguinte maneira `HttpResponse::Ok().content_type("application/json").body(serde_json::to_string(&struct).expect("Failed to serialize todo cards"))`, mas existe uma forma que pode simplificar nossa vida por nos permitir delegar a chamada de `serde_json`. Esse formato substitui o `.body(...)` por `.json(...)`. A vantagem de se utilizar esse formato é que ele reduz a quantidade de código que nós devemos manter, delegando ao actix essa responsabilidade. Nos capítulos introdutórios do livro, falamos que o actix estava com muita vantagem em relação a outros frameworks nos benchmarks da TechEmpower, porém, no caso de serialização JSON, existem alguns frameworks C/C++ à sua frente, inclusive a crate `hyper`. O Objetivo de `body` é principalmente enviar mensagens sem dados estruturados ou estruturados em outros formatos como Edn.
 
 Com esse pequeno refactor, nossos controllers de `todo` serão modificados para o seguinte formato:
 
 ```rust
 // src/todo_web_api/controller/todo.rs
 // ...
-#[post("/api/create")]
 pub async fn create_todo(state: web::Data<Clients>, info: web::Json<TodoCard>) -> impl Responder {
-    let id = Uuid::new_v4();
-    let todo_card = adapter::todo_json_to_db(info, id);
-    let client = state.dynamo.clone();
+    let todo_card = adapter::todo_json_to_db(info, uuid::Uuid::new_v4());
 
-    match put_todo(&client, todo_card).await {
+    match put_todo(state.dynamo.clone(), todo_card) {
         None => {
-            error!("Failed to create todo card {}", ERROR_CREATE);
-            HttpResponse::BadRequest().body(ERROR_CREATE)
+            error!("Failed to create todo card");
+            HttpResponse::BadRequest().body("Failed to create todo card")
         }
         Some(id) => HttpResponse::Created()
-            .content_type(ContentType::json())
-            .json(TodoIdResponse::new(id)),
+            .content_type("application/json")
+            .json(TodoIdResponse::new(id))
     }
 }
 
-#[get("/api/index")]
 pub async fn show_all_todo(state: web::Data<Clients>) -> impl Responder {
-    let client = state.dynamo.clone();
-    let resp = get_todos(&client).await;
-    match resp {
+    match get_todos(state.dynamo.clone()) {
         None => {
             error!("Failed to read todo cards");
-            HttpResponse::InternalServerError().body(ERROR_READ)
+            HttpResponse::InternalServerError().body("Failed to read todo cards")
         }
-        Some(cards) => HttpResponse::Ok()
-            .content_type(ContentType::json())
-            .json(TodoCardsResponse { cards }),
+        Some(todos) => HttpResponse::Ok().content_type("application/json")
+            .json(TodoCardsResponse { cards: todos })
     }
 }
 ```
