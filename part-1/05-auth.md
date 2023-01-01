@@ -2,11 +2,11 @@
 
 # Autenticação
 
-Criaremos funções do serviço para registrar e para fazer login no nosso serviço. Além disso, implementaremos um middleware que protege nossos endpoints de usuários não autenticados. Para realizar isso vamos utilizar a crate `Diesel` para lidar com a base de dados, que será o Postgres. Para isso precisamos seguir alguns passos:
+Criaremos funções do serviço para registrar e para fazer login no nosso serviço. Além disso, implementaremos um middleware que protege nossos endpoints de usuários não autenticados. Para realizar isso vamos utilizar a crate `Diesel` para lidar com a base de dados, que será o Postgres. Para isso precisamos seguir alguns passos (também em https://diesel.rs/guides/getting-started):
 
-1. Instale a `diesel_cli`, pois este binário ajuda a gerenciar o projeto. Utilize `cargo install diesel_cli` para isso. Para compilar o `diesel_cli` é preciso ter a lib `lmysqlclient`, no MacOS podemos fazer isso com `brew install mysql` ou simplesmente utilizar `cargo install diesel_cli --no-default-features --features postgres` para isntalar somente o conector de `postgres`.
+1. Instale a `diesel_cli`, pois este binário ajuda a gerenciar o projeto. Utilize `cargo install diesel_cli` para isso. Para compilar o `diesel_cli` é preciso ter a lib `libpq`, no MacOS podemos fazer isso com `brew install postgresql`, `brew install libpq` e depois `cargo install diesel_cli --no-default-features --features postgres` para instalar somente o conector de `postgres`. 
 2. Ter um container disponível `docker run -i --rm --name auth-db -p 5432:5432 -e POSTGRES_USER=auth -e POSTGRES_PASSWORD=secret -d postgres`
-3. Para utilizar o `diesel_cli` executamos o comando `diesel setup`, mas para isso precisamos da url do postgress em um arquivo `.env` com `echo DATABASE_URL=postgres://auth:secret@localhost/auth_db > .env`. Agora executamos `diesel setup` para estabelecer a conexão.
+3. Para utilizar o `diesel_cli` executamos o comando `diesel setup`, mas para isso precisamos da url do postgress em um arquivo `.env`. Para isso precisamos executar `echo DATABASE_URL=postgres://auth:secret@localhost/auth_db > .env`. Agora executamos `diesel setup --migration-dir src/migrations` para estabelecer a conexão.
 4. Depois podemos criar nossas migrações com `diesel migration generate create_auth`, note a pasta `migrations` com duas subpastas cada uma contendo um `up.sql` e um `down.sql`.
 5. Na segunda pasta vamos criar a tabela `auth_user` em `up.sql`:
 
@@ -25,7 +25,7 @@ CREATE TABLE auth_user (
 DROP TABLE auth_user;
 ```
 
-6. Agora basta executar as migrations com `diesel migration run`, caso você queira reverter as migrations basta executar `diesel migration redo`. Note a criação de um arquivo `src/schema.rs` em nosso projeto:
+6. Agora basta executar as migrations com `diesel migration run --migration-dir src/migrations`, caso você queira reverter as migrations basta executar `diesel migration redo`. Note a criação de um arquivo `src/schema.rs` em nosso projeto:
 
 ```rust
 table! {
@@ -44,21 +44,33 @@ table! {
 
 > Nota sobre Diesel em Produção
 > 
-> Quando em produção você talvez prefira executar suas migrações na inicialização da aplicação. Assim, a crate Diesel disponibiliza a macro `embed_migrations!`, permitindo embedar os scripts de migração como parte final do binário. Para usa-la, basta incluir `mbedded_migrations::run(&db_conn)` no início de suas `main` e as migrações serão executadas.
+> Quando em produção você talvez prefira executar suas migrações na inicialização da aplicação. Assim, a [crate Diesel disponibiliza a macro](https://docs.diesel.rs/master/diesel_migrations/macro.embed_migrations.html_) `embed_migrations!`, permitindo embedar os scripts de migração como parte final do binário. Para usá-la, basta usar um snippet similar ao abaixo no início de suas `main` e as migrações serão executadas.
+>
+>```rust
+>use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+>pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations/postgresql");
+>
+>fn run_migrations(connection: &mut impl MigrationHarness<DB>) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+>    connection.run_pending_migrations(MIGRATIONS)?;
+>
+>    Ok(())
+>}
+>```
+>
 
-## Configurando o Postgress com Rust
+## Configurando o Postgres com Rust
 
 Agora podemos começar a evoluir a autenticação do nosso servidor, para isso devemos adicionar algumas crates ao `[dependencies]` do Cargo.toml:
 
 ```toml
-actix = "0.9.0"
-chrono = { version = "0.4.10", features = ["serde"] }
-diesel = { version = "1.4.3", features = ["postgres", "uuidv07", "r2d2", "chrono"] }
+actix = "0.11.0"
+chrono = { version = "0.4.23", features = ["serde"] }
+diesel = {version = "2.0.2", features = ["chrono", "postgres", "r2d2", "uuid"]}
 dotenv = "0.15.0"
-r2d2 = "0.8.8"
+r2d2 = "0.8.10"
 ```
 
-A abordagem que vamos seguir aqui é diferente da apresentada no guia do diesel, consulte bibliografia para obter o link, pois vamos tentar tirar proveito do sistema de actors do actix (caso você queira, é um bom exercício aplicar a mesma estratégia ao `DynamoDbClient`). Assim, em nosso módulo `src/todo_api/db/helpers.rs` vamos criar uma struct `DbExecutor`, com um tipo de conexão de pool, que vai implementar a trait `Actor` do actix:
+A abordagem que vamos seguir aqui é diferente da apresentada no guia do diesel, consulte bibliografia para obter o link, pois vamos tentar tirar proveito do sistema de actors do actix (caso você queira, é um bom exercício aplicar a mesma estratégia ao `Client`). Assim, em nosso módulo `src/todo_api/db/helpers.rs` vamos criar uma struct `DbExecutor`, com um tipo de conexão de pool, que vai implementar a trait `Actor` do actix:
 
 ```rust
 use actix::{Actor, SyncContext};
@@ -74,7 +86,7 @@ impl Actor for DbExecutor {
 
 > Actors
 > 
->  Actors se comunicam exclusivamente pela troca de mensagens. Assim, o actor que envia a mensagem irá, opcionalmente, esperar pela respostas. Além disso, actors não são referenciados diretamente, mas sim pelos seus endereços. Qualquer tipo no RUst pode se tornar um actor, o único requerimento é que implemente a trait `Actor`.
+>  Actors se comunicam exclusivamente pela troca de mensagens. Assim, o actor que envia a mensagem irá, opcionalmente, esperar pela respostas. Além disso, actors não são referenciados diretamente, mas sim pelos seus endereços. Qualquer tipo no Rust pode se tornar um actor, o único requerimento é que implemente a trait `Actor`.
 
 Depois disso precisamos adicionar a struct `DbExecutor` ao nosso `Clients`, porém nosso `DbExecutor` vai precisar precisar ser envelopado em um `Addr<T>`, que corresponde ao endereço do actor:
 
@@ -85,7 +97,7 @@ use crate::todo_api::db::helpers::{client, DbExecutor};
 
 #[derive(Clone)]
 pub struct Clients {
-    pub dynamo: rusoto_dynamodb::DynamoDbClient,
+    pub dynamo: aws_sdk_dynamodb::Client,
     pub postgres: Addr<DbExecutor>,
 }
 
@@ -135,10 +147,11 @@ Agora podemos modificar a função `Clients::new` para que não seja preciso pas
 ```rust
 use crate::todo_api::db::helpers::{client, DbExecutor, db_executor_address};
 use actix::prelude::Addr;
+use aws_sdk_dynamodb::Client;
 
 #[derive(Clone)]
 pub struct Clients {
-    pub dynamo: rusoto_dynamodb::DynamoDbClient,
+    pub dynamo: aws_sdk_dynamodb::Client,
     pub postgres: Addr<DbExecutor>,
 }
 
@@ -155,17 +168,18 @@ impl Clients {
 Note que ao executar o código obtemos uma falha, pois `DATABASE_URL` não está setada, agora precisamos utilizar as configurações do postgres para o `docker-compose`:
 
 ```yml
-version: "3.7"
+# ...
 services:
 # ...
+  web:
+  environment:
+      # ...
+      DATABASE_URL: 'postgres://auth:secret@postgres:5432/auth_db'
   postgres:
     container_name: "postgres"
     image: postgres
     ports:
       - "5432:5432"
-    networks:
-      internal_net:
-        ipv4_address: 172.21.1.15
     environment:
       - POSTGRES_USER=auth
       - POSTGRES_PASSWORD=secret
@@ -173,14 +187,14 @@ services:
 # ...
 ```
 
-Para isso precisamos remover nosso `env_logger` nosso código e Cargo.toml. Além disso, a definição da variável de ambiente do log passa para o arquivo `.env`:
+Para isso precisamos remover nosso `env_logger` do nosso código e Cargo.toml. Além disso, a definição da variável de ambiente do log passa para o arquivo `.env`:
 
 ```
-DATABASE_URL=postgres://auth:secret@172.21.1.15/auth_db
+DATABASE_URL=postgres://auth:secret/auth_db
 RUST_LOG=actix_web=info
 ```
 
-Agora precisamos executar as migrações no docker compose, para isso vamos utilizar `embed_migrations!` migrations como falamos anteriormente. A macro `embed_migrations!` está disponível na crate `diesel_migrations = "1.4.0"`, adicione ela a seu `[dependencies]` do Cargo.toml. No módulo `src/schema.rs` adicione a linha `embed_migrations!();` depois da macro `table!`. E agora precisamos que o código execute a migração. Para isso adicionamos a função `run_migrations` em `create_table`, no módulo `src/todo_api/db/helpers.rs`:
+Agora precisamos executar as migrações no docker compose, para isso vamos utilizar `embed_migrations!` migrations como falamos anteriormente. A macro `embed_migrations!` está disponível na crate `diesel_migrations = "2.0.0"`, adicione ela a seu `[dependencies]` do Cargo.toml. E agora precisamos que o código execute a migração. Para isso adicionamos a função `run_migrations` em `create_table`, no módulo `src/todo_api/db/helpers.rs`:
 
 ```rust
 use actix::{Actor, Addr, SyncArbiter, SyncContext};
@@ -190,24 +204,39 @@ use diesel::{
 };
 use diesel_migrations::run_pending_migrations;
 use log::{debug, error};
-// ...
 use std::env;
 
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/migrations");
+
 // ...
 
-pub fn create_table() {
-    let client = client();
-    let list_tables_input: ListTablesInput = Default::default();
-    run_migrations();
+pub async fn create_table(client: &Client) {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut pg_conn = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
 
-    // ...
+    run_migrations(&mut pg_conn);
+    match client.list_tables().send().await {
+        Ok(list) => {
+            match list.table_names {
+                Some(table_vec) => {
+                    if table_vec.len() > 0 {
+                        println!("Error: {:?}", "Table already exists");
+                    } else {
+                        create_table_input(&client).await
+                    }
+                }
+                None => create_table_input(&client).await,
+            };
+        }
+        Err(_) => {
+            create_table_input(&client).await;
+        }
+    }
 }
 
-fn run_migrations() {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let pg_conn = PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url));
-    match run_pending_migrations(&pg_conn) {
+fn run_migrations(pg_conn: &mut PgConnection) {
+    match pg_conn.run_pending_migrations(MIGRATIONS) {
         Ok(_) => debug!("auth database created"),
         Err(_) => error!("auth database creation failed"),
     };
@@ -226,7 +255,7 @@ Nosso próximo passo é modelar o domínio de autenticação em `todo_api`, cham
 use crate::schema::*;
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "auth_user"]
+#[diesel(table_name = auth_user)]
 pub struct User {
     email: String,
     id: uuid::Uuid,
@@ -303,59 +332,7 @@ pub fn one_day_from_now() -> DateTime<Utc> {
 ```
 ### Adaptando o request para um modelo de banco de dados.
 
-Agora precisamos de um modelo que represente o request HTTP de `signup`, porém nossos modelos de `Todo` estão todos em `src/todo_api_web/model/mod.rs`, assim devemos criar um módulo `model/todo.rs` e corrigir todas as chamadas:
-
-```rust
-// src/todo_api_web/controller/todo.rs
-use crate::{
-    // ...
-    todo_api_web::model::{
-        http::Clients,
-        todo::{TodoCard, TodoIdResponse, TodoCardsResponse}
-    }
-};
-
-// src/todo_api/db/todo.rs
-use crate::todo_api_web::model::todo::TodoCard;
-
-// src/todo_api/adapter/mod.rs
-use crate::{
-    todo_api::model::{StateDb, TaskDb, TodoCardDb},
-    todo_api_web::model::todo::{State, Task, TodoCard},
-};
-// ...
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::{
-        todo_api::model::{StateDb, TaskDb, TodoCardDb},
-        todo_api_web::model::todo::{State, Task, TodoCard},
-    };
-    // ...
-}
-
-// tests/helpers.rs
-use todo_server::todo_api_web::model::todo::{State, Task, TodoCard};
-
-// tests/todo_api_web/controller.rs
-mod create_todo {
-    use todo_server::todo_api_web::{
-        model::todo::TodoIdResponse,
-        routes::app_routes
-    };
-    // ...
-}
-
-mod read_all_todos {
-    use todo_server::todo_api_web::{
-        model::todo::{TodoCardsResponse},
-        routes::app_routes
-    };
-    // ...
-}
-```
-
-Com tudo corrigido, podemos criar o módulo `src/todo_api_web/model/auth.rs` com a struct `SignUp`:
+Agora precisamos de um modelo que represente o request HTTP de `signup`. Iremos criar o módulo `src/todo_api_web/model/auth.rs` com a struct `SignUp`:
 
 ```rust
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -365,7 +342,7 @@ pub struct SignUp {
 }
 ```
 
-Note que ambos campos são `pub`, isso é porque vamos precisar deles no `adapter`. Felizmente não podemos guardar o `password` como texto em nosso banco de dados, para isso vamos utilizar uma crate chamada bcrypt, adicionando `bcrypt = "0.6"` ao nosso `[dependencies]` do Cargo.toml (caso você se interesse por criptografia e queira outras opções, sugiro olhar também as crates `argonautica` e `libreauth`). Faremos está conversão no módulo `src/todo_api/adapter/auth.rs`:
+Note que ambos campos são `pub`, isso é porque vamos precisar deles no `adapter`. Felizmente não podemos guardar o `password` como texto em nosso banco de dados, para isso vamos utilizar uma crate chamada bcrypt, adicionando `bcrypt = "0.13"` ao nosso `[dependencies]` do Cargo.toml (caso você se interesse por criptografia e queira outras opções, sugiro olhar também as crates `argonautica` e `libreauth`). Faremos está conversão no módulo `src/todo_api/adapter/auth.rs`:
 
 ```rust
 use crate::todo_api::model::auth::User;
@@ -442,7 +419,7 @@ use diesel::{PgConnection, prelude::*};
 use crate::todo_api::model::auth::User;
 use crate::todo_api::db::error::DbError;
 
-pub fn insert_new_user(user: User, conn: &PgConnection) -> Result<(),DbError>{
+pub fn insert_new_user(user: User, conn: &mut PgConnection) -> Result<(),DbError>{
     use crate::schema::auth_user::dsl::*;
 
     let new_user = diesel::insert_into(auth_user)
@@ -455,8 +432,9 @@ pub fn insert_new_user(user: User, conn: &PgConnection) -> Result<(),DbError>{
     }
 }
 ```
+Na versão que estamos usando da lib diesel, connection tem que ser [mutáveis](https://github.com/Diesel-rs/Diesel/blob/master/guide_drafts/migration_guide.md#mutable-connections-required)
 
-Vamos explicar o que se passa neste módulo. Precisamos de `PgConenction` para disponibilizar uma conexnao a nosso `execute`, que é o executor da nossa query. `prelude::*` serve para disponivilizar funções como `execute`. Além disso, criamos um módulo para conter todos nossos erros de banco de dados em `src/todo_api/db/error.rs`, que possui o enum `DbError` que veremos a seguir. Depois disso, temos `use crate::schema::auth_user::dsl::*;`, que disponibiliza a table `auth_user` para utilizar em `insert_into(auth_user)`. Temos, também, `diesel::insert_into(auth_user).values(&user).execute(conn)` que insere na tabale `auth_user` com `insert_into`, define seus valores de inserção com `values`, recebendo a struct `User`, e executa a query com `execute`, ou com `get_result` caso você queria algum dos valores existente no banco após a inserção. Por último aplicamos um `match` ao tipo `Result` de `new_user`, caso o tipo seja `Ok` retornamos um sucesso, caso o tipo seja `Err`, retornamos o erro `DbError::UserNotCreated`. Agora vamos para a implementação da trait `Error` em `DbError`:
+Vamos explicar o que se passa neste módulo. Precisamos de `PgConnection` para disponibilizar uma conexão a nosso `execute`, que é o executor da nossa query. `prelude::*` serve para disponibilizar funções como `execute`. Além disso, criamos um módulo para conter todos nossos erros de banco de dados em `src/todo_api/db/error.rs`, que possui o enum `DbError` que veremos a seguir. Depois disso, temos `use crate::schema::auth_user::dsl::*;`, que disponibiliza a table `auth_user` para utilizar em `insert_into(auth_user)`. Temos, também, `diesel::insert_into(auth_user).values(&user).execute(conn)` que insere na tabale `auth_user` com `insert_into`, define seus valores de inserção com `values`, recebendo a struct `User`, e executa a query com `execute`, ou com `get_result` caso você queria algum dos valores existente no banco após a inserção. Por último aplicamos um `match` ao tipo `Result` de `new_user`, caso o tipo seja `Ok` retornamos um sucesso, caso o tipo seja `Err`, retornamos o erro `DbError::UserNotCreated`. Agora vamos para a implementação da trait `Error` em `DbError`:
 
 ```rust
 use std::error::Error;
@@ -560,19 +538,15 @@ mod  auth {
     use crate::helpers::{read_json};
     use todo_server::todo_api_web::model::http::Clients;
 
-
     #[actix_rt::test]
     async fn signup_returns_created_status() {
         dotenv().ok();
-        let mut app = test::init_service(
-            App::new()
-                .data(Clients::new())
-                .configure(app_routes)
-        ).await;
-    
+        let app =
+            test::init_service(App::new().app_data(Clients::new()).configure(app_routes)).await;
+
         let signup_req = test::TestRequest::post()
             .uri("/auth/signup")
-            .header("Content-Type", "application/json")
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(read_json("signup.json").as_bytes().to_owned())
             .to_request();
 
@@ -600,8 +574,8 @@ Nosso teste define `signup_req` como o request que vamos enviar para `app.call(s
 > 	docker run -i --rm --name auth-db -p 5432:5432 -e POSTGRES_USER=auth -e POSTGRES_PASSWORD=secret -d postgres
 > 
 > test: db
-> 	diesel setup
-> 	diesel migration run
+>	diesel setup --migration-dir src/migrations
+>	diesel migration run --migration-dir src/migrations
 > 	cargo test --features "dbtest"
 > 	diesel migration redo
 >  
@@ -622,17 +596,13 @@ use actix_web::{web, HttpResponse};
 
 pub fn app_routes(config: &mut web::ServiceConfig) {
     config.service(
-        web::scope("/")
-            .service(
-                // ...
-            )
-            .service(
-                web::scope("auth/")
-                    .route("signup", web::post().to(signup_user))
-            )
-            .route("ping", web::get().to(pong))
-            .route("~/ready", web::get().to(readiness))
-            .route("", web::get().to(|| HttpResponse::NotFound())),
+        web::scope("")
+            .service(ping)
+            .service(readiness)
+            .service(create_todo)
+            .service(show_all_todo)
+            .service(signup_user)
+            .default_service(web::to(|| HttpResponse::NotFound())),
     );
 }
 ```
@@ -668,7 +638,7 @@ impl Handler<SignUp> for DbExecutor {
         let user = adapter::auth::signup_to_hash_user(msg);
         let new_user = diesel::insert_into(auth_user)
             .values(&user)
-            .execute(&self.0.get().expect("Failed to open connection"));
+            .execute(&mut self.0.get().expect("Failed to open connection"));
 
         match new_user {
             Ok(_) => Ok(()),
@@ -678,7 +648,7 @@ impl Handler<SignUp> for DbExecutor {
 }
 ```
 
-Para a trait `Message` devemos implementar o tipo de retorna da comunicação, como no nosso caso não vamos retornar nada deixamos o `()` e caso ocorra um erro, retornamos o que já implementamos, `DbError`. Depois disso implementamos o `Handler` para `DbExecutor` com o tipo de mensagem `SignUp`, que possui a função `handle`. O primeiro argumento de `handle` é o prório `DbExecutor`, que está implementado como `struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>)`, o segundo argumento é a mensagem, no nosso caso `SignUp`, e o terceiro argumento é o contexto do actix. Note que a função `handle` é praticamente igual a `insert_new_user`, mas em vez de passarmos um `PgConnection` passamos um `PooledConnection`, uma referência ao `Pool` de cone≈ões que criamos em `DbExecutor`, e para isso precisamos adicionar `use crate::diesel::RunQueryDsl;` que altera nosso `execute` para poder realizar erstá operação. Com isto encaminhado, agora podemos criar o controller. Este controller será um pouco diferente do que usamos usualmente, pois o adapter se encontra dentro do `Handler` e o controller simplesmente ficará responsável por fazer a comunicação via mensagem entre os actors:
+Para a trait `Message` devemos implementar o tipo de retorna da comunicação, como no nosso caso não vamos retornar nada deixamos o `()` e caso ocorra um erro, retornamos o que já implementamos, `DbError`. Depois disso implementamos o `Handler` para `DbExecutor` com o tipo de mensagem `SignUp`, que possui a função `handle`. O primeiro argumento de `handle` é o prório `DbExecutor`, que está implementado como `struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>)`, o segundo argumento é a mensagem, no nosso caso `SignUp`, e o terceiro argumento é o contexto do actix. Note que a função `handle` é praticamente igual a `insert_new_user`, mas em vez de passarmos um `PgConnection` passamos um `PooledConnection`, uma referência ao `Pool` de conexões que criamos em `DbExecutor`, e para isso precisamos adicionar `use crate::diesel::RunQueryDsl;` que altera nosso `execute` para poder realizar erstá operação. Com isto encaminhado, agora podemos criar o controller. Este controller será um pouco diferente do que usamos usualmente, pois o adapter se encontra dentro do `Handler` e o controller simplesmente ficará responsável por fazer a comunicação via mensagem entre os actors:
 
 ```rust
 use actix_web::{HttpResponse, web, Responder};
@@ -726,7 +696,7 @@ impl Handler<SignUp> for DbExecutor {
 
         let user = adapter::auth::signup_to_hash_user(msg);
 
-        insert_new_user(user, &self.0.get().expect("Failed to open connection"))
+        insert_new_user(user, &mut self.0.get().expect("Failed to open connection"))
     }
 }
 ```
@@ -740,7 +710,7 @@ use crate::todo_api::model::auth::User;
 use crate::todo_api::db::error::DbError;
 
 #[cfg(not(feature = "dynamo"))]
-pub fn insert_new_user(user: User, conn: &PgConnection) -> Result<(),DbError>{
+pub fn insert_new_user(user: User, conn: &mut PgConnection) -> Result<(),DbError>{
     use crate::schema::auth_user::dsl::*;
 
     let new_user = diesel::insert_into(auth_user)
@@ -918,7 +888,7 @@ mod  auth {
 
         let login_req = test::TestRequest::post()
             .uri("/auth/login")
-            .header("Content-Type", "application/json")
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(read_json("signup.json").as_bytes().to_owned())
             .to_request();
 
@@ -941,15 +911,14 @@ use crate::todo_api_web::controller::{
 
 pub fn app_routes(config: &mut web::ServiceConfig) {
     config.service(
-        web::scope("/")
-            // ...
-            .service(
-                web::scope("auth/")
-                    .route("signup", web::post().to(signup_user))
-                    .route("login", web::post().to(login))
-            )
-            // ...
-            .route("", web::get().to(|| HttpResponse::NotFound())),
+        web::scope("")
+            .service(ping)
+            .service(readiness)
+            .service(create_todo)
+            .service(show_all_todo)
+            .service(signup_user)
+            .service(login)
+            .default_service(web::to(|| HttpResponse::NotFound())),
     );
 }
 
@@ -1100,7 +1069,7 @@ impl User {
 ```
 
 
-Antes de continuar com `generate_jwt` precisamos explorar a implementacnao de `Login`, pois é o `Login` que é afetado pela função `state.postgres.send(login_user).await`:
+Antes de continuar com `generate_jwt` precisamos explorar a implementação de `Login`, pois é o `Login` que é afetado pela função `state.postgres.send(login_user).await`:
 
 ```rust
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -1119,7 +1088,7 @@ impl Handler<Login> for DbExecutor {
     fn handle(&mut self, msg: Login, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::scan_user;
 
-        scan_user(msg.email, &self.0.get().expect("Failed to open connection"))
+        scan_user(msg.email, &mut self.0.get().expect("Failed to open connection"))
     }
 }
 ```
@@ -1127,7 +1096,7 @@ impl Handler<Login> for DbExecutor {
 Login recebe um `email` e um `password` para depois procurar no banco de dados com `scan_user`:
 
 ```rust
-pub fn scan_user(user_email: String, conn: &PgConnection) -> Result<Vec<User>,DbError>{
+pub fn scan_user(user_email: String, conn: &mut PgConnection) -> Result<Vec<User>,DbError>{
     use crate::schema::auth_user::dsl::*;
 
     let items = auth_user
@@ -1209,7 +1178,7 @@ impl Handler<Login> for DbExecutor {
     fn handle(&mut self, msg: Login, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::scan_user;
 
-        scan_user(msg.email, &self.0.get().expect("Failed to open connection"))
+        scan_user(msg.email, &mut self.0.get().expect("Failed to open connection"))
     }
 }
 ```
@@ -1267,12 +1236,12 @@ impl Handler<UpdateDate> for DbExecutor {
     fn handle(&mut self, msg: UpdateDate, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::update_user_jwt_date;
 
-        update_user_jwt_date(msg, &self.0.get().expect("Failed to open connection"))
+        update_user_jwt_date(msg, &mut self.0.get().expect("Failed to open connection"))
     }
 }
 ```
 
-Note que o tipo `Result` da nossa `Message` é apenas um `Reuslt` com um `Ok` vazio e um erro do tipo `DbError`, `Result<(), DbError>`. Neste caso precisamos somente saber se o update da data foi bem sucedido ou falho, com qual erro. Assim, a função `handle`simplesmente atualiza a `expires_at` no banco conforme a chave `email`. É importante também garantir que `expires_at` seja do tipo `chrono::NaiveDateTime` para não termos problemas com o tipo da tabela `auth_user`. Vamos agora olhar a função `update_user_jwt_date`.
+Note que o tipo `Result` da nossa `Message` é apenas um `Result` com um `Ok` vazio e um erro do tipo `DbError`, `Result<(), DbError>`. Neste caso precisamos somente saber se o update da data foi bem sucedido ou falho, com qual erro. Assim, a função `handle`simplesmente atualiza a `expires_at` no banco conforme a chave `email`. É importante também garantir que `expires_at` seja do tipo `chrono::NaiveDateTime` para não termos problemas com o tipo da tabela `auth_user`. Vamos agora olhar a função `update_user_jwt_date`.
 
 ```rust
 pub fn update_user_jwt_date(update_date: UpdateDate, conn: &PgConnection) -> Result<(), DbError>{
@@ -1530,15 +1499,15 @@ use actix_web::{web, HttpResponse};
 
 pub fn app_routes(config: &mut web::ServiceConfig) {
     config.service(
-        web::scope("/")
-            // ...
-            .service(
-                web::scope("auth/")
-                    .route("signup", web::post().to(signup_user))
-                    .route("login", web::post().to(login))
-                    .route("logout", web::delete().to(logout)),
-            )
-            // ...
+        web::scope("")
+            .service(ping)
+            .service(readiness)
+            .service(create_todo)
+            .service(show_all_todo)
+            .service(signup_user)
+            .service(login)
+            .service(logout)
+            .default_service(web::to(|| HttpResponse::NotFound())),
     );
 }
 ```
@@ -1611,12 +1580,12 @@ impl Handler<Logout> for DbExecutor {
     fn handle(&mut self, msg: Logout, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::scan_user;
 
-        scan_user(msg.email, &self.0.get().expect("Failed to open connection"))
+        scan_user(msg.email, &mut self.0.get().expect("Failed to open connection"))
     }
 }
 ```
 
-Vale salientar que a função `scan_user` já possui implementação para a `feature` `db-test`. Além disso, é importante ressaltar que a struct `Logout` faz exatamente a mesma coisa que a struct `Login`, exceto pelo fato de que `Login` possui o campo `password`, por isso podemos simplificar a nosso `model` contendo apenas um tipo de `Login/Logout` com o campo `password` opcional. Assim `Login` pode se transformar em `Auth`:
+Vale salientar que a função `scan_user` já possui implementação para a feature `db-test`. Além disso, é importante ressaltar que a struct `Logout` faz exatamente a mesma coisa que a struct `Login`, exceto pelo fato de que `Login` possui o campo `password`, por isso podemos simplificar a nosso `model` contendo apenas um tipo de `Login/Logout` com o campo `password` opcional. Assim `Login` pode se transformar em `Auth`:
 
 ```rust
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -1635,7 +1604,7 @@ impl Handler<Auth> for DbExecutor {
     fn handle(&mut self, msg: Auth, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::scan_user;
 
-        scan_user(msg.email, &self.0.get().expect("Failed to open connection"))
+        scan_user(msg.email, &mut self.0.get().expect("Failed to open connection"))
     }
 }
 ```
@@ -1880,7 +1849,7 @@ impl Handler<Inactivate> for DbExecutor {
     fn handle(&mut self, msg: Inactivate, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::inactivate_user;
 
-        inactivate_user(msg, &self.0.get().expect("Failed to open connection"))
+        inactivate_user(msg, &mut self.0.get().expect("Failed to open connection"))
     }
 }
 ```
@@ -2015,7 +1984,7 @@ pub mod todo;
 pub mod auth;
 
 // model/mod.rs
-use rusoto_dynamodb::AttributeValue;
+use aws_sdk_dynamodb::model::AttributeValue;
 use std::collections::HashMap;
 use uuid::Uuid;
 
