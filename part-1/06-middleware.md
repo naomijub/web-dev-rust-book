@@ -16,9 +16,9 @@ As alterações a seguir nos exigiram modificar o Cargo.toml para conter a crate
 [dependencies]
 actix = "0.9.0"
 #...
-jsonwebtokens = "1.0.0-alpha.12"
-actix-service = "1.0.5"
-futures = "0.3.4"
+jsonwebtokens = "1.2.0"
+actix-service = "2.0.2"
+futures = "0.3"
 
 [dev-dependencies]
 bytes = "0.5.3"
@@ -26,243 +26,177 @@ bytes = "0.5.3"
 
 ## Estrutura de um middleware com Actix
 
-Um middleware pode ser registrado em cada `App`, `scope` ou `Resource` do servidor e é executado em ordem oposta a seu registro. De modo geral, middlewares em Actix são um tipo, preferenciamente uma struct, que implementa as traits `Service` e `Transform`, da crate `actix_service`. Assim, cada um dos métodos da trait tem a capacidade de responder algo imediatamente ou através de uma future. O exemplo mais básico de Middleware seria um `hello world` no request (`Hello from Request`) e outro na response (`Hello from Response`), conforme o código a seguir:
+Um middleware pode ser registrado em cada `App`, `scope` ou `Resource` do servidor e é executado em ordem oposta a seu registro. De modo geral, middlewares em Actix são um tipo, preferenciamente uma struct, que implementa as traits `Service` e `Transform`, da crate `actix_service`. Assim, cada um dos métodos da trait tem a capacidade de responder algo imediatamente ou através de uma future. O exemplo mais básico de Middleware seria um `hello world` no request (`Hello from Request`) e outro na response (`Hello from Response`), onde usamos `wrap_fn` para criar o middleware, conforme o código a seguir:
 
 ```rust
-use std::pin::Pin;
-use std::task::{Context, Poll};
+use actix_web::{dev::Service as _, web, App};
+use futures_util::future::FutureExt;
 
-use actix_service::{Service, Transform};
-use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error};
-use futures::future::{ok, Ready};
-use futures::Future;
-
-pub struct SayHi;
-
-impl<S, B> Transform<S> for SayHi
-where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
-{
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type InitError = ();
-    type Transform = SayHiMiddleware<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
-
-    fn new_transform(&self, service: S) -> Self::Future {
-        ok(SayHiMiddleware { service })
-    }
-}
-
-pub struct SayHiMiddleware<S> {
-    service: S,
-}
-
-impl<S, B> Service for SayHiMiddleware<S>
-where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
-{
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.poll_ready(cx)
-    }
-
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        println!("Hello from Request. You requested: {}", req.path());
-
-        let fut = self.service.call(req);
-
-        Box::pin(async move {
-            let res = fut.await?;
-
-            println!("Hello from Response");
-            Ok(res)
+#[actix_web::main]
+async fn main() {
+    let app = App::new()
+        .wrap_fn(|req, srv| {
+            println!("Hi from start. You requested: {}", req.path());
+            srv.call(req).map(|res| {
+                println!("Hi from response");
+                res
+            })
         })
-    }
+        .route(
+            "/index.html",
+            web::get().to(|| async { "Hello, middleware!" }),
+        );
 }
 ```
-
-Existem 2 passos no processamento de um middleware. O primeiro é sua inicialização, na qual o `middleware factory` é chamado com o próximo serviço encadeado. Isso corresponde a função `new_transform` da trait `Transform` com o tipo `S` definido como `Service<_,_,_>` sendo o campo`service` que `SayHiMiddleware<S>` implementa. Depois disso o método `call` é chamado com o request. `poll_ready` nos indica quando a future está pronta.
-
-O parâmetro `req: ServiceRequest` pode ser passado de forma mutável e adaptar o request, por exemplo um request do tipo `application/edn` poderia ser convertido para `application/json`/ Depois disso, temos a future contendo a response em `let fut = self.service.call(req);`, que só é concretizada dentro de uma `Box` não movível contendo um bloco `async`. a função `Pin` torna a `Box` um ponteiro fixo em memória, não movível. Depois disso, basta responde a `future` com a respostas `res`.
 
 ## Definindo o Middleware de autenticação
 
-A primeira coisa que devemos fazer aqui é criar o módulo middleware em nosso código. Esse módulo estará contido em `src/todo_api_web/middleware/mod.rs`. Com o módulo criado podemos definir a struct de autenticação, `Authentication`, que corresponde a struct `SayHi`. É essa struct que vamos passar como argumento para o `wrap` de `App`, `App:new().wrap(crate::todo_api_web::middleware::Authentication)`. `Authentication` criará o `middleware factory` para passarmos o serviço a um middleware de fato, `AuthenticationMiddleware`,  que nos permitirá alterar o request. Este bloco de código fica assim:
+A primeira coisa que devemos fazer aqui é criar o módulo middleware em nosso código. Esse módulo estará contido em `src/todo_api_web/middleware/mod.rs`. A função `authentication_middleware` será passada como argumento para o `wrap` de `App`, `App:new().wrap(from_fn(authentication_middleware))`. Este bloco de código fica assim:
 
 ```rust
-use actix_service::{Service, Transform};
+use crate::todo_api::{core::decode_jwt, model::core::JwtValue};
+use actix_web_lab::middleware::Next;
+
+use actix_web::Error;
 use actix_web::{
+    body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
-    Error, HttpResponse,
-};
-use futures::{
-    future::{ok, Ready},
-    Future,
-};
-use std::{
-    pin::Pin,
-    task::{Context, Poll},
+    web::Data,
 };
 
-use crate::{
-    todo_api_web::model::http::Clients,
-    todo_api::{
-        core::decode_jwt,
-        model::core::JwtValue,
-    }
-};
+use super::model::http::Clients;
+pub async fn authentication_middleware(
+    mut req: ServiceRequest,
+    next: Next<impl MessageBody>,
+) -> Result<ServiceResponse<impl MessageBody>, Error> {
+    let data = req.extract::<Data<Clients>>().await.unwrap();
+    let jwt = req.headers().get("x-auth");
 
-pub struct Authentication;
+    match jwt {
+        None => Err(actix_web::error::ErrorInternalServerError(
+            "Error in authentication middleware",
+        )),
+        Some(token) => {
+            let decoded_jwt: JwtValue = serde_json::from_value(decode_jwt(token.to_str().unwrap()))
+                .expect("Failed to parse Jwt");
 
-impl<S: 'static, B> Transform<S> for Authentication
-where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
-{
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type InitError = ();
-    type Transform = AuthenticationMiddleware<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+            let valid_jwt = data.postgres.send(decoded_jwt);
+            let fut = next.call(req).await?;
 
-    fn new_transform(&self, service: S) -> Self::Future {
-        ok(AuthenticationMiddleware { service })
+            match valid_jwt.await {
+                Ok(true) => {
+                    let (req, res) = fut.into_parts();
+                    let res = ServiceResponse::new(req, res);
+                    Ok(res)
+                }
+                _ => Err(actix_web::error::ErrorInternalServerError(
+                    "Error in authentication middleware",
+                )),
+            }
+        }
     }
 }
-pub struct AuthenticationMiddleware<S> {
-    service: S,
-}
 
-impl<S: 'static, B> Service for AuthenticationMiddleware<S>
-where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
-{
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.poll_ready(cx)
-    }
-
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        // ...
-    }
-}
 ```
 
-Não há muito o que alterar aqui além do nome das structs, pois este é um modelo padrão para se gerar um middleware, porém poderiámos retornar informações ainda no nível de `new_transform` e de `poll_ready`. Já a função `call` é o centro de nossa atenção, sendo ela responsável pela manipulação de dados que queremos fazer. O primeiro caso que vamos ver é o fato de querermos que este middleware atue somente nas rotas `/api/`, assim temos duas soluções para isso. A primeira seria adicionar este middleware diretamente em `web::scope("api/")` do arquivo de rotas:
+A função `call` é o centro de nossa atenção, sendo ela responsável pela manipulação de dados que queremos fazer. O primeiro caso que vamos ver é o fato de querermos que este middleware atue somente nas rotas `/api/`, assim temos duas soluções para isso. A primeira seria adicionar este middleware diretamente em `web::scope("api/")` do arquivo de rotas:
 
 ```rust
 pub fn app_routes(config: &mut web::ServiceConfig) {
     config.service(
-        web::scope("/")
+        web::scope("")
             .service(
-                web::scope("api/")
-                    .wrap(crate::todo_api_web::middleware::Authentication)
-                    .route("create", web::post().to(create_todo))
-                    .route("index", web::get().to(show_all_todo)),
+                web::scope("/api")
+                    .service(create_todo)
+                    .service(show_all_todo)
+                    .wrap(from_fn(authentication_middleware)),
             )
             .service(
-                web::scope("auth/")
-                    .route("signup", web::post().to(signup_user))
-                    .route("login", web::post().to(login))
-                    .route("logout", web::delete().to(logout)),
+                web::scope("/auth")
+                    .service(signup_user)
+                    .service(login)
+                    .service(logout),
             )
-            .route("ping", web::get().to(pong))
-            .route("~/ready", web::get().to(readiness))
-            .route("", web::get().to(|| HttpResponse::NotFound())),
+            .service(ping)
+            .service(readiness)
+            .default_service(web::to(|| HttpResponse::NotFound())),
     );
 }
+
 ```
 
-Nnao gosto muito desta alternativa pois ela impacta a testabilidade. Portanto, prefiro a segunda alternativa que é criar uma condicional que verifica se a rota do request começa com os `scope`  que queremos. Caso a condicional for verdadeira, aplicamos nossa lógica, senão, simplesmente damos sequência ao request:
+Não gosto muito desta alternativa pois ela impacta a testabilidade. Portanto, prefiro a segunda alternativa que é criar uma condicional que verifica se a rota do request começa com os `scope`  que queremos. Caso a condicional for verdadeira, aplicamos nossa lógica, senão, simplesmente damos sequência ao request:
 
 ```rust
-fn call(&mut self, req: ServiceRequest) -> Self::Future {
+pub async fn authentication_middleware(
+    mut req: ServiceRequest,
+    next: Next<impl MessageBody>,
+) -> Result<ServiceResponse<impl MessageBody>, Error> {
         if req.path().starts_with("/api/") {
          // ...
         } else {
-            let fut = self.service.call(req);
-            Box::pin(async move {
-                let res = fut.await?;
-                Ok(res)
-            })
-        }
+        let fut = next.call(req).await?;
+        let (req, res) = fut.into_parts();
+        let res = ServiceResponse::new(req, res);
+        Ok(res)
     }
+}
 ```
 
 O `if` que definimos extrai o `path`, rota, de `ServiceRequest`, e aplica a função `starts_with` com o início da rota que queremos, `/api/`. Com isso, toda as rotas do serviço que começarem com `/api/` serão alteradas por este middleware. O próximo passo é extrairmos o header `x-auth` dos headers do request:
 
 ```rust
-fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        if req.path().starts_with("/api/") {
-            // ...
-            let jwt = req.headers().get("x-auth");
+pub async fn authentication_middleware(
+    mut req: ServiceRequest,
+    next: Next<impl MessageBody>,
+) -> Result<ServiceResponse<impl MessageBody>, Error> {
+    if req.path().starts_with("/api/") {
+        let data = req.extract::<Data<Clients>>().await.unwrap();
+        let jwt = req.headers().get("x-auth");
 
-            match jwt {
-                None => Box::pin(async move {
-                    Ok::<_,actix_http::error::Error>(req.into_response(
-                        HttpResponse::BadRequest()
-                        .json("{\"error\": \"x-auth is required\"}")
-                        .into_body()
-                    ))
-                }),
-                Some(token) => {
-                    // ...
-                }
-            }
-        }
         // ...
+    }
 }
 ```
 
 Exatraimos o header `x-auth` aplicando a função `headers` a request, que obtém todos os headers, e posteriormente escolhendo um header específico com `get`. O retorno desta função é um `Option<String>` contendo a String de Jwt. Como este campo é obrigatório, fazemos um `match` em `jwt` e no caso `None` retornamos um `BadRequest` com a informação que `x-auth` é requerido, `x-auth is required`. Depois disso precisamos de duas coisas, decodificar o token Jwt e enviar a resposta decodificada para validar ela no banco de dados, assim precisaremos da função `decode_jwt` para decodificar o `jwt` e de `Clients` armazenado em `data` para comunicar com o banco de dados: 
 
 ```rust
-fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        if req.path().starts_with("/api/") {
-            let data = req.app_data::<Clients>().expect("Failed to parse app_data");
-            let jwt = req.headers().get("x-auth");
+pub async fn authentication_middleware(
+    mut req: ServiceRequest,
+    next: Next<impl MessageBody>,
+) -> Result<ServiceResponse<impl MessageBody>, Error> {
+    if req.path().starts_with("/api/") {
+        let data = req.extract::<Data<Clients>>().await.unwrap();
+        let jwt = req.headers().get("x-auth");
 
-            match jwt {
-                None => // ...
-                Some(token) => {
-                    let decoded_jwt: JwtValue = serde_json::from_value(decode_jwt(token.to_str().unwrap())).expect("Failed to parse Jwt");
-                    let valid_jwt = data.postgres.send(decoded_jwt);
+        match jwt {
+            None => Err(actix_web::error::ErrorInternalServerError(
+                "Error in authentication middleware",
+            )),
+            Some(token) => {
+                let decoded_jwt: JwtValue =
+                    serde_json::from_value(decode_jwt(token.to_str().unwrap()))
+                        .expect("Failed to parse Jwt");
 
-                    let fut = self.service.call(req);
-                    Box::pin(async move {
-                        match valid_jwt.await {
-                            Ok(true) => {
-                                let res = fut.await?;
-                                Ok(res)
-                            },
-                            _ => {
-                                Err(Error::from(()))
-                            }
-                        }
-                    })
+                let valid_jwt = data.postgres.send(decoded_jwt);
+                let fut = next.call(req).await?;
+
+                match valid_jwt.await {
+                    Ok(true) => {
+                        let (req, res) = fut.into_parts();
+                        let res = ServiceResponse::new(req, res);
+                        Ok(res)
+                    }
+                    _ => Err(actix_web::error::ErrorInternalServerError(
+                        "Error in authentication middleware",
+                    )),
                 }
             }
-        } 
-        // ...
-    }
+        }
+    } else {
+    // ...
+}
 ```
 
 > Para recordar `decode_jwt`
@@ -359,18 +293,25 @@ impl Handler<JwtValue> for DbExecutor {
 Com tudo isso pronto, basta adicionar o middleware em `App::new()`:
 
 ```rust
-#[actix_rt::main]
-async fn web_main() -> Result<(), std::io::Error> {
-    HttpServer::new(|| {
+#[actix_web::main]
+async fn main() -> Result<(), std::io::Error> {
+    std::env::set_var("RUST_LOG", "actix_web=debug");
+    env_logger::init();
+
+    let client = Clients::new().await;
+    create_table(&client.clone()).await;
+
+    HttpServer::new(move|| {
         App::new()
-        .data(Clients::new())
-        .wrap(DefaultHeaders::new().header("x-request-id", Uuid::new_v4().to_string()))
-        .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
-        .wrap(crate::todo_api_web::middleware::Authentication)
-        .configure(app_routes)
+            .app_data(Data::new(client.clone()))
+            .wrap(DefaultHeaders::new().add(("x-request-id", Uuid::new_v4().to_string())))
+            .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
+            .wrap(from_fn(authentication_middleware))
+            .configure(app_routes)
     })
-    .workers(num_cpus::get() + 2)
-    .bind("0.0.0.0:4000")
+    .workers(num_cpus::get() - 2)
+    .max_connections(30000)
+    .bind(("0.0.0.0", 4000))
     .unwrap()
     .run()
     .await
