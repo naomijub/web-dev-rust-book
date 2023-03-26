@@ -720,6 +720,7 @@ fn a_string_with_non_digits_is_an_error() {
 <li>CI executando as pipelines de teste.</li>
 <li>Serde para serialização e deserialização de Json.</li>
 </ol>
+<p><a href="https://github.com/belagoesr/todo-server">Código do capítulo</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="configurando-os-primeiros-endpoints"><a class="header" href="#configurando-os-primeiros-endpoints">Configurando os primeiros endpoints</a></h1>
 <p>O nosso objetivo inicial é fazer nosso servidor responder <code>pong</code> na rota <code>/ping</code> e executar uma função de baixo custo na rota <code>/~/ready</code> retornando 200 ou algum valor de status superior a 400, bastante simples. O objetivo disso é definir em nosso servidor endpoints que respondam se o servidor está disponível e saudável, <code>/ping</code>, assim como responder se esta pronto para executar mais uma operação, <code>/~/ready</code>. Para isso, precisamos criar nosso <code>todo-server</code> com o cargo rodando o comando <code>cargo new todo-server --bin</code>, que irá gerar os arquivos a seguir:</p>
 <ol>
@@ -743,7 +744,7 @@ edition = &quot;2018&quot;
 </code></pre>
 <p>Já o arquivo <code>Cargo.lock</code> corresponde às configurações geradas para o <code>Cargo.toml</code> com o registro de versões de dependências, assim como o <code>package-lock.json</code> no Node.</p>
 <h2 id="adicionando-actix"><a class="header" href="#adicionando-actix">Adicionando Actix</a></h2>
-<p>Nossa principal dependência é o <code>Actix</code>, assim precisamos adicionar a dependência <code>actix-web = &quot;2.0&quot;</code> à seção <code>[dependencies]</code> do <code>Cargo.toml</code>:</p>
+<p>Nossa principal dependência é o <code>Actix</code>, assim precisamos adicionar a dependência <code>actix-web = &quot;4.2.1&quot;</code> à seção <code>[dependencies]</code> do <code>Cargo.toml</code>:</p>
 <pre><code class="language-toml">[package]
 name = &quot;todo-server&quot;
 version = &quot;0.1.0&quot;
@@ -751,7 +752,7 @@ authors = [&quot;Julia Naomi @naomijub&quot;]
 edition = &quot;2018&quot;
 
 [dependencies]
-actix-web = &quot;2.0&quot;
+actix-web = &quot;4.2.1&quot;
 </code></pre>
 <h3 id="implementando-o-endpoint-ping"><a class="header" href="#implementando-o-endpoint-ping">Implementando o endpoint <code>/ping</code></a></h3>
 <p>Este endpoint é comum a muitos serviços, mas em alguns casos é chamado de <code>/healthy</code>, <code>/healthcheck</code> ou <code>/~/healthy</code>, digamos que seja um exemplo com aplicações práticas de um <code>hello world</code>. Neste primeiro momento vamos apresentar primeiro a implementção do <code>/ping</code> e depois explicar, pois acredito que neste caso seja importante ter visão do todo antes de entrar nos detalhes. Assim, uma implementação bem simples de <code>/ping</code> seria:</p>

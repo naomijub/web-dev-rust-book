@@ -32,7 +32,7 @@ Já o arquivo `Cargo.lock` corresponde às configurações geradas para o `Cargo
 
 ## Adicionando Actix
 
-Nossa principal dependência é o `Actix`, assim precisamos adicionar a dependência `actix-web = "2.0"` à seção `[dependencies]` do `Cargo.toml`:
+Nossa principal dependência é o `Actix`, assim precisamos adicionar a dependência `actix-web = "4.2.1"` à seção `[dependencies]` do `Cargo.toml`:
 
 ```toml
 [package]
@@ -42,7 +42,7 @@ authors = ["Julia Naomi @naomijub"]
 edition = "2018"
 
 [dependencies]
-actix-web = "2.0"
+actix-web = "4.2.1"
 ```
 
 ### Implementando o endpoint `/ping`

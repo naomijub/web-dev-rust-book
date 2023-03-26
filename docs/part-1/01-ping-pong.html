@@ -165,7 +165,7 @@ edition = &quot;2018&quot;
 </code></pre>
 <p>Já o arquivo <code>Cargo.lock</code> corresponde às configurações geradas para o <code>Cargo.toml</code> com o registro de versões de dependências, assim como o <code>package-lock.json</code> no Node.</p>
 <h2 id="adicionando-actix"><a class="header" href="#adicionando-actix">Adicionando Actix</a></h2>
-<p>Nossa principal dependência é o <code>Actix</code>, assim precisamos adicionar a dependência <code>actix-web = &quot;2.0&quot;</code> à seção <code>[dependencies]</code> do <code>Cargo.toml</code>:</p>
+<p>Nossa principal dependência é o <code>Actix</code>, assim precisamos adicionar a dependência <code>actix-web = &quot;4.2.1&quot;</code> à seção <code>[dependencies]</code> do <code>Cargo.toml</code>:</p>
 <pre><code class="language-toml">[package]
 name = &quot;todo-server&quot;
 version = &quot;0.1.0&quot;
@@ -173,7 +173,7 @@ authors = [&quot;Julia Naomi @naomijub&quot;]
 edition = &quot;2018&quot;
 
 [dependencies]
-actix-web = &quot;2.0&quot;
+actix-web = &quot;4.2.1&quot;
 </code></pre>
 <h3 id="implementando-o-endpoint-ping"><a class="header" href="#implementando-o-endpoint-ping">Implementando o endpoint <code>/ping</code></a></h3>
 <p>Este endpoint é comum a muitos serviços, mas em alguns casos é chamado de <code>/healthy</code>, <code>/healthcheck</code> ou <code>/~/healthy</code>, digamos que seja um exemplo com aplicações práticas de um <code>hello world</code>. Neste primeiro momento vamos apresentar primeiro a implementção do <code>/ping</code> e depois explicar, pois acredito que neste caso seja importante ter visão do todo antes de entrar nos detalhes. Assim, uma implementação bem simples de <code>/ping</code> seria:</p>
