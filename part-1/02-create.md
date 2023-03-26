@@ -88,14 +88,9 @@ Assim, podemos escrever nosso teste sem conflito de dependências em `tests/todo
 
 ```rust
 mod create_todo {
-    use todo_server::todo_api_web::{
-        controller::todo::create_todo,
-        model::TodoIdResponse,
-    };
+    use todo_server::todo_api_web::{controller::todo::create_todo, model::todo::TodoIdResponse};
 
-    use actix_web::{
-        test, web, App,
-    };
+    use actix_web::{http::header::CONTENT_TYPE, test, web, App, body};
     use serde_json::from_str;
 
     fn post_todo() -> String {
@@ -119,29 +114,24 @@ mod create_todo {
                     }
                 ],
                 \"state\": \"Doing\"
-            }"
+            }",
         )
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn valid_todo_post() {
-        let mut app = test::init_service(
-            App::new()
-                .service(
-                    web::resource("/api/create")
-                    .route(web::post().to(create_todo))
-            )
-        ).await;
-    
+        let mut app = test::init_service(App::new().service(create_todo)).await;
+
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(post_todo().as_bytes().to_owned())
             .to_request();
 
-        let resp = test::read_response(&mut app, req).await;
-
-        let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
@@ -164,34 +154,37 @@ A seguir possuímos a definição do teste e o uso do runtime do actix, seguidos
 
 ```rust
 //definição do teste
-#[actix_rt::test]
-async fn valid_todo_post()
+#[actix_web::test]
+async fn valid_todo_post() {
 ```
 
 ```rust
 // Definição do App
 let mut app = test::init_service(
-    App::new()
-        .service(
-            web::resource("/api/create")
-            .route(web::post().to(create_todo))
-    )
+    App::new().service(create_todo)
 ).await;
 ```
 
-Note duas mudanças na definição do `App`: nossa rota possui um padrão diferente `/api/create` e o controller `create_todo` está sendo passado para um método `post()`. Outro detalhe é que estamos utilizando mais recursos na criação do request:
+Note duas mudanças na definição do `App`: nossa rota possui um padrão diferente `/api/create` e o controller `create_todo` está sendo passado para um método `service()`. Outro detalhe é que estamos utilizando mais recursos na criação do request:
 
 ```rust
 let req = test::TestRequest::post()
     .uri("/api/create")
-    .header("Content-Type", "application/json")
+    .insert_header((CONTENT_TYPE, ContentType::json()))
     .set_payload(post_todo().as_bytes().to_owned())
     .to_request();
 ```
 
-Veja que `TestRequest` agora instancia um tipo `POST` antes de adicionar informações ao seu builder, `TestRequest::post()`. As duas outras mudanças são a adição das funções `header` e `set_payload`, `.header("Content-Type", "application/json").set_payload(post_todo().as_bytes().to_owned())`. `header` define o tipo de conteúdo que estamos enviando e sua ausência nesse caso pode implicar em uma resposta com o status `400`. `set_payload` recebe um array de bytes com o conteúdo do `payload`, ou seja `post_todo`.
+Veja que `TestRequest` agora instancia um tipo `POST` antes de adicionar informações ao seu builder, `TestRequest::post()`. As duas outras mudanças são a adição das funções `header` e `set_payload`, `.header("Content-Type", ContentType::json()).set_payload(post_todo().as_bytes().to_owned())`. `header` define o tipo de conteúdo que estamos enviando e sua ausência nesse caso pode implicar em uma resposta com o status `400`. `set_payload` recebe um array de bytes com o conteúdo do `payload`, ou seja `post_todo`.
 
-Depois podemos ler a resposta normalmente, `let resp = test::read_response(&mut app, req).await;`, e transformar essa resposta em uma struct conhecida pelo serviço, `let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();`. O último passo é garantir que a resposta contendo o `TodoIdResponse` seja de fato um id válido e para isso utilizamos a macro `assert!` em `assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());`. Note a função auxiliar `get_id`, se nosso teste estivesse dentro do nosso módulo em vez de na pasta de testes de integração, seria possível anotar ela com `#[cfg(test)]` e economizar espaço no executável e tempo de compilação. Eu optei por deixá-la visível e testar o controller nos testes de integração, mas a escolha é sua:
+```rust
+let resp = test::call_service(&mut app, req).await;
+    let body = resp.into_body();
+    let bytes = body::to_bytes(body).await.unwrap();
+    let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
+    assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
+```
+Depois podemos ler a resposta normalmente, `let resp = test::call_service(&mut app, req).await;`, obter o body da response em bytes `let body = resp.into_body();let bytes = body::to_bytes(body).await.unwrap();` e transformar essa resposta em uma struct conhecida pelo serviço, `from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();`. O último passo é garantir que a resposta contendo o `TodoIdResponse` seja de fato um id válido e para isso utilizamos a macro `assert!` em `assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());`. Note a função auxiliar `get_id`, se nosso teste estivesse dentro do nosso módulo em vez de na pasta de testes de integração, seria possível anotar ela com `#[cfg(test)]` e economizar espaço no executável e tempo de compilação. Eu optei por deixá-la visível e testar o controller nos testes de integração, mas a escolha é sua:
 
 ```rust
 impl TodoIdResponse {
@@ -256,34 +249,30 @@ impl TodoIdResponse {
 Para o item 1, `create_todo` controller, devemos novamente criar uma função `async`, que tem como tipo de resposta uma implementação da trait `Responder`, a `impl Responder`, como fizemos com `pong` e `readiness`:
 
 ```rust
-// src/todo_api_web/conytoller/todo.rs
-use actix_web::{HttpResponse, web, Responder};
+// src/todo_api_web/controller/todo.rs
+use crate::todo_api_web::model::todo::TodoIdResponse;
+use actix_web::{ http::header::ContentType, post, web, HttpResponse, Responder};
 use uuid::Uuid;
-use crate::todo_api_web::model::{TodoCard, TodoIdResponse};
 
-pub async fn create_todo(_info: web::Json<TodoCard>) -> impl Responder {
+#[post("/api/create")]
+pub async fn create_todo(_payload: web::Payload) -> impl Responder {
     let new_id = Uuid::new_v4();
+    let str = serde_json::to_string(&TodoIdResponse::new(new_id)).unwrap();
     HttpResponse::Created()
-        .content_type("application/json")
-        .body(serde_json::to_string(&TodoIdResponse::new(new_id)).expect("failed to serialize ContactsBatchResponseId")
-    )
+        .content_type(ContentType::json())
+        .body(str)
 }
 ```
 
-As primeiras coisas que podemos perceber são a create de `Uuid` para gerar novos `uuids` com `Uuid::new_v4()`, e os tipos de entrada e de saída, `TodoCard, TodoIdResponse`, respectivamente. O actix possui uma forma interna de desserializar objetos JSON que é definido no módulo `web` com `web::Json<T>` e é em `T` que vamos incluir nossa struct `TodoCard`. Veja que o tipo de retorno `TodoIdResponse` está sendo serializado pelo `serde_json` e retornado ao `body`. Caso algo dê errado, obteremos um erro do tipo `"failed to serialize ContactsBatchResponseId"`. Note também que adicionamos o header `Content-type` através da função `content_type("application/json")`. Assim já seria suficiente para nosso teste passar, mas se quisermos testar essa rota com um `curl` é preciso adicionar ao `App` de `main.rs`:
+As primeiras coisas que podemos perceber são a create de `Uuid` para gerar novos `uuids` com `Uuid::new_v4()`, e os tipos de entrada e de saída, `TodoCard, TodoIdResponse`, respectivamente. O actix possui uma forma interna de desserializar objetos JSON que é definido no módulo `web` com `web::Json<T>` e é em `T` que vamos incluir nossa struct `TodoCard`. Veja que o tipo de retorno `TodoIdResponse` está sendo serializado pelo `serde_json` e retornado ao `body`. Note também que adicionamos o header `Content-type` através da função `.content_type(ContentType::json())`. Assim já seria suficiente para nosso teste passar, mas se quisermos testar essa rota com um `curl` é preciso adicionar ao `App` de `main.rs`:
 
 ```rust
 HttpServer::new(|| {
-    App::new().service(
-        web::scope("/")
-            .service(
-                web::scope("api/")
-                    .route("create", web::post().to(create_todo))
-            )
-            .route("ping", web::get().to(pong))
-            .route("~/ready", web::get().to(readiness))
-            .route("", web::get().to(|| HttpResponse::NotFound())),
-    )
+    App::new()
+        .service(readiness)
+        .service(ping)
+        .service(create_todo)
+        .default_service(web::to(|| HttpResponse::NotFound()))
 })
 ```
 
@@ -316,23 +305,19 @@ Basicamente estamos extraindo todas as rotas para uma nova função que alterar�
 
 ```rust
 // main.rs
-#[macro_use] extern crate serde;
+mod todo_api_web;
+use todo_api_web::routes::app_routes;
 
 use actix_web::{App, HttpServer};
+use num_cpus;
 
-mod todo_api_web;
-
-use todo_api_web::{
-    routes::app_routes
-};
-
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        App::new().configure(app_routes)
+        App::new().configure(app_routes) 
     })
     .workers(num_cpus::get() + 2)
-    .bind("127.0.0.1:4000")
+    .bind(("localhost", 4004))
     .unwrap()
     .run()
     .await
@@ -345,52 +330,34 @@ Agora podemos fazer a mesma refatoração nos testes, `tests/todo_api_web/contro
 mod ping_readiness {
     use todo_server::todo_api_web::routes::app_routes;
 
-    use bytes::Bytes;
-    use actix_web::{
-        test, App,
-        http::StatusCode,
-    };
-    use actix_service::Service;
+    use actix_web::{body, http::StatusCode, test, web, App};
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_ping_pong() {
-        let mut app = test::init_service(
-            App::new().configure(
-                app_routes
-            )
-        ).await;
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
 
-        let req = test::TestRequest::get()
-            .uri("/ping")
-            .to_request();
-        let resp = test::read_response(&mut app, req).await;
+        let req = test::TestRequest::get().uri("/ping").to_request();
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
 
-        assert_eq!(resp, Bytes::from_static(b"pong"));
+        assert_eq!(bytes, web::Bytes::from_static(b"pong"));
     }
 
-    #[actix_rt::test]
-    async fn test_readiness_ok() {
-        let mut app = test::init_service(
-            App::new()
-                .configure(app_routes)
-        ).await;
-    
-        let req = test::TestRequest::with_uri("/readiness").to_request();
-    
-        let resp = app.call(req).await.unwrap();
+    #[actix_web::test]
+    async fn test_readiness() {
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let req = test::TestRequest::get().uri("/~/ready").to_request();
+        let resp = test::call_service(&mut app, req).await;
+
         assert_eq!(resp.status(), StatusCode::ACCEPTED);
     }
 }
 
 mod create_todo {
-    use todo_server::todo_api_web::{
-        model::TodoIdResponse,
-        routes::app_routes
-    };
+    use todo_server::todo_api_web::{controller::todo::create_todo, model::todo::TodoIdResponse};
 
-    use actix_web::{
-        test, App,
-    };
+    use actix_web::{body, http::header::CONTENT_TYPE, test, web, App};
     use serde_json::from_str;
 
     fn post_todo() -> String {
@@ -414,45 +381,43 @@ mod create_todo {
                     }
                 ],
                 \"state\": \"Doing\"
-            }"
+            }",
         )
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn valid_todo_post() {
-        let mut app = test::init_service(
-            App::new()
-                .configure(app_routes)
-        ).await;
-    
+        let mut app = test::init_service(App::new().service(create_todo)).await;
+
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(post_todo().as_bytes().to_owned())
             .to_request();
 
-        let resp = test::read_response(&mut app, req).await;
-
-        let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
+
 ```
 
 Com estas alterações podemos perceber que um teste falha ao executarmos `cargo test`, esse é o teste `test todo_api_web::controller::ping_readiness::test_readiness_ok`, que falha com um `404`. Isso se deve ao fato de que a rota que estamos enviando o request de `readiness` estava errada esse tempo todo, pois escrevemos `/readiness`, enquanto a rota real é `/~/ready`:
 
 ```rust
-#[actix_rt::test]
-async fn test_readiness_ok() {
-    let mut app = test::init_service(
-        App::new()
-            .configure(app_routes)
-    ).await;
-
-    let req = test::TestRequest::with_uri("/~/ready").to_request();
-
-    let resp = app.call(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::ACCEPTED);
+#[get("/~/ready")]
+pub async fn readiness() -> impl Responder {
+    let process = std::process::Command::new("sh")
+        .arg("-c")
+        .arg("echo hello")
+        .output();
+    match process {
+        Ok(_) => HttpResponse::Accepted(),
+        Err(_) => HttpResponse::InternalServerError(),
+    }
 }
 ```
 
@@ -470,9 +435,9 @@ db:
 
 ### Escrevendo no banco de dados
 
-Como essa primeira feature envolve exploração, primeiro vou apresentar a lógica de como fazemos para depois escrever os testes e generalizações. O próximo passo para termos a lógica do banco de dados é criar um novo módulo em `lib.rs` (e no `main.rs`) chamado `todo_api`, que por sua vez possuirá o módulo `db`, que vai gerenciar todas as relações com o DynamoDB. Antes de seguir com o servidor em si, vou comentar a atual função `main` e substituir por outra simples, `fn main() {// ...}`, que utiliza somente o módulo `todo_api` para executar a criação de uma `TodoCard` no banco de dados, depois disso podemos conectar as partes novamente.
+Como essa primeira feature envolve exploração, primeiro vou apresentar a lógica de como fazemos para depois escrever os testes e generalizações. O próximo passo para termos a lógica do banco de dados é criar um novo módulo em `lib.rs` (e no `main.rs`) chamado `todo_api`, que por sua vez possuirá o módulo `db`, que vai gerenciar todas as relações com o DynamoDB. Antes de seguir com o servidor em si, vou comentar a atual função `main` e substituir por outra simples que sera descrita posteriormente, que utiliza somente o módulo `todo_api` para executar a criação de uma `TodoCard` no banco de dados, depois disso podemos conectar as partes novamente.
 
-Para podermos nos comunicar facilmente com o DynamoDB em Rust, existem duas bibliotecas. Uma que relaciona todos os serviços da AWS chamada `rusoto_core` e outra, a `rusoto_dynamodb`, voltada ao DynamoDB. Basta adicioná-las às dependências no `Cargo.toml`. (Atualmente a rusoto está sem novos desenvolvimentos em prol da sdk Rust da AWS que está em Beta)
+Para podermos nos comunicar facilmente com o DynamoDB em Rust, existem a biblioteca oferecida pela AWS, chamada `aws-sdk-dynamodb`. Basta adicioná-las às dependências no `Cargo.toml`. (Atualmente a sdk Rust da AWS está em Developer Preview e não deve ser usada em produção).
 
 ```toml
 [dependencies]
@@ -484,174 +449,263 @@ serde = { version = "1.0.104", features = ["derive"] }
 serde_json = "1.0.44"
 serde_derive = "1.0.104"
 num_cpus = "1.0"
-rusoto_dynamodb = "0.41.0"
-rusoto_core = "0.41.0"
+aws-config = "0.49.0"
+aws-sdk-dynamodb = "0.19.0"
 
 [dev-dependencies]
 bytes = "0.5.3"
 actix-service = "1.0.5"
 ```
 
-Com a biblioteca `rusoto_dynamodb` disponível, podemos começar a pensar em como nos comunicar com o DynamoDB. Podemos fazer isso adicionando um módulo `helpers` dentro de `todo_api/db` e criando uma função que retorna o cliente:
+Com a biblioteca `aws-sdk-dynamodb` disponível, podemos começar a pensar em como nos comunicar com o DynamoDB. Podemos fazer isso adicionando um módulo `helpers` dentro de `todo_api/db` e criando uma função que retorna o cliente:
 
-```rust
-use rusoto_core::Region;
-use rusoto_dynamodb::DynamoDbClient;
+Nota: Para utilizar o dynamodb localmente, deve ser criado um arquivo de configuração contendo uma região e credenciais (que não precisam ser validas) da AWS em `~/.aws/config` contendo:
 
-pub fn client() -> DynamoDbClient {
-    DynamoDbClient::new(Region::Custom {
-        name: String::from("us-east-1"),
-        endpoint: String::from("http://localhost:8000"),
-    })
-}
+```code
+[profile localstack]
+region=us-east-1
+aws_access_key_id=AKIDLOCALSTACK
+aws_secret_access_key=localstacksecret
 ```
 
 Agora precisamos criar uma tabela, para nosso caso não vou utilizar uma migracão pois acredito que em um cenário real este banco de dados será configurado por outro serviço, algo mais próximo a um ambiente cloud. Assim, vamos criar a função `create_table` em `todo_api/db/helpers.rs`, que fará a configuração da tabela para nós:
 
 ```rust
-// ...
-use rusoto_dynamodb::{
-    DynamoDb, DynamoDbClient, CreateTableInput, KeySchemaElement, 
-    AttributeDefinition, ProvisionedThroughput
+use actix_web::http::Uri;
+use aws_sdk_dynamodb::{
+    model::{
+        AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType,
+    },
+    Client, Endpoint,
 };
-// ...
+
 pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 
-pub fn create_table() {
-    let client = client();
-    let create_table_input = CreateTableInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        key_schema: vec![KeySchemaElement {
-            attribute_name: "id".into(),
-            key_type: "HASH".into(),
-        }],
-        attribute_definitions: vec![AttributeDefinition {
-            attribute_name: "id".into(),
-            attribute_type: "S".into(),
-        }],
-        provisioned_throughput: Some(ProvisionedThroughput {
-            read_capacity_units: 1,
-            write_capacity_units: 1,
-        }),
-        ..CreateTableInput::default()
-    };
+pub async fn create_table() {
+    let config = aws_config::load_from_env().await;
+    let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
+        .endpoint_resolver(
+            Endpoint::immutable(Uri::from_static("http://localhost:8000")),
+        )
+        .build();
 
-    match client.create_table(create_table_input).sync() {
-        Ok(output) =>  {
-            println!("Output: {:?}", output);
-        },
+    let client = Client::from_conf(dynamodb_local_config);
+
+    let table_name = TODO_CARD_TABLE.to_string();
+    let ad = AttributeDefinition::builder()
+        .attribute_name("id")
+        .attribute_type(ScalarAttributeType::S)
+        .build();
+
+    let ks = KeySchemaElement::builder()
+        .attribute_name("id")
+        .key_type(KeyType::Hash)
+        .build();
+
+    let pt = ProvisionedThroughput::builder()
+        .read_capacity_units(1)
+        .write_capacity_units(1)
+        .build();
+
+    match client
+        .create_table()
+        .table_name(table_name)
+        .key_schema(ks)
+        .attribute_definitions(ad)
+        .provisioned_throughput(pt)
+        .send()
+        .await
+    {
+        Ok(output) => {
+            println!("Output: {:?}", output);    
+        }
         Err(error) => {
             println!("Error: {:?}", error);
         }
     }
 }
 ```
-
-Para testarmos esta configuração precisamos executar o comando `make db`, adicionar uma simples mudança no `main.rs` e executar `cargo run` em outro terminal:
+Para testar precisamos executar o comando `make db`. Iremos seguir a [documentação](https://docs.aws.amazon.com/sdk-for-rust/latest/dg/dynamodb-local.html) do aws-sdk-rust para configurar o DynamoDB local. Em outro terminal, precisamos setar uma variavel de ambiente para a `aws-config` utilizar o profile `localstack` que adicionamos em `~/.aws/config`, para isso usamos `export AWS_PROFILE=localstack` (no osx ou linux). Depois atualizamos a main com o cdigo abaixo e executamos em seguida, no mesmo terminal aonde setamos a variavel de ambiente `AWS_PROFILE` executamos `cargo build && cargo run`. 
 
 ```rust
-// ...
+// main.rs
 use todo_api::db::helpers::create_table;
 
-fn main() {
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
     create_table();
 }
 ```
-
 Executando esta sequência de comandos, recebemos o seguinte output:
 
 ```rust
-CreateTableOutput { 
-    table_description: Some(TableDescription { 
-        attribute_definitions: Some([AttributeDefinition { attribute_name: "id", attribute_type: "S" }]),
-        billing_mode_summary: Some(BillingModeSummary { 
-            billing_mode: Some("PROVISIONED"), 
-            last_update_to_pay_per_request_date_time: Some(0.0) }), 
-        creation_date_time: Some(1580524670.506), 
-        global_secondary_indexes: None, 
-        item_count: Some(0), 
-        key_schema: Some([KeySchemaElement { attribute_name: "id", key_type: "HASH" }]), 
-        latest_stream_arn: None, 
-        latest_stream_label: None, 
-        local_secondary_indexes: None, 
-        provisioned_throughput: Some(
-            ProvisionedThroughputDescription { 
-                last_decrease_date_time: Some(0.0), 
-                last_increase_date_time: Some(0.0), 
-                number_of_decreases_today: Some(0), 
-                read_capacity_units: Some(1), 
-                write_capacity_units: Some(1) }), 
-        restore_summary: None, 
-        sse_description: None, 
-        stream_specification: None, 
-        table_arn: Some("arn:aws:dynamodb:ddblocal:000000000000:table/TODO_CARDS"), 
-        table_id: None, 
-        table_name: Some("TODO_CARDS"), 
-        table_size_bytes: Some(0), 
-        table_status: Some("ACTIVE") 
-    }) 
+Output: CreateTableOutput CreateTableOutput {
+	table_description: Some(TableDescription {
+		attribute_definitions: Some([AttributeDefinition {
+			attribute_name: Some("id"),
+			attribute_type: Some(S)
+		}]),
+		table_name: Some("TODO_CARDS"),
+		key_schema: Some([KeySchemaElement {
+			attribute_name: Some("id"),
+			key_type: Some(Hash)
+		}]),
+		table_status: Some(Active),
+		creation_date_time: Some(DateTime {
+			seconds: 1665206254,
+			subsecond_nanos: 461999893
+		}),
+		provisioned_throughput: Some(ProvisionedThroughputDescription {
+			last_increase_date_time: Some(DateTime {
+				seconds: 0,
+				subsecond_nanos: 0
+			}),
+			last_decrease_date_time: Some(DateTime {
+				seconds: 0,
+				subsecond_nanos: 0
+			}),
+			number_of_decreases_today: Some(0),
+			read_capacity_units: Some(1),
+			write_capacity_units: Some(1)
+		}),
+		table_size_bytes: 0,
+		item_count: 0,
+		table_arn: Some("arn:aws:dynamodb:ddblocal:000000000000:table/TODO_CARDS"),
+		table_id: None,
+		billing_mode_summary: None,
+		local_secondary_indexes: None,
+		global_secondary_indexes: None,
+		stream_specification: None,
+		latest_stream_label: None,
+		latest_stream_arn: None,
+		global_table_version: None,
+		replicas: None,
+		restore_summary: None,
+		sse_description: None,
+		archival_summary: None,
+		table_class_summary: None
+	})
 }
 ```
 
 Tabela criada! Mas se executarmos `cargo run` de novo, receberemos um erro dizendo que não é possível criar uma tabela que já existe:
 
 ```rust
-Error: Service(ResourceInUse("Cannot create preexisting table"))
+Error: ServiceError {
+	err: CreateTableError {
+		kind: ResourceInUseException(ResourceInUseException {
+			message: Some("Cannot create preexisting table")
+		}),
+		meta: Error {
+			code: Some("ResourceInUseException"),
+			message: Some("Cannot create preexisting table"),
+			request_id: Some("543a624e-7f21-4dd2-80f2-520ae078152b"),
+			extras: {}
+		}
+	},
+	raw: Response {
+		inner: Response {
+			status: 400,
+			version: HTTP / 1.1,
+			headers: {
+				"date": "Sat, 08 Oct 2022 05:33:45 GMT",
+				"content-type": "application/x-amz-json-1.0",
+				"x-amzn-requestid": "543a624e-7f21-4dd2-80f2-520ae078152b",
+				"content-length": "112",
+				"server": "Jetty(9.4.48.v20220622)"
+			},
+			body: SdkBody {
+				inner: Once(Some(b "{\"__type\":\"com.amazonaws.dynamodb.v20120810#ResourceInUseException\",\"Message\":\"Cannot create preexisting table\"}")),
+				retryable: true
+			}
+		},
+		properties: SharedPropertyBag(Mutex {
+			data: PropertyBag,
+			poisoned: false,
+			..
+		})
+	}
+}
 ```
 
-Para corrigir esse erro, sugiro modificar o método `create_table` para verificar se existem tabelas com a função `client.list_tables(list_tables_input).sync()`. Para isso, fazemos a seguinte modificação:
+Para corrigir esse erro, sugiro modificar o método `create_table` para verificar se existem tabelas com a função `client.list_tables().send()`. Para isso, fazemos a seguinte modificação:
 
 ```rust
-use rusoto_dynamodb::{
-    AttributeDefinition, CreateTableInput, DynamoDb, DynamoDbClient, KeySchemaElement,
-    ProvisionedThroughput, ListTablesInput
+use actix_web::http::Uri;
+use aws_sdk_dynamodb::{
+    model::{
+        AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType,
+    },
+    Client, Endpoint
 };
 
-// ...
-pub fn create_table() {
-    let client = client();
-    let list_tables_input: ListTablesInput = Default::default();
+pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 
-    match client.list_tables(list_tables_input).sync() {
+pub async fn create_table() {
+    let config = aws_config::load_from_env().await;
+    let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
+        .endpoint_resolver(
+            Endpoint::immutable(Uri::from_static("http://localhost:8000")),
+        )
+        .build();
+
+    let client = Client::from_conf(dynamodb_local_config);
+
+    match client.list_tables().send().await {
         Ok(list) => {
             match list.table_names {
                 Some(table_vec) => {
                     if table_vec.len() > 0 {
                         println!("Error: {:?}", "Table already exists");
                     } else {
-                        create_table_input()
+                        create_table_input(&client).await
                     }
                 }
-                None => create_table_input(),
+                None => create_table_input(&client).await,
             };
         }
         Err(_) => {
-            create_table_input();
+            create_table_input(&client).await;
         }
     }
 }
 
-fn create_table_input() {
-    let client = client();
+fn build_key_schema() -> KeySchemaElement {
+    KeySchemaElement::builder()
+        .attribute_name("id")
+        .key_type(KeyType::Hash)
+        .build()
+}
 
-    let create_table_input = CreateTableInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        key_schema: vec![KeySchemaElement {
-            attribute_name: "id".into(),
-            key_type: "HASH".into(),
-        }],
-        attribute_definitions: vec![AttributeDefinition {
-            attribute_name: "id".into(),
-            attribute_type: "S".into(),
-        }],
-        provisioned_throughput: Some(ProvisionedThroughput {
-            read_capacity_units: 1,
-            write_capacity_units: 1,
-        }),
-        ..CreateTableInput::default()
-    };
+fn build_provisioned_throughput() -> ProvisionedThroughput {
+    ProvisionedThroughput::builder()
+        .read_capacity_units(1)
+        .write_capacity_units(1)
+        .build()
+}
 
-    match client.create_table(create_table_input).sync() {
+fn build_attribute_definition() -> AttributeDefinition {
+    AttributeDefinition::builder()
+        .attribute_name("id")
+        .attribute_type(ScalarAttributeType::S)
+        .build()
+}
+
+async fn create_table_input(client: &Client) {
+    let table_name = TODO_CARD_TABLE.to_string();
+    let ad = build_attribute_definition();
+    let ks = build_key_schema();
+    let pt = build_provisioned_throughput();
+
+    match client
+        .create_table()
+        .table_name(table_name)
+        .key_schema(ks)
+        .attribute_definitions(ad)
+        .provisioned_throughput(pt)
+        .send()
+        .await
+    {
         Ok(output) => {
             println!("Output: {:?}", output);
         }
@@ -660,7 +714,6 @@ fn create_table_input() {
         }
     }
 }
-
 ```
 
 Note que, quando verificamos as listas existentes na tabela, surgiram várias situações possíveis e para facilitar a criação da tabela, extraímos sua lógica para `create_table_input`. A primeira situação é `Err`, que possivelmente representa algum problema de listagem de tabelas na base, indicando ausência de tabelas, que nos permite criar tabelas. O segundo caso, dentro do `Ok` é um `None`, que pode significar os mais diversos problemas. Depois disso obtemos a listagem em `Some`, mas esta listagem pode estar vazia, sendo um caso para criar tabela, o `else`, e se a listagem for maior que zero, não criamos a tabela.
@@ -738,34 +791,30 @@ use uuid::Uuid;
 use crate::todo_api_web::model::{TodoCard, TodoIdResponse};
 use crate::todo_api::model::{TodoCardDb};
 
-
 pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
     let todo_card = TodoCardDb::new(info);
-
-    match put_todo(todo_card) {
+    let client = get_client().await;
+    match put_todo(&client, todo_card).await {
         None => HttpResponse::BadRequest().body("Failed to create todo card"),
         Some(id) => HttpResponse::Created()
-            .content_type("application/json")
+            .content_type(ContentType::json())
             .body(serde_json::to_string(&TodoIdResponse::new(id)).expect("Failed to serialize todo card"))
     }
 }
 
 /// A partir daqui vamos extrair logo mais
-use rusoto_dynamodb::{DynamoDb, PutItemInput};
-
+use aws_sdk_dynamodb::{Client};
 use crate::{
-    todo_api::db::helpers::{TODO_CARD_TABLE, client},
+    todo_api::db::helpers::{TODO_CARD_TABLE},
 };
+use super::helpers::get_client;
 
-pub fn put_todo(todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-    
-    match client.put_item(put_item).sync() {
+pub async fn put_todo(client: &Client, todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
+    match client.put_item()
+    .table_name(TODO_CARD_TABLE.to_string())
+    .set_item(Some(todo_card.clone().into()))
+    .send()
+    .await {
         Ok(_) => {
             Some(todo_card.id)
         },
@@ -778,21 +827,20 @@ pub fn put_todo(todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
 
 Veja que nosso controller ficou muito mais funcional agora. Ele recebe um JSON do tipo `TodoCard`, transforma esse JSON em um `TodoCardDb` e envia para a função `put_todo` inserir no banco de dados. Caso ocorra algum problema com a inserção fazemos pattern matching com o `None` e retornamos algo como `HttpResponse::BadRequest()` ou `HttpResponse::InternalServerError()`, mas caso o retorno seja um id em `Some`, retornamos um JSON contendo `TodoIdResponse`. Note que foi necessário adicionar a função `body` ao `HttpResponse::BadRequest()` para garantir que os dois pattern matchings tivessem o mesmo tipo de retorno `Response`, em vez de `ResponseBuilder`. 
 
-Mais à frente, na função `put_todo`, nos deparamos com a struct `PutItemInput`, struct responsável por configurar como será a inserção do item via função `put_item(item).sync`. Ao mesmo tempo, se você estiver utilizando o `rls` do rust, vai perceber que o `into` de `item: todo_card.clone().into(),` está destacado, isso se deve ao fato de que precisamos implementar a função `into` para o tipo `TodoCardDB` de forma que retorne `HashMap<String, AttributeValue>`. Para isso, utilizamos a declaração `impl Into<HashMap<String, AttributeValue>> for TodoCardDb` com a seguinte implementação:
+Se você estiver utilizando o `rust-analyzer` do rust, vai perceber que o `into` de `item: todo_card.clone().into(),` está destacado, isso se deve ao fato de que precisamos implementar a função `into` para o tipo `TodoCardDB` de forma que retorne `HashMap<String, AttributeValue>`. Para isso, utilizamos a declaração `impl Into<HashMap<String, AttributeValue>> for TodoCardDb` com a seguinte implementação:
 
 ```rust
 // src/todo_api/model/mod.rs
-use rusoto_dynamodb::AttributeValue;
 use std::collections::HashMap;
 
 impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
     fn into(self) -> HashMap<String, AttributeValue> {
         let mut todo_card = HashMap::new();
-        todo_card.insert("id".to_string(), val!(S => Some(self.id.to_string())));
-        todo_card.insert("title".to_string(), val!(S => Some(self.title)));
-        todo_card.insert("description".to_string(), val!(S => Some(self.description)));
-        todo_card.insert("owner".to_string(), val!(S => Some(self.owner.to_string())));
-        todo_card.insert("state".to_string(), val!(S => Some(self.state.to_string())));
+        todo_card.insert("id".to_string(), val!(S => self.id.to_string()));
+        todo_card.insert("title".to_string(), val!(S => self.title));
+        todo_card.insert("description".to_string(), val!(S => self.description));
+        todo_card.insert("owner".to_string(), val!(S => self.owner.to_string()));
+        todo_card.insert("state".to_string(), val!(S => self.state.to_string()));
         todo_card.insert("tasks".to_string(), val!(L => task_to_db_val(self.tasks)));
         todo_card
     }
@@ -838,7 +886,7 @@ fn task_to_db_val(tasks: Vec<TaskDb>) -> Vec<AttributeValue> {
         .iter()
         .map(|t| {
             let mut tasks_hash = HashMap::new();
-            tasks_hash.insert("title".to_string(), val!(S => Some(t.title.clone())));
+            tasks_hash.insert("title".to_string(), val!(S => t.title.clone()));
             tasks_hash.insert("is_done".to_string(), val!(B => t.is_done));
             val!(M => tasks_hash)
         })
@@ -853,24 +901,16 @@ Ainda falta falarmos da `val!`. `val!` é uma macro criada para transformar os v
 #[macro_export]
 macro_rules! val {
     (B => $bval:expr) => {{
-        let mut attr = AttributeValue::default();
-        attr.bool = Some($bval);
-        attr
+        AttributeValue::Bool($bval)
     }};
     (L => $val:expr) => {{
-        let mut attr = AttributeValue::default();
-        attr.l = Some($val);
-        attr
+        AttributeValue::L($val)
     }};
     (S => $val:expr) => {{
-        let mut attr = AttributeValue::default();
-        attr.s = $val;
-        attr
+        AttributeValue::S($val)
     }};
     (M => $val:expr) => {{
-        let mut attr = AttributeValue::default();
-        attr.m = Some($val);
-        attr
+        AttributeValue::M($val)
     }};
 }
 ```
@@ -912,87 +952,48 @@ E vamos receber um `Uuid` como resposta e o status `201`:
 
 ### Organizando nosso código
 
-Nosso controller possui um conjunto de códigos que não fazem sentido dentro do contexto de controller, no caso a função `put_todo`, como descrita a seguir:
+Nosso controller possui um conjunto de códigos que não fazem sentido dentro do contexto de controller, no caso a função `put_todo`. A primeira coisa que vamos fazer é criar um módulo `todo` dentro de `todo_api/db` que conterá toda a lógica de banco de dados para o `todo`:
 
 ```rust
-use rusoto_dynamodb::{DynamoDb, PutItemInput};
+use super::helpers::get_client;
+use crate::todo_api::db::helpers::TODO_CARD_TABLE;
+use aws_sdk_dynamodb::Client;
 
-use crate::{
-    todo_api::db::helpers::{TODO_CARD_TABLE, client},
-};
-
-pub fn put_todo(todo_card: TodoCardDb) ->  Option<uuid::Uuid> {
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-    
-    match client.put_item(put_item).sync() {
-        Ok(_) => {
-            Some(todo_card.id)
-        },
-        Err(_) => {
-            None
-        }
+pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
+    match client
+        .put_item()
+        .table_name(TODO_CARD_TABLE.to_string())
+        .set_item(Some(todo_card.clone().into()))
+        .send()
+        .await
+    {
+        Ok(_) => Some(todo_card.id),
+        Err(_) => None,
     }
 }
-```
 
-A primeira coisa que vamos fazer é criar um módulo `todo` dentro de `todo_api/db` que conterá toda a lógica de banco de dados para o `todo`:
-
-```rust
-// src/todo_api/db/todo.rs
-use rusoto_dynamodb::{DynamoDb, PutItemInput};
-use uuid::Uuid;
-use crate::{
-    todo_api::{
-        db::helpers::{TODO_CARD_TABLE, client},
-        model::TodoCardDb
-    }
-};
-
-pub fn put_todo(todo_card: TodoCardDb) ->  Option<Uuid> {
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-    
-    match client.put_item(put_item).sync() {
-        Ok(_) => {
-            Some(todo_card.id)
-        },
-        Err(_) => {
-            None
-        }
-    }
-}
 ```
 
 E agora podemos simplificar muito nosso controller com:
 
 ```rust
-use actix_web::{HttpResponse, web, Responder};
-use crate::{
-    todo_api::{
-        db::todo::put_todo,
-        model::{TodoCardDb}
-    },
-    todo_api_web::model::{TodoCard, TodoIdResponse}
-};
+use crate::todo_api::db:: {helpers::get_client, todo::put_todo};
+use crate::todo_api::model::TodoCardDb;
+use crate::todo_api_web::model::todo::{TodoCard, TodoIdResponse};
+use actix_web::{http::header::ContentType, post, web, HttpResponse, Responder};
 
-
+#[post("/api/create")]
 pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
     let todo_card = TodoCardDb::new(info);
-
-    match put_todo(todo_card) {
+    let client = get_client().await;
+    match put_todo(&client, todo_card).await {
         None => HttpResponse::BadRequest().body("Failed to create todo card"),
         Some(id) => HttpResponse::Created()
-            .content_type("application/json")
-            .body(serde_json::to_string(&TodoIdResponse::new(id)).expect("Failed to serialize todo card"))
+        .content_type(ContentType::json())
+            .body(
+                serde_json::to_string(&TodoIdResponse::new(id))
+                    .expect("Failed to serialize todo card"),
+            ),
     }
 }
 ```
@@ -1087,7 +1088,7 @@ pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
     match put_todo(todo_card) {
         None => HttpResponse::BadRequest().body("Failed to create todo card"),
         Some(id) => HttpResponse::Created()
-            .content_type("application/json")
+            .content_type(ContentType::json())
             .body(serde_json::to_string(&TodoIdResponse::new(id)).expect("Failed to serialize todo card"))
     }
 }
@@ -1100,11 +1101,11 @@ Uma última refatoração que podemos fazer é a função `task_to_db_val`, já 
 impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
     fn into(self) -> HashMap<String, AttributeValue> {
         let mut todo_card = HashMap::new();
-        todo_card.insert("id".to_string(), val!(S => Some(self.id.to_string())));
-        todo_card.insert("title".to_string(), val!(S => Some(self.title)));
-        todo_card.insert("description".to_string(), val!(S => Some(self.description)));
-        todo_card.insert("owner".to_string(), val!(S => Some(self.owner.to_string())));
-        todo_card.insert("state".to_string(), val!(S => Some(self.state.to_string())));
+        todo_card.insert("id".to_string(), val!(S => self.id.to_string()));
+        todo_card.insert("title".to_string(), val!(S => self.title));
+        todo_card.insert("description".to_string(), val!(S => self.description));
+        todo_card.insert("owner".to_string(), val!(S => self.owner.to_string()));
+        todo_card.insert("state".to_string(), val!(S => self.state.to_string()));
         todo_card.insert("tasks".to_string(), 
             val!(L => self.tasks.into_iter().map(|t| t.to_db_val()).collect::<Vec<AttributeValue>>()));
         todo_card
@@ -1114,29 +1115,30 @@ impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
 impl TaskDb {
     fn to_db_val(self) -> AttributeValue {
         let mut tasks_hash = HashMap::new();
-            tasks_hash.insert("title".to_string(), val!(S => Some(self.title.clone())));
+            tasks_hash.insert("title".to_string(), val!(S => self.title.clone()));
             tasks_hash.insert("is_done".to_string(), val!(B => self.is_done));
             val!(M => tasks_hash)
     }
 }
 ```
 
-Agora  faltam alguns testes.
+Agora faltam alguns testes.
 
 ## Aplicando testes a nosso endpoint
 
 Creio que uma boa abordagem agora seja começar pelos testes mais unitários, por isso vamos começar pelo adapter. Nosso primeiro teste será com a função `converts_json_to_db`:
 
 ```rust
-
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use super::*;
-    use actix_web::web::Json;
     use crate::{
         todo_api::model::{StateDb, TaskDb, TodoCardDb},
-        todo_api_web::model::{State, Task, TodoCard},
+        todo_api_web::model::todo::{State, Task, TodoCard},
     };
+    use actix_web::web::Json;
 
     #[test]
     fn converts_json_to_db() {
@@ -1147,7 +1149,10 @@ mod test {
             description: "description".to_string(),
             owner: owner,
             state: State::Done,
-            tasks: vec![Task {is_done: true, title: "title".to_string()}]
+            tasks: vec![Task {
+                is_done: true,
+                title: "title".to_string(),
+            }],
         });
         let expected = TodoCardDb {
             id: id,
@@ -1155,10 +1160,12 @@ mod test {
             description: "description".to_string(),
             owner: owner,
             state: StateDb::Done,
-            tasks: vec![TaskDb {is_done: true, title: "title".to_string()}]
+            tasks: vec![TaskDb {
+                is_done: true,
+                title: "title".to_string(),
+            }],
         };
-        assert_eq!(todo_json_to_db(json, id),
-                    expected);
+        assert_eq!(todo_json_to_db(json, id), expected);
     }
 }
 ```
@@ -1174,15 +1181,14 @@ mod test {
     fn task_db_to_db_val() {
         let actual = TaskDb {
             title: "blob".to_string(),
-            is_done: true
-        }.to_db_val();
+            is_done: true,
+        }
+        .to_db_val();
         let mut tasks_hash = HashMap::new();
-        tasks_hash.insert("title".to_string(), val!(S => Some("blob".to_string())));
+        tasks_hash.insert("title".to_string(), val!(S => "blob".to_string()));
         tasks_hash.insert("is_done".to_string(), val!(B => true));
         let expected = val!(M => tasks_hash);
-
         assert_eq!(actual, expected);
-        
     }
 }
 ```
@@ -1199,17 +1205,25 @@ A lógica do teste `task_db_to_db_val` é basicamente a mesma que a implementaç
             description: "description".to_string(),
             owner: id,
             state: StateDb::Done,
-            tasks: vec![TaskDb {is_done: true, title: "title".to_string()}]
-        }.into();
+            tasks: vec![TaskDb {
+                is_done: true,
+                title: "title".to_string(),
+            }],
+        }
+        .into();
         let mut expected = HashMap::new();
-        expected.insert("id".to_string(), val!(S => Some(id.to_string())));
-        expected.insert("title".to_string(), val!(S => Some("title".to_string())));
-        expected.insert("description".to_string(), val!(S => Some("description".to_string())));
-        expected.insert("owner".to_string(), val!(S => Some(id.to_string())));
-        expected.insert("state".to_string(), val!(S => Some(StateDb::Done.to_string())));
-        expected.insert("tasks".to_string(), 
-            val!(L => vec![TaskDb {is_done: true, title: "title".to_string()}.to_db_val()]));
-        
+        expected.insert("id".to_string(), val!(S => id.to_string()));
+        expected.insert("title".to_string(), val!(S => "title".to_string()));
+        expected.insert(
+            "description".to_string(),
+            val!(S => "description".to_string()),
+        );
+        expected.insert("owner".to_string(), val!(S => id.to_string()));
+        expected.insert("state".to_string(), val!(S => StateDb::Done.to_string()));
+        expected.insert(
+            "tasks".to_string(),
+            val!(L => vec![TaskDb {is_done: true, title: "title".to_string()}.to_db_val()]),
+        );
         assert_eq!(actual, expected);
     }
 ```
@@ -1217,15 +1231,21 @@ A lógica do teste `task_db_to_db_val` é basicamente a mesma que a implementaç
 Se executarmos `cargo test` enquanto o `make db` roda, teremos duas situações: uma em que a base de dados já está configurada e tudo ocorre normalmente e outra em que ela não está configurada e o teste falha. Para resolvermos esse problema, bastaria adicionar o `create_table` ao cenário de teste assim:
 
 ```rust
-#[actix_rt::test]
-async fn valid_todo_post() {
-    todo_server::todo_api::db::helpers::create_table();
-    let mut app = test::init_service(
-        App::new()
-            .configure(app_routes)
-    ).await;
-    // ...
-}
+ #[actix_web::test]
+    async fn valid_todo_post() {
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let req = test::TestRequest::post()
+            .uri("/api/create")
+            .insert_header((CONTENT_TYPE, ContentType::json()))
+            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
+        assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
+    }
 ```
 
 É bem claro para mim que um teste que precisa executar o contêiner do banco de dados para passar é bastante frágil. Assim vamos precisar fazer algumas modificações para tornar o teste passável. A mudança que vamos fazer é, na minha opinião, uma forma mais elegante de fazer mocks em rust, pois ela não necessita criar uma trait e uma struct para mockar uma função específica, basta definirmos que para modo de compilação em test, `#[cfg(test)]`, a função terá outro comportamento, geralmente evitando efeitos colaterais com base de dados. Agora, o que vai mudar é que nosso teste de controller deixará de estar presente na pasta `tests` e passará a ser um módulo `#[cfg(test)]` junto ao controller:
@@ -1247,23 +1267,19 @@ mod create_todo {
         // ...
     }
 
-    #[actix_rt::test]
+     #[actix_web::test]
     async fn valid_todo_post() {
-        let mut app = test::init_service(
-            App::new()
-                .configure(app_routes)
-        ).await;
-    
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
-            .set_payload(post_todo().as_bytes().to_owned())
+            .insert_header((CONTENT_TYPE, ContentType::json()))
+            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
 
-        let resp = test::read_response(&mut app, req).await;
-        println!("{:?}", resp);
-
-        let id: TodoIdResponse = from_str(&String::from_utf8(resp.to_vec()).unwrap()).unwrap();
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
@@ -1274,37 +1290,31 @@ Assim, agora precisamos fazer com que nossa interação com o banco de dados sej
 ```rust
 // ...
 #[cfg(not(test))]
-pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
-    use rusoto_dynamodb::DynamoDb;
-    use crate::todo_api::db::helpers::client;
+pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
+    use crate::todo_api::db::helpers::TODO_CARD_TABLE;
 
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
-
-    match client.put_item(put_item).sync() {
+    match client
+        .put_item()
+        .table_name(TODO_CARD_TABLE.to_string())
+        .set_item(Some(todo_card.clone().into()))
+        .send()
+        .await
+    {
         Ok(_) => Some(todo_card.id),
-        Err(_) => None,
+        Err(e) => {
+            println!("{:?}", e);
+            None
+        }
     }
 }
 
 #[cfg(test)]
-pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
-    let _ = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
+pub async fn put_todo(_client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
     Some(todo_card.id)
 }
 ```
 
-Veja que `put_todo` com `cfg(test)` ativado pula a etapa `client.put_item(put_item).sync()` e simplesmente retorna  um `Option<Uuid>`. 
-
-> No momento, a biblioteca rusoto dispõe de uma maneira muito primitiva de testar seus serviços, por isso, para o caso do DyanmoDB, não creio que ela seja suficiente para realizar um teste real.
+Veja que `put_todo` com `cfg(test)` ativado pula a etapa `match client.put_item().table_name(TODO_CARD_TABLE.to_string()).set_item(Some(todo_card.clone().into())).send().await` e simplesmente retorna  um `Option<Uuid>`. 
 
 Outro modo de fazer esse teste, utilizando `cfg`, é utilizar `features`, mas por ser um pouco mais sensível deixei para apresentar depois. Neste repositório, vamos utilizar `features` para testar os controllers, o que deixará o código mais limpo, porém mais difícil de gerenciar, podendo fazer com que uma feature indesejada suba para a produção. Assim, recomendo fortemente que os builds de produção utilizem a flag `--release` e que os `cfg` mapeie corretamente isso. Para utilizar essa feature, uma boa prática é adicioná-la ao campo `[features]` do `Cargo.toml`:
 
@@ -1324,32 +1334,30 @@ dynamo = []
 Além disso, precisamos gerar a nova função, muito semelhante ao `cfg(test)` de antes:
 
 ```rust
-// ...
-#[cfg(not(feature = "dynamo"))]
-pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
-    use crate::todo_api::db::helpers::client;
-    use rusoto_dynamodb::DynamoDb;
+use crate::todo_api::model::TodoCardDb;
+use aws_sdk_dynamodb::Client;
 
-    let client = client();
-    let put_item = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
+#[cfg(feature = "dynamo")]
+pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
+    use crate::todo_api::db::helpers::TODO_CARD_TABLE;
 
-    match client.put_item(put_item).sync() {
+    match client
+        .put_item()
+        .table_name(TODO_CARD_TABLE.to_string())
+        .set_item(Some(todo_card.clone().into()))
+        .send()
+        .await
+    {
         Ok(_) => Some(todo_card.id),
-        Err(_) => None,
+        Err(e) => {
+            println!("{:?}", e);
+            None
+        }
     }
 }
 
-#[cfg(feature = "dynamo")]
-pub fn put_todo(todo_card: TodoCardDb) -> Option<Uuid> {
-    let _ = PutItemInput {
-        table_name: TODO_CARD_TABLE.to_string(),
-        item: todo_card.clone().into(),
-        ..PutItemInput::default()
-    };
+#[cfg(not(feature = "dynamo"))]
+pub async fn put_todo(_client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
     Some(todo_card.id)
 }
 ```
@@ -1411,17 +1419,19 @@ mod create_todo {
     // ...
     use crate::helpers::read_json;
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn valid_todo_post() {
-        // ...
-    
+        ...
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .header("Content-Type", "application/json")
+            .insert_header((CONTENT_TYPE, ContentType::json()))
             .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
 
-        // ...
+        let resp = test::call_service(&mut app, req).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
+        let id = from_str::<TodoIdResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
