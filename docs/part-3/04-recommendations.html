@@ -1,0 +1,889 @@
+<!DOCTYPE HTML>
+<html lang="pt" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Componente de Recomendações - Desenvolvimento Web em Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../0-capa.html"><strong aria-hidden="true">1.</strong> Capa</a></li><li class="chapter-item expanded "><a href="../intro/1-about.html"><strong aria-hidden="true">2.</strong> Sobre autora</a></li><li class="chapter-item expanded "><a href="../intro/2-Audience.html"><strong aria-hidden="true">3.</strong> Público alvo</a></li><li class="chapter-item expanded "><a href="../intro/3-book.html"><strong aria-hidden="true">4.</strong> Como o livro está organizado</a></li><li class="chapter-item expanded "><a href="../intro/4-setup.html"><strong aria-hidden="true">5.</strong> Instalando Rust</a></li><li class="chapter-item expanded "><a href="../intro/5-exercício.html"><strong aria-hidden="true">6.</strong> Exercício Maior Produto de uma Série</a></li><li class="chapter-item expanded "><a href="../part-1/00-capa.html"><strong aria-hidden="true">7.</strong> Todo Server com Actix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-1/01-ping-pong.html"><strong aria-hidden="true">7.1.</strong> Configurando os primeiros endpoints</a></li><li class="chapter-item expanded "><a href="../part-1/02-create.html"><strong aria-hidden="true">7.2.</strong> Criando Tarefas</a></li><li class="chapter-item expanded "><a href="../part-1/03-get.html"><strong aria-hidden="true">7.3.</strong> Obtendo todas as Todo Cards inseridas</a></li><li class="chapter-item expanded "><a href="../part-1/04-serving.html"><strong aria-hidden="true">7.4.</strong> Tornam nosso serviço mais realístico</a></li><li class="chapter-item expanded "><a href="../part-1/05-auth.html"><strong aria-hidden="true">7.5.</strong> Autenticação</a></li><li class="chapter-item expanded "><a href="../part-1/06-middleware.html"><strong aria-hidden="true">7.6.</strong> Exigindo Autenticação através de middlewares</a></li><li class="chapter-item expanded "><a href="../part-1/07-ci.html"><strong aria-hidden="true">7.7.</strong> Configurando um CI</a></li><li class="chapter-item expanded "><a href="../part-1/08-conclusao.html"><strong aria-hidden="true">7.8.</strong> Concluindo o serviço</a></li></ol></li><li class="chapter-item expanded "><a href="../part-2/00-capa.html"><strong aria-hidden="true">8.</strong> GraphQL com Actix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-2/01-ping-gql.html"><strong aria-hidden="true">8.1.</strong> Configurando o GraphQL</a></li><li class="chapter-item expanded "><a href="../part-2/02-bestprices.html"><strong aria-hidden="true">8.2.</strong> Query Best Prices</a></li><li class="chapter-item expanded "><a href="../part-2/03-recommendations.html"><strong aria-hidden="true">8.3.</strong> Query Recommendations</a></li><li class="chapter-item expanded "><a href="../part-2/04-redis.html"><strong aria-hidden="true">8.4.</strong> Adicionando Caching com Redis</a></li></ol></li><li class="chapter-item expanded "><a href="../part-3/00-capa.html"><strong aria-hidden="true">9.</strong> Frontend com WebAssembly e YewStack</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-3/01-setup.html"><strong aria-hidden="true">9.1.</strong> Setup de WebAssembly</a></li><li class="chapter-item expanded "><a href="../part-3/02-iniciando.html"><strong aria-hidden="true">9.2.</strong> Iniciando o projeto</a></li><li class="chapter-item expanded "><a href="../part-3/03-best-prices.html"><strong aria-hidden="true">9.3.</strong> Componente de Best Prices</a></li><li class="chapter-item expanded "><a href="../part-3/04-recommendations.html" class="active"><strong aria-hidden="true">9.4.</strong> Componente de Recomendações</a></li><li class="chapter-item expanded "><a href="../part-3/05-route.html"><strong aria-hidden="true">9.5.</strong> Aplicando um Router</a></li></ol></li><li class="chapter-item expanded "><a href="../appendix.html"><strong aria-hidden="true">10.</strong> Appendix</a></li><li class="chapter-item expanded "><a href="../bibliografia.html"><strong aria-hidden="true">11.</strong> Bibliografia</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Desenvolvimento Web em Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="componente-de-recomendações"><a class="header" href="#componente-de-recomendações">Componente de Recomendações</a></h1>
+<p>A query que vamos utilizar neste capítulo será a de <code>recommendations</code>, que contém muitas mais informações que a de <code>best_prices</code>, mas será útil para compor os componentes faltantes. A baixo a query de <code>recommendations</code>:</p>
+<pre><code class="language-graphql">{
+recommendations(departure: &quot;2020-06-28&quot;, 
+    origin: &quot;POA&quot;, 
+    destination: &quot;GRU&quot;) {
+    data{
+      recommendedFlightCode
+      flights {
+        flightCode
+        flightDuration
+        stops
+        arrival {
+          cityName
+          airportName
+          airportCode
+          dateTime
+        }
+        departure {
+          cityName
+          airportName
+          airportCode
+          dateTime
+        }
+        segments {
+          flightNumber
+          equipment {
+            name
+            code
+          }
+        }
+        cabins {
+          code
+          displayPrice
+          availabilityCount
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<p>Adicionamos esta query a função <code>fetch_gql</code> que executará ambas as queries simultaneamente. E já modificamos a struct <code>GqlField</code> para conter o campo <code>recommendations</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn fetch_gql() -&gt; Value {
+    json!({
+        &quot;query&quot;: &quot;{
+            recommendations(departure: \&quot;2020-06-28\&quot;, 
+                origin: \&quot;POA\&quot;, 
+                destination: \&quot;GRU\&quot;) {
+                data{
+                recommendedFlightCode
+                flights {
+                    flightCode
+                    flightDuration
+                    stops
+                    arrival {
+                        cityName
+                        airportName
+                        airportCode
+                        dateTime
+                    }
+                    departure {
+                        cityName
+                        airportName
+                        airportCode
+                        dateTime
+                    }
+                    segments {
+                    flightNumber
+                    equipment {
+                        name
+                        code
+                    }
+                    }
+                    cabins {
+                        code
+                        displayPrice
+                        availabilityCount
+                    }
+                }
+                }
+            }
+            bestPrices(departure: \&quot;2020-06-28\&quot;, origin: \&quot;POA\&quot;, destination: \&quot;GRU\&quot;) {
+                bestPrices {
+                    date
+                    available
+                    price {amount}
+                }
+             }
+        }&quot;
+    })
+}
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = &quot;camelCase&quot;)]
+pub struct GqlFields {
+    best_prices: BestPrices,
+    recommendations: Recommendations,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Esta query retorna o seguinte Json:</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: {
+    &quot;recommendations&quot;: {
+      &quot;data&quot;: [
+        {
+          &quot;recommendedFlightCode&quot;: &quot;LA3068&quot;,
+          &quot;flights&quot;: [
+            {
+              &quot;flightCode&quot;: &quot;LA3068&quot;,
+              &quot;flightDuration&quot;: &quot;PT1H35M&quot;,
+              &quot;stops&quot;: 0,
+              &quot;arrival&quot;: {
+                &quot;cityName&quot;: &quot;São Paulo&quot;,
+                &quot;airportName&quot;: &quot;Guarulhos Intl.&quot;,
+                &quot;airportCode&quot;: &quot;GRU&quot;,
+                &quot;dateTime&quot;: &quot;2020-06-28T22:15-03:00&quot;
+              },
+              &quot;departure&quot;: {
+                &quot;cityName&quot;: &quot;Porto Alegre&quot;,
+                &quot;airportName&quot;: &quot;Salgado Filho&quot;,
+                &quot;airportCode&quot;: &quot;POA&quot;,
+                &quot;dateTime&quot;: &quot;2020-06-28T20:40-03:00&quot;
+              },
+              &quot;segments&quot;: [
+                {
+                  &quot;flightNumber&quot;: &quot;3068&quot;,
+                  &quot;equipment&quot;: {
+                    &quot;name&quot;: &quot;Airbus 320-200&quot;,
+                    &quot;code&quot;: &quot;320&quot;
+                  }
+                }
+              ],
+              &quot;cabins&quot;: [
+                {
+                  &quot;code&quot;: &quot;Y&quot;,
+                  &quot;displayPrice&quot;: 582.03,
+                  &quot;availabilityCount&quot;: 33
+                },
+                {
+                  &quot;code&quot;: &quot;W&quot;,
+                  &quot;displayPrice&quot;: 1072.03,
+                  &quot;availabilityCount&quot;: 9
+                }
+              ]
+            },
+            {
+              &quot;flightCode&quot;: &quot;LA3297&quot;,
+              &quot;flightDuration&quot;: &quot;PT1H40M&quot;,
+              &quot;stops&quot;: 0,
+              &quot;arrival&quot;: {
+                &quot;cityName&quot;: &quot;São Paulo&quot;,
+                &quot;airportName&quot;: &quot;Guarulhos Intl.&quot;,
+                &quot;airportCode&quot;: &quot;GRU&quot;,
+                &quot;dateTime&quot;: &quot;2020-06-28T10:45-03:00&quot;
+              },
+              &quot;departure&quot;: {
+                &quot;cityName&quot;: &quot;Porto Alegre&quot;,
+                &quot;airportName&quot;: &quot;Salgado Filho&quot;,
+                &quot;airportCode&quot;: &quot;POA&quot;,
+                &quot;dateTime&quot;: &quot;2020-06-28T09:05-03:00&quot;
+              },
+              &quot;segments&quot;: [
+                {
+                  &quot;flightNumber&quot;: &quot;3297&quot;,
+                  &quot;equipment&quot;: {
+                    &quot;name&quot;: &quot;Airbus 320-200&quot;,
+                    &quot;code&quot;: &quot;320&quot;
+                  }
+                }
+              ],
+              &quot;cabins&quot;: [
+                {
+                  &quot;code&quot;: &quot;Y&quot;,
+                  &quot;displayPrice&quot;: 842.03,
+                  &quot;availabilityCount&quot;: 1
+                },
+                {
+                  &quot;code&quot;: &quot;W&quot;,
+                  &quot;displayPrice&quot;: 1137.03,
+                  &quot;availabilityCount&quot;: 4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+</code></pre>
+<p>Ou seja, nosso backend retornará um campo <code>data</code>, que pode ser um array vazio, pois pode retornar sem voos. O campo data por sua vez, retornará uma estrutura de <code>RecommendedFLights</code> que é um vetor com o voo recomendado, <code>recommendedFlightCode</code>, e todos os possíveis voos em <code>flights</code>. No primeiro momento, vamos focar apenas a estrutura do seguinte Json:</p>
+<pre><code class="language-json">{
+    &quot;flightCode&quot;: &quot;LA3068&quot;,
+    &quot;flightDuration&quot;: &quot;PT1H35M&quot;,
+    &quot;stops&quot;: 0,
+    &quot;arrival&quot;: {
+        &quot;cityName&quot;: &quot;São Paulo&quot;,
+        &quot;airportName&quot;: &quot;Guarulhos Intl.&quot;,
+        &quot;airportCode&quot;: &quot;GRU&quot;,
+        &quot;dateTime&quot;: &quot;2020-06-28T22:15-03:00&quot;
+    },
+    &quot;departure&quot;: {
+        &quot;cityName&quot;: &quot;Porto Alegre&quot;,
+        &quot;airportName&quot;: &quot;Salgado Filho&quot;,
+        &quot;airportCode&quot;: &quot;POA&quot;,
+        &quot;dateTime&quot;: &quot;2020-06-28T20:40-03:00&quot;
+    },
+}
+</code></pre>
+<h2 id="modelando-recommendations"><a class="header" href="#modelando-recommendations">Modelando Recommendations</a></h2>
+<p>A  modelagem do domínio vai seguir o mesmo formato do capítulo anterior e da parte anterior, assim podemos resumir a modelagem de <code>Recommendations</code> inicialmente da seguinte forma:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Recommendations {
+    data: Vec&lt;RecommendedFlight&gt;
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = &quot;camelCase&quot;)]
+pub struct RecommendedFlight {
+    recommended_flight_code: String,
+    flights: Vec&lt;Flight&gt;
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = &quot;camelCase&quot;)]
+pub struct Flight {
+    flight_code: String,
+    flight_duration: String,
+    stops: i32,
+    arrival: OriginDestination,
+    departure: OriginDestination,
+    segments: Vec&lt;Segment&gt;
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = &quot;camelCase&quot;)]
+pub struct OriginDestination {
+    city_name: String,
+    airport_name: String,
+    airport_code: String,
+    date_time: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = &quot;camelCase&quot;)]
+pub struct Segment { 
+    flight_number: String,
+    equipment: Equipment
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Equipment { 
+    name: String,
+    code: String
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora podemos começar a implementar o componente da struct <code>Recommendations</code>.</p>
+<h2 id="implementando-a-view-para-recommendations"><a class="header" href="#implementando-a-view-para-recommendations">Implementando a <code>view</code> para <code>Recommendations</code></a></h2>
+<p>Para este componente vamos utilizar uma forma diferente de criação de <code>view</code>, pois vamos passar as propriedades do nível de superior para que está view gerencie elas. Isso nos permitirá alterar o estado da aplicação de dentro do nosso componente de <code>Recommendations</code>. Agora, na implementação da struct <code>GqlResponse</code> precisamos adicionar uma função que facilite acesso ao campo privado <code>recommendations</code>, fazemos isso com:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl GqlResponse {
+    pub fn best_prices(self) -&gt; BestPrices {
+        self.data.best_prices
+    }
+
+    pub fn recommendations(self) -&gt; Recommendations {
+        self.data.recommendations
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com isso, podemos chamar a mesma estratégia que usamos com <code>best_prices</code> e chamar a função <code>view</code> de <code>Recommendations</code> dentro da <code>view</code> de <code>Airline</code>. Para podemos chamar dois componentes <code>Html</code> dentro de outro, vamos preciisar separar em várias <code>div</code>s, pois cada conjunto de tag permiite a utilização de apenas um <code>Html</code> do <code>yew</code>. fazemos isso modificandoa  função <code>view</code> de <code>app.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn view(&amp;self) -&gt; Html {
+    if self.fetching {
+        html! {
+            &lt;div class=&quot;loading-margin&quot;&gt;
+                &lt;div class=&quot;loader&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+        } 
+    } else {
+        html! {
+            &lt;div class=&quot;body&quot;&gt;
+                { 
+                    if let Some(data) = &amp;self.graphql_response {
+                        html!{&lt;div&gt;
+                            &lt;div&gt; {data.clone().best_prices().view()} &lt;/div&gt;
+                            &lt;div&gt; { data.clone().recommendations().view() } &lt;/div&gt;
+                          &lt;/div&gt; }
+                    } else {
+                        html!{
+                            &lt;p class=&quot;failed-fetch&quot;&gt;
+                                {&quot;Failed to fetch&quot;}
+                            &lt;/p&gt;
+                        }
+                    }
+                }
+            &lt;/div&gt;
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora precisamos definir a função <code> view</code> para a struct <code>Recommendations</code>, que será invocada em <code>app.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl Recommendations {
+    pub fn view(&amp;self) -&gt; Html {
+      html!{
+          &lt;div class=&quot;flight-container&quot;&gt; {
+              self.data[0].clone().flights.into_iter()
+              .map(|r|
+                  html!{
+                      &lt;div class=&quot;flight&quot;&gt; 
+                          {&quot;Hello from flights&quot;}
+                      &lt;/div&gt;
+                  }
+              )
+              .collect::&lt;Html&gt;()
+          }
+          &lt;/div&gt;}
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="compondo-a-view"><a class="header" href="#compondo-a-view">Compondo a <code>view</code></a></h3>
+<p>Anteriormente descrevemos a função <code>view</code> da seguinte forma:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn view(&amp;self) -&gt; Html {
+  html!{
+      &lt;div class=&quot;flight-container&quot;&gt; {
+          self.data[0].clone().flights.into_iter()
+          .map(|r|
+              html!{
+                  &lt;div class=&quot;flight&quot;&gt; 
+                      // ...
+                  &lt;/div&gt;
+              }
+          )
+          .collect::&lt;Html&gt;()
+      }
+      &lt;/div&gt;}
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>A primeira coisa que gostaria de salientar é a presenção do <code>clone</code> logo após acessarmos o vetor com <code>[0]</code>, isso se deve ao fato de que temos apenas a referência de um valor, que não vai nos possibilitar executar o <code>move</code> para a macro, conforme o erro a seguir:</p>
+<pre><code>  --&gt; src/reccomendation.rs:74:17
+   |
+74 |                 self.data[0].flights.into_iter()
+   |                 ^^^^^^^^^^^^^^^^^^^^ move occurs because value has type `std::vec::Vec&lt;reccomendation::Flight&gt;`, which does not implement the `Copy` trait
+   |
+</code></pre>
+<p>A criação do <code>flight-container</code> é algo bastante simples, pois basta incluirmos a <code>div</code> dentro da macro <code>html!</code>, mas dentro do container precisamos iterar sobre cada um dos voos utilizando <code>self.data[0].clone().flights.into_iter()</code>. Note que o campo <code>data</code> poderia ser <code>Option</code> e neste caso deveriamos utilizar um <code>if let Some(flights)</code> para extrair valor de <code>Some(flights)</code>, ou poderia ser um vetor vazio, e neste caso seriia melhor utilizar a função <code>first</code> e aplicar um <code>match</code>. Uma vez que temos nosso <code>into_iter</code> podemos applicar um <code>map</code> que vai criar nossos <code>Htmls</code>, para depois colecionarmos em um <code>collect::&lt;Html&gt;()</code>. Nosso <code>map</code> começa com um <code>html!</code> que cria a div correspondete a todo o bloco com informações do voo, conforme a imagem a seguir:</p>
+<p><img src="../imagens/flights.png" alt="Componente com cada uma das recomendações de voo" /></p>
+<p>O css para está parte é este:</p>
+<pre><code class="language-css">
+.flight-container {
+  width: 70%;
+  margin-top: 5rem;
+  transform: translate(35%, 0%);
+  background-color: #f1f0f0;
+}
+
+.flight {
+  display: table-row;
+  border: 1px solid lightgrey;
+}
+
+.flight-cell {
+  padding: 2rem 1rem;
+  display: table-cell;
+  border-bottom: 1px solid lightgray;
+}
+
+.origins-destinations {
+  width: 22rem;
+  display: flex;
+}
+
+.arrow {
+  font-size: 30px;
+  font-weight: bold;
+  color: red;
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
+.origin-destination {
+  font-size: 26px;
+  display: flex;
+}
+
+.time {
+  font-weight: bold;
+  color: black;
+}
+
+.airport {
+  color: rgb(75, 74, 74);
+  margin-left: 1rem;
+}
+
+.duration {
+  padding: 1rem 2rem;
+  font-size: 20px;
+  color: gray;
+}
+
+.stops {
+  padding: 1rem 2rem;
+  font-size: 20px;
+  color: blue;
+}
+
+.price {
+  font-size: 26px;
+  font-weight: bold;
+  padding: 1rem 2rem;
+  margin-left: 1rem;
+  border-left: 1px groove lightgray;
+}
+</code></pre>
+<p>Assim, podemos começar a implementar cada uma das células que formam um voo. Fazemos isso utilizando várias <code>div</code>s com suas configurações definidas no CSS:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;div class=&quot;flight&quot;&gt; 
+    &lt;div class=&quot;flight-cell origins-destinations&quot;&gt;
+        &lt;div class=&quot;origin-destination&quot;&gt; 
+            &lt;div class=&quot;time&quot;&gt; {{
+                let date = Utc.datetime_from_str(&amp;r.departure.date_time[..16],&quot;%Y-%m-%dT%H:%M&quot;);
+                date.unwrap().format(&quot;%H:%M&quot;).to_string()
+            }} &lt;/div&gt;
+            &lt;div class=&quot;airport&quot;&gt; {r.departure.airport_code} &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;arrow&quot;&gt;{&quot;&gt;&quot;}&lt;/div&gt;
+        &lt;div class=&quot;origin-destination&quot;&gt;
+            &lt;div class=&quot;time&quot;&gt; {{
+                let date = Utc.datetime_from_str(&amp;r.arrival.date_time[..16],&quot;%Y-%m-%dT%H:%M&quot;);
+                date.unwrap().format(&quot;%H:%M&quot;).to_string()
+            }} &lt;/div&gt;
+            &lt;div class=&quot;airport&quot;&gt; {r.arrival.airport_code} &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;flight-cell duration&quot;&gt; {
+        r.flight_duration.replace(&quot;PT&quot;,&quot;&quot;).replace(&quot;H&quot;, &quot;h &quot;).replace(&quot;M&quot;, &quot;min&quot;)
+    } &lt;/div&gt;
+    &lt;div class=&quot;flight-cell stops&quot;&gt; {
+        if r.stops == 0 {
+            html!{&lt;p&gt;{&quot;Direto&quot;}&lt;/p&gt;}
+        } else {
+            html!{&lt;p&gt;{r.stops.to_string()}&lt;/p&gt;}
+        }   
+    } &lt;/div&gt;
+    &lt;div class=&quot;flight-cell price&quot;&gt; {&quot;R$ 582,03&quot;}&lt;/div&gt;
+&lt;/div&gt;
+<span class="boring">}
+</span></code></pre></pre>
+<p>A primeira célula, <code>origins-destinations</code>, possui três grandes campos, origem, seta e destino. Origem e destino são iguais em organizacão, mudando apenas o campo para acessar as iinformações de oirgem, <code>departuure</code>, e de destino, <code>arrival</code>. Existe uma pegadiinha no tiipo <code>date_time</code>, que torna parsear ele um pouco complicado para um  parser normal, pois ele não apresenta o campo de  segundos no horário, mas apresenta o timezone <code>-3:00</code>. A forma como podemos lidar com isso é enviando um formater que vai parsear apenas a parte da String de <code>dataTime</code> que temos controle, <code>&quot;%Y-%m-%dT%H:%M&quot;</code>, ou seja, os 16 primeiros caracteres, por isso do slice <code>r.departure.date_time[..16]</code>.</p>
+<p>Nos campos faltantes, vamos aplicar algumas funções para alterar seu valor. Por exemplo, o campo <code>flight_duration</code> aparece no formato <code>PT1H40M</code>, mas queremos exibir o formato <code>1h 40min</code>, por isso removemos <code>PT</code>, fazemos o replace de <code>H</code> por <code>h </code> e modificamos <code>M</code> para <code>min</code>. Quanto ao campo <code>stops</code>, a úncia coisa que precisamos garantir é que se a quantidade for zero, vamos escrever <code>Direto</code>, caso não for, mostramos quantas escalas são. O preço veremos a seguir.</p>
+<h2 id="introduzindo-cabines"><a class="header" href="#introduzindo-cabines">Introduzindo cabines</a></h2>
+<p>O objetivo de introduzir <code>cabins</code> é podermos exibir diferentes preços para diferentes conjuntos de Voos. No exemplo que estamos utilizando possuimos dois tipos de <code>cabin</code>, a <code>Y</code> que corresponde a classe <code>economy</code> e a <code>W</code> que corresponde a <code>premium economy</code>. Para utilizarmos <code>cabins</code> vamos precisar criar o modelo para <code>cabins</code> dentro da struct <code>Flight</code>. O Json correspondente é:</p>
+<pre><code class="language-json">{&quot;cabins&quot;: [
+    {
+      &quot;code&quot;: &quot;Y&quot;,
+      &quot;displayPrice&quot;: 842.03,
+      &quot;availabilityCount&quot;: 1
+    },
+    {
+      &quot;code&quot;: &quot;W&quot;,
+      &quot;displayPrice&quot;: 1137.03,
+      &quot;availabilityCount&quot;: 4
+    }
+  ]
+}
+</code></pre>
+<p>Com isso, podemos notar que o campo <code>cabins</code> é bastante simples, pois é composto por um vetor de <code>Cabin</code> que pode ser definida da seguinte forma:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Properties, Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = &quot;camelCase&quot;)]
+pub struct Cabin { 
+    code: String,
+    display_price: f64,
+    availability_count: i32
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora precisamos filtrar os voos pela <code>Cabin</code> com <code>code</code> igual a <code>Y</code> para exibirmos o <code>display_price</code>, caso a contagem de assentos, <code>availability_count</code>, seja maior que zero. Para fazermos isso precisamos adicionar o campo de filtro no estado de <code>Airline</code>. Isso pode ser feito da seguinte forma:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Airline {
+    // ...
+    graphql_response: Option&lt;GqlResponse&gt;,
+    filter_cabin: String,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>E adicionar este campo nos obriga a adicionar um valor padrão na função <code>create</code> de <code>Airline</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn create(_: Self::Properties, link: ComponentLink&lt;Self&gt;) -&gt; Self {
+    Airline {
+        fetch: FetchService::new(),
+        link: link,
+        fetch_task: None,
+        fetching: true,
+        graphql_url: &quot;http://localhost:4000/graphql&quot;.to_string(),
+        graphql_response: None,
+        filter_cabin: String::from(&quot;Y&quot;),
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com isso, precisamos definir uma mensagem para executar <code>updates</code>. Essa mensagem definiremos como <code>Cabin(String)</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum Msg {
+    FetchGql(Option&lt;Text&gt;),
+    Fetching(bool),
+    Cabin(String)
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>E precisamos definir como o update vai se comportar quando receber a mensagem <code>Cabin</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn update(&amp;mut self, msg: Self::Message) -&gt; ShouldRender {
+  match msg {
+      Msg::FetchGql(data) =&gt; {
+          // ...
+      },
+      Msg::Fetching(fetch) =&gt; {
+          self.fetching = fetch;
+      },
+      Msg::Cabin(c) =&gt; {
+          self.filter_cabin = c
+      }
+  }
+  true
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Assim, nosso <code>update</code> vai atualizar o campo <code>filter_cabin</code> com o valor recebido dentro da mensagem <code>Cabin</code>. O próximo passo seria enviar para a função <code>view</code> de <code>Recommendations</code> o <code>ComponentLink&lt;Airline&gt;</code> e o <code>filter_cabin</code> como referências emprestadas, fazemos isso utilizando o <code>&amp;</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn view(&amp;self) -&gt; Html {
+    if self.fetching {
+       // ...
+    } else {
+        html! {
+            &lt;div class=&quot;body&quot;&gt;
+                { 
+                    if let Some(data) = &amp;self.graphql_response {
+                        html!{&lt;div&gt;
+                            &lt;div&gt; {data.clone().best_prices().view()} &lt;/div&gt;
+                            &lt;div&gt; { data.clone().recommendations().view(&amp;self.link, 
+                                        &amp;self.filter_cabin) } &lt;/div&gt;
+                          &lt;/div&gt; }
+                    } else {
+                        // ...
+                    }
+                }
+            &lt;/div&gt;
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora que sabemos o que devemos passar para a <code>view</code>  de <code>Recommendations</code> podemos atualizar a funcão com:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::app::{Airline, Msg};
+// ...
+
+
+impl Recommendations {
+    pub fn view(&amp;self, link: &amp;ComponentLink&lt;Airline&gt;, filter_cabin: &amp;str) -&gt; Html {
+        html!{
+            &lt;div&gt;
+                &lt;div class=&quot;cabins&quot;&gt;
+                    &lt;div class=&quot;cabin&quot; onclick=link.callback(move |_| Msg::Cabin(&quot;Y&quot;.to_string()))&gt;
+                        {&quot;Economy&quot;}&lt;/div&gt;
+                    &lt;div class=&quot;cabin&quot; onclick=link.callback(move |_| Msg::Cabin(&quot;W&quot;.to_string()))&gt;
+                        {&quot;Premium Economy&quot;}&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;flight-container&quot;&gt; {
+                    self.data[0].clone().flights.into_iter()
+                    .map(|r|
+                        html!{
+                            &lt;div class=&quot;flight&quot;&gt; 
+                                &lt;div class=&quot;flight-cell origins-destinations&quot;&gt;
+                                    &lt;div class=&quot;origin-destination&quot;&gt; 
+                                        &lt;div class=&quot;time&quot;&gt; {{
+                                            let date = Utc.datetime_from_str(&amp;r.departure.date_time[..16],&quot;%Y-%m-%dT%H:%M&quot;);
+                                            date.unwrap().format(&quot;%H:%M&quot;).to_string()
+                                        }} &lt;/div&gt;
+                                        &lt;div class=&quot;airport&quot;&gt; {r.departure.airport_code} &lt;/div&gt;
+                                    &lt;/div&gt;
+                                    &lt;div class=&quot;arrow&quot;&gt;{&quot;&gt;&quot;}&lt;/div&gt;
+                                    &lt;div class=&quot;origin-destination&quot;&gt;
+                                        &lt;div class=&quot;time&quot;&gt; {{
+                                            let date = Utc.datetime_from_str(&amp;r.arrival.date_time[..16],&quot;%Y-%m-%dT%H:%M&quot;);
+                                            date.unwrap().format(&quot;%H:%M&quot;).to_string()
+                                        }} &lt;/div&gt;
+                                        &lt;div class=&quot;airport&quot;&gt; {r.arrival.airport_code} &lt;/div&gt;
+                                    &lt;/div&gt;
+                                &lt;/div&gt;
+                                &lt;div class=&quot;flight-cell duration&quot;&gt; {
+                                    r.flight_duration.replace(&quot;PT&quot;,&quot;&quot;).replace(&quot;H&quot;, &quot;h &quot;).replace(&quot;M&quot;, &quot;min&quot;)
+                                } &lt;/div&gt;
+                                &lt;div class=&quot;flight-cell stops&quot;&gt; {
+                                    if r.stops == 0 {
+                                        html!{&lt;p&gt;{&quot;Direto&quot;}&lt;/p&gt;}
+                                    } else {
+                                        html!{&lt;p&gt;{r.stops.to_string()}&lt;/p&gt;}
+                                    }   
+                                } &lt;/div&gt;
+                                &lt;div class=&quot;flight-cell price&quot;&gt; {{
+                                    let cabin = r.cabins.into_iter()
+                                        .filter(|c| c.availability_count &gt; 0 &amp;&amp; &amp;c.code == filter_cabin)
+                                        .collect::&lt;Vec&lt;Cabin&gt;&gt;();
+                                    match cabin.first() {
+                                        Some(c) =&gt; format!(&quot;R$ {:?}&quot;, c.display_price),
+                                        None =&gt; String::from(&quot;N/A&quot;)
+                                    }
+                                }}&lt;/div&gt;
+                            &lt;/div&gt;
+                        }
+                    )
+                    .collect::&lt;Html&gt;()
+                }
+                &lt;/div&gt;
+            &lt;/div&gt;
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Os estilos do código anterior são:</p>
+<pre><code class="language-css">.cabins {
+  text-align: center;
+  vertical-align: middle;
+  color: rgb(110, 110, 110);
+  display: table-row;
+  transform: translate(195%, 185%);
+  font-size: 20px;
+}
+
+.cabin {
+  display: table-cell;
+  border: 1px solid gray;
+  padding: 9px 12px;
+}
+</code></pre>
+<p>A primeira mudança que vamos entender é a adição do <code>display_price</code> para a <code>Cabin</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;div class=&quot;flight-cell price&quot;&gt; {{
+    let cabin = r.cabins.into_iter()
+        .filter(|c| c.availability_count &gt; 0 &amp;&amp; &amp;c.code == filter_cabin)
+        .collect::&lt;Vec&lt;Cabin&gt;&gt;();
+    match cabin.first() {
+        Some(c) =&gt; format!(&quot;R$ {:?}&quot;, c.display_price),
+        None =&gt; String::from(&quot;N/A&quot;)
+    }
+}}&lt;/div&gt;
+<span class="boring">}
+</span></code></pre></pre>
+<p>Iteramos sobre o valor de <code>cabins</code> com <code>r.cabins.into_iter()</code> que nos permite aplicar um <code>filter</code> para garantir que os voos estão disponíveis, <code>c.availability_count &gt; 0</code> e para garantir q o código da <code>cabin</code>, <code>c.code</code>, é igiual ao <code>filter_cabin</code> que enviamos, <code>&amp;c.code == filter_cabin</code>. Depois, coletamos os calores filtrados com <code>.collect::&lt;Vec&lt;Cabin&gt;&gt;()</code>. Este vetor de <code>Cabin</code> deve conter no máximo um elemento, assim aplicar um <code>first</code> é uma forma segura de garantir que não vamos perder valores. Aplicando um <code>match</code> em <code>abin.first()</code> lidamos com o fato de que podemos não ter uma <code>cabin</code> disponível para aquelec código, retornando <code>String::from(&quot;N/A&quot;)</code>. Para o caso de termos um <code>Some</code> com valor de <code>cabin</code> executamos um <code>format</code> para disponibilizar o valor da passagem, <code>Some(c) =&gt; format!(&quot;R$ {:?}&quot;, c.display_price)</code>.</p>
+<p>O próximo passo é criar os <code>links</code> de <code>callbacks</code> que alterem o estado da aplicação:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;div class=&quot;cabins&quot;&gt;
+    &lt;div class=&quot;cabin&quot; onclick=link.callback(move |_| Msg::Cabin(&quot;Y&quot;.to_string()))&gt;
+        {&quot;Economy&quot;}&lt;/div&gt;
+    &lt;div class=&quot;cabin&quot; onclick=link.callback(move |_| Msg::Cabin(&quot;W&quot;.to_string()))&gt;
+        {&quot;Premium Economy&quot;}&lt;/div&gt;
+&lt;/div&gt;
+<span class="boring">}
+</span></code></pre></pre>
+<p>Criamos uma <code>div</code> que possui as duas cabines que conhecemos, <code>Economy</code> e <code>Premium Economy</code>, dentro de suas prórpias <code>div</code>s. Cada uma das <code>dvi</code>s  vai ter um <code>callback</code> com JavScript  para alterar o estado de <code>fiilter_cabin</code>. Fazemos isso adicionando <code>onclick=link.callback(move |_| Msg::Cabin(&quot;Y&quot;.to_string()))</code> a <code>div</code> de <code>Economy</code> e <code>onclick=link.callback(move |_| Msg::Cabin(&quot;W&quot;.to_string()))</code> a <code>div</code> de <code>Premium Economy</code>.</p>
+<p>Nosso próximo passo é defiiniir uma forma de receber os parâmetros da query GraphQL via rota da URL e que possamos atualizar esses dados de forma a executar um novo request com os novos parâmetros.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part-3/03-best-prices.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../part-3/05-route.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part-3/03-best-prices.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../part-3/05-route.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>

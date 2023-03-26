@@ -1,0 +1,471 @@
+<!DOCTYPE HTML>
+<html lang="pt" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Configurando o GraphQL - Desenvolvimento Web em Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../0-capa.html"><strong aria-hidden="true">1.</strong> Capa</a></li><li class="chapter-item expanded "><a href="../intro/1-about.html"><strong aria-hidden="true">2.</strong> Sobre autora</a></li><li class="chapter-item expanded "><a href="../intro/2-Audience.html"><strong aria-hidden="true">3.</strong> Público alvo</a></li><li class="chapter-item expanded "><a href="../intro/3-book.html"><strong aria-hidden="true">4.</strong> Como o livro está organizado</a></li><li class="chapter-item expanded "><a href="../intro/4-setup.html"><strong aria-hidden="true">5.</strong> Instalando Rust</a></li><li class="chapter-item expanded "><a href="../intro/5-exercício.html"><strong aria-hidden="true">6.</strong> Exercício Maior Produto de uma Série</a></li><li class="chapter-item expanded "><a href="../part-1/00-capa.html"><strong aria-hidden="true">7.</strong> Todo Server com Actix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-1/01-ping-pong.html"><strong aria-hidden="true">7.1.</strong> Configurando os primeiros endpoints</a></li><li class="chapter-item expanded "><a href="../part-1/02-create.html"><strong aria-hidden="true">7.2.</strong> Criando Tarefas</a></li><li class="chapter-item expanded "><a href="../part-1/03-get.html"><strong aria-hidden="true">7.3.</strong> Obtendo todas as Todo Cards inseridas</a></li><li class="chapter-item expanded "><a href="../part-1/04-serving.html"><strong aria-hidden="true">7.4.</strong> Tornam nosso serviço mais realístico</a></li><li class="chapter-item expanded "><a href="../part-1/05-auth.html"><strong aria-hidden="true">7.5.</strong> Autenticação</a></li><li class="chapter-item expanded "><a href="../part-1/06-middleware.html"><strong aria-hidden="true">7.6.</strong> Exigindo Autenticação através de middlewares</a></li><li class="chapter-item expanded "><a href="../part-1/07-ci.html"><strong aria-hidden="true">7.7.</strong> Configurando um CI</a></li><li class="chapter-item expanded "><a href="../part-1/08-conclusao.html"><strong aria-hidden="true">7.8.</strong> Concluindo o serviço</a></li></ol></li><li class="chapter-item expanded "><a href="../part-2/00-capa.html"><strong aria-hidden="true">8.</strong> GraphQL com Actix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-2/01-ping-gql.html" class="active"><strong aria-hidden="true">8.1.</strong> Configurando o GraphQL</a></li><li class="chapter-item expanded "><a href="../part-2/02-bestprices.html"><strong aria-hidden="true">8.2.</strong> Query Best Prices</a></li><li class="chapter-item expanded "><a href="../part-2/03-recommendations.html"><strong aria-hidden="true">8.3.</strong> Query Recommendations</a></li><li class="chapter-item expanded "><a href="../part-2/04-redis.html"><strong aria-hidden="true">8.4.</strong> Adicionando Caching com Redis</a></li></ol></li><li class="chapter-item expanded "><a href="../part-3/00-capa.html"><strong aria-hidden="true">9.</strong> Frontend com WebAssembly e YewStack</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-3/01-setup.html"><strong aria-hidden="true">9.1.</strong> Setup de WebAssembly</a></li><li class="chapter-item expanded "><a href="../part-3/02-iniciando.html"><strong aria-hidden="true">9.2.</strong> Iniciando o projeto</a></li><li class="chapter-item expanded "><a href="../part-3/03-best-prices.html"><strong aria-hidden="true">9.3.</strong> Componente de Best Prices</a></li><li class="chapter-item expanded "><a href="../part-3/04-recommendations.html"><strong aria-hidden="true">9.4.</strong> Componente de Recomendações</a></li><li class="chapter-item expanded "><a href="../part-3/05-route.html"><strong aria-hidden="true">9.5.</strong> Aplicando um Router</a></li></ol></li><li class="chapter-item expanded "><a href="../appendix.html"><strong aria-hidden="true">10.</strong> Appendix</a></li><li class="chapter-item expanded "><a href="../bibliografia.html"><strong aria-hidden="true">11.</strong> Bibliografia</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Desenvolvimento Web em Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="configurando-o-graphql"><a class="header" href="#configurando-o-graphql">Configurando o GraphQL</a></h1>
+<p>Agora que temos contexto de como funciona o Actix, será muito mais simples criar um novo serviço, assim o objetivo neste capítulo será focar na parte GraphQL deste novo serviço. Antes vamos entender um pouco o que é GraphQL e porque vamos utlizar essa tecnologia.</p>
+<h2 id="graphql"><a class="header" href="#graphql">GraphQL</a></h2>
+<p>GraphQL é uma tecnologia desenvolvida pelo Facebook que consiste em uma linguagem de queries para APIs e um runtime para executar estas queries. Além disso, GraphQL provê ferramentas para entender e descrever os dados das APIs, da ao cliente o poder de decidir quais dados quer consumir e facilita e evolução de APIs. De forma resumida, são quatro etapas que envolvem o GraphQL:</p>
+<ol>
+<li>Descrever seus dados via tipos:</li>
+</ol>
+<pre><code class="language-graphql">type Project {
+  name: String
+  tagline: String
+  contributors: [User]
+}
+</code></pre>
+<ol start="2">
+<li>Receber um request com os dados a serem consumidos:</li>
+</ol>
+<pre><code class="language-graphql">{
+  project(name: &quot;GraphQL&quot;) {
+    tagline
+  }
+}
+</code></pre>
+<ol start="3">
+<li>Realizar as consultas a todos os serviços/APIs necessários</li>
+<li>Responder exatamente o que o cliente pediu.</li>
+</ol>
+<pre><code class="language-json">{
+    &quot;data&quot;: {
+        &quot;project&quot;: {
+            &quot;tagline&quot;: &quot;A query language for APIs&quot;
+        }
+    }
+}
+</code></pre>
+<p>Assim, o motivo de escolhermos GraphQL como tecnologia para este serviço é a necessidade de consultar diversas fontes para um mesmo request, como mais de uma API e caching.</p>
+<h2 id="queries-básicas"><a class="header" href="#queries-básicas">Queries Básicas</a></h2>
+<p>Vamos começar com o básico, fazer o sistema responder <code>404 NOT_FOUND</code> para rotas diversas e depois iniciar com uma query que responderá um simples <code>pong</code> quando chamarmos a query <code>ping</code>. Para isso, nosso primeiro passo é criar o serviço com <code>cargo new recommendations-gql --bin</code>, e adicionar as dependências básicas ao nosso Cargo.toml:</p>
+<pre><code class="language-toml">[dependencies]
+actix-web = &quot;2.0.0&quot;
+actix-rt = &quot;1.0.0&quot;
+juniper = &quot;0.14.2&quot;
+serde = { version = &quot;1.0.104&quot;, features = [&quot;derive&quot;] }
+serde_json = &quot;1.0.44&quot;
+serde_derive = &quot;1.0.104&quot;
+</code></pre>
+<p>Agora precisamos adicionar o caso de status code <code>404</code>. Para esse caso vamos utilizar outro recurso que não utilizamos antes que é o <code>default_service</code>. Ele nos permite responder um valor default para qualquer rota não encontrada, neste caso escrevemos <code>404</code>:</p>
+<pre><code class="language-rs">// main.rs
+use actix_web::{web, App, HttpServer};
+
+#[actix_rt::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+    HttpServer::new(move || {
+        App::new()
+            .default_service(web::to(|| async { &quot;404&quot; }))
+    })
+    .bind(&quot;127.0.0.1:4000&quot;)?
+    .run()
+    .await
+}
+</code></pre>
+<p>Pronto! ao acessar <code>localhost:4000</code> recebemos um <code>404</code>. Próximo passo é adicionarmos a query de <code>ping</code>.</p>
+<h2 id="ping-em-graphql"><a class="header" href="#ping-em-graphql">Ping em GraphQL</a></h2>
+<p>Primeiro passo para o <code>ping</code> seria pensarmos o schema correspondente na estrutura GraphQL. Assim, nosso objetivo é realizar uma query nomeada <code>ping</code> que retorne uma string contento <code>&quot;pong&quot;</code>. Para isso sabemos que precisaremos que uma função <code>ping</code> que retornar um <code>Result&lt;String, Error&gt;</code> que contém <code>pong</code>, algo como:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn ping() -&gt; Result&lt;String, Error&gt; {
+    Ok(String::from(&quot;pong&quot;))
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Mas esta função precisa estar dentro de um contexto <code>Query</code> do graphql e para isso criamos uma struct chamada de <code>QueryRoot</code>, que corresponde a raiz das queries, e aplicamos a macro <code>#[juniper::object]</code> que transforma essa implementação de queries, <code>impl QueryRoot</code>, em um objeto graphql do tipo <code>Query</code>. Note que o tipo de retorno é um <code>FieldResult</code>, que corresponde a um tipo <code>Result</code> que já abstraiu o tipo do <code>Error</code> para um erro que o GraphQL possa entender.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use juniper::FieldResult;
+
+pub struct QueryRoot;
+
+#[juniper::object]
+impl QueryRoot {
+    fn ping() -&gt; FieldResult&lt;String&gt; {
+        Ok(String::from(&quot;pong&quot;))
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Segundo passo seria declarar um tipo <code>Schema</code> que poderá ser utilizado pelos handlers do Graphql para validar as queries, as mutations e os tipos. Esse <code>Schema</code> é composto de duas partes, a <code>QueryRoot</code> e a <code>MutationRoot</code>, que são designadas a um nó contendo os schemas chamado <code>RootNode</code>, <code>pub type Schema = RootNode&lt;'static, QueryRoot, MutationRoot&gt;;</code>. Como ainda não temos nenhuma mutation, nosso <code>MutationRoot</code> é bastante simples:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct MutationRoot;
+
+#[juniper::object]
+impl MutationRoot {}
+<span class="boring">}
+</span></code></pre></pre>
+<blockquote>
+<p>Queries e Mutations</p>
+<p>O objetivo de uma query é &quot;perguntar&quot; para o sistema algum conjunto de infotmações, enquanto o objetivo da mutation é &quot;mutar&quot; alguma informação que o sistema possui, mas suas declarações são bastante parecidas com as das queries.</p>
+</blockquote>
+<p>Por último precisamos de uma função que retorne o schema que criamos, que chamaremos de <code>create_schema</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use juniper::FieldResult;
+use juniper::RootNode;
+
+pub struct QueryRoot;
+
+#[juniper::object]
+impl QueryRoot {
+    fn ping() -&gt; FieldResult&lt;String&gt; {
+        Ok(String::from(&quot;pong&quot;))
+    }
+}
+
+pub struct MutationRoot;
+
+#[juniper::object]
+impl MutationRoot {}
+
+pub type Schema = RootNode&lt;'static, QueryRoot, MutationRoot&gt;;
+
+pub fn create_schema() -&gt; Schema {
+    Schema::new(QueryRoot {}, MutationRoot {})
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com isso podemos criar o módulo <code>schema</code> em <code>schema.rs</code>. Próximo passo é disponibilizar este <code>Schema</code> para a aplicação, podemos fazer isso utilizando a função <code>data</code> de <code>actix_web::App</code>:</p>
+<pre><pre class="playground"><code class="language-rust">#[macro_use]
+extern crate juniper;
+extern crate serde_json;
+
+use actix_web::{web, App, HttpServer};
+
+mod schemas;
+
+use crate::schemas::{create_schema, Schema};
+
+#[actix_rt::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+    let schema: std::sync::Arc&lt;Schema&gt; = std::sync::Arc::new(create_schema());
+
+    HttpServer::new(move || {
+        App::new()
+            .data(schema.clone())
+            .default_service(web::to(|| async { &quot;404&quot; }))
+    })
+    .bind(&quot;127.0.0.1:4000&quot;)?
+    .run()
+    .await
+}
+</code></pre></pre>
+<p>Estamos utilizando a definição <code>let schema: std::sync::Arc&lt;Schema&gt; =</code> para fazer um vínculo da variável <code>schema</code> ao contexto de <code>main</code>, note, também, que seu tipo precis ser <code>std::sync::Arc</code>, pois todas as threads do graphql estarão acessado esse <code>Schema</code>. O próximo passo é definirmos as rotas dos <code>handlers</code> para o GraphQL, fazemos isso no módulo <code>handlers</code> e exportamos estas infos pela função <code>routes</code>:</p>
+<pre><pre class="playground"><code class="language-rust">#[macro_use]
+extern crate juniper;
+extern crate serde_json;
+
+use actix_web::{web, App, HttpServer};
+
+mod handlers;
+mod schemas;
+
+use crate::handlers::routes;
+use crate::schemas::{create_schema, Schema};
+
+
+#[actix_rt::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+    let schema: std::sync::Arc&lt;Schema&gt; = std::sync::Arc::new(create_schema());
+
+    HttpServer::new(move || {
+        App::new()
+            .data(schema.clone())
+            .configure(routes)
+            .default_service(web::to(|| async { &quot;404&quot; }))
+    })
+    .bind(&quot;127.0.0.1:4000&quot;)?
+    .run()
+    .await
+}
+</code></pre></pre>
+<p>Assim, a função <code>routes</code> do módulo <code>handlers</code> possuirá a seguinte estrutura:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn routes(config: &amp;mut web::ServiceConfig) {
+    config
+        .route(&quot;/graphql&quot;, web::post().to(graphql))
+        .route(&quot;/graphiql&quot;, web::get().to(graphiql));
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Nossa configuração possuirá duas rotas <code>/graphql</code>, que é a rota na qual fazemos um post com nossa query, e <code>/graphiql</code>, que será uma rota que nos exibirá uma página web interativa da nossa aplicação:</p>
+<p><img src="../imagens/graphiqlping.png" alt="página interativa do graphiql" /></p>
+<p>Note que a direita na rota <code>graphiql</code> existe uma aba chamada de <code>Documentation Explorer</code>, ela nos permite saber as queries e as mutations disponíveis, assim como seus tipos de entrada e tipos de retorno.</p>
+<p>Agora, o handler <code>graphiql</code>é bastante simples, sua única função é encondar em <code>HTML</code> o handler <code>graphql</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn graphiql() -&gt; HttpResponse {
+    HttpResponse::Ok()
+        .content_type(&quot;text/html; charset=utf-8&quot;)
+        .body(graphiql_source(&quot;/graphql&quot;))
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com isso, podemos finalmente entender o que o handler <code>graphql</code> faz:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::sync::Arc;
+
+use actix_web::{web, Error, HttpResponse};
+use juniper::http::graphiql::graphiql_source;
+use juniper::http::GraphQLRequest;
+
+use crate::schemas::{Schema};
+
+pub async fn graphql(
+    schema: web::Data&lt;Arc&lt;Schema&gt;&gt;,
+    data: web::Json&lt;GraphQLRequest&gt;,
+) -&gt; Result&lt;HttpResponse, Error&gt; {
+    let res = web::block(move || {
+        let res = data.execute(&amp;schema, &amp;());
+        Ok::&lt;_, serde_json::error::Error&gt;(serde_json::to_string(&amp;res)?)
+    })
+    .await
+    .map_err(Error::from)?;
+
+    Ok(HttpResponse::Ok()
+        .content_type(&quot;application/json&quot;)
+        .body(res))
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>O handler <code>graphql</code> recebe como argumento dois campos 1. <code>schema</code> através do tipo actix <code>web::Data&lt;Arc&lt;Schema&gt;&gt;</code> e o request <code>data</code> do tipo <code>web::Json&lt;GraphQLRequest&gt;</code>. A magia acontece na linha <code>data.execute(&amp;schema, &amp;())</code>, na qual o GraphQL executa nosso request, <code>data</code>, com base no <code>schema</code>. Depois disso, encodamos o resultado para Json e respondemos como um <code>Result&lt;HttpResponse, Error&gt;</code> oriundo de <code> Ok(HttpResponse::Ok().content_type(&quot;application/json&quot;).body(res))</code>. Se você executar este código será possível fazer a query <code>ping</code> em localhost:4000/graphql:</p>
+<p><img src="../imagens/ping_via_postman.png" alt="QUery ping em /graphql" /></p>
+<h2 id="testando-o-endpoint"><a class="header" href="#testando-o-endpoint">Testando o endpoint</a></h2>
+<p>Como na parte anterior do livro falamos de como criar testes de integração no diretório <code>tests/</code>, agora vamos partir para outra estratégia, que é criar testes de integração dentro do <code>src/</code>, pois isto nos permite tirar proveito da flag <code>#[cfg(test)]</code>. Para fazermos isso, precisamos criar um módulo <code>test</code>, anotoado com a flag <code>#[cfg(test)]</code> em <code>main.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>...
+mod handlers;
+mod schemas;
+#[cfg(test)] mod test;
+...
+<span class="boring">}
+</span></code></pre></pre>
+<p>Depois disso é preciso criar o arquivo <code>src/test/mod.rs</code>, que declarará o nome dos submodulos de teste, neste caso um simples <code>pub mod ping;</code>. Para testarmos o <code>ping</code> precisamos criar o módulo que declaramos em <code>src/test/ping.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[cfg(test)]
+mod ping_readiness {
+    use crate::handlers::routes;
+    use crate::schemas::{create_schema, Schema};
+
+    use actix_web::{test, App};
+    use bytes::Bytes;
+
+    #[actix_rt::test]
+    async fn test_ping_pong() {
+        let schema: std::sync::Arc&lt;Schema&gt; = std::sync::Arc::new(create_schema());
+
+        let mut app =
+            test::init_service(App::new().data(schema.clone()).configure(routes)).await;
+
+        let req = test::TestRequest::post()
+            .uri(&quot;/graphql&quot;)
+            .header(&quot;Content-Type&quot;, &quot;application/json&quot;)
+            .set_payload(&quot;{\&quot;query\&quot;: \&quot;query ping { ping }\&quot;}&quot;)
+            .to_request();
+        let resp = test::read_response(&amp;mut app, req).await;
+
+        assert_eq!(resp, Bytes::from_static(b&quot;{\&quot;data\&quot;:{\&quot;ping\&quot;:\&quot;pong\&quot;}}&quot;));
+    }
+}
+
+<span class="boring">}
+</span></code></pre></pre>
+<p>A estrutura do teste é praticamente igual a estrutura que estavamos utilizando anteriormente, as únicas diferenças são <code>let schema: std::sync::Arc&lt;Schema&gt; = std::sync::Arc::new(create_schema());</code>, que a rota agora é <code>/graphql</code> e que o payload é um json contendo um campo <code>query</code> seguido de sua query <code>&quot;{\&quot;query\&quot;: \&quot;query ping { ping }\&quot;}&quot;</code>. </p>
+<p>Agora vamos a implementação da primeira query de consulta, que chamaremos de <code>bestPrices</code>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part-2/00-capa.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../part-2/02-bestprices.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part-2/00-capa.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../part-2/02-bestprices.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>

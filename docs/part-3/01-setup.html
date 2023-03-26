@@ -1,0 +1,329 @@
+<!DOCTYPE HTML>
+<html lang="pt" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Setup de WebAssembly - Desenvolvimento Web em Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../0-capa.html"><strong aria-hidden="true">1.</strong> Capa</a></li><li class="chapter-item expanded "><a href="../intro/1-about.html"><strong aria-hidden="true">2.</strong> Sobre autora</a></li><li class="chapter-item expanded "><a href="../intro/2-Audience.html"><strong aria-hidden="true">3.</strong> Público alvo</a></li><li class="chapter-item expanded "><a href="../intro/3-book.html"><strong aria-hidden="true">4.</strong> Como o livro está organizado</a></li><li class="chapter-item expanded "><a href="../intro/4-setup.html"><strong aria-hidden="true">5.</strong> Instalando Rust</a></li><li class="chapter-item expanded "><a href="../intro/5-exercício.html"><strong aria-hidden="true">6.</strong> Exercício Maior Produto de uma Série</a></li><li class="chapter-item expanded "><a href="../part-1/00-capa.html"><strong aria-hidden="true">7.</strong> Todo Server com Actix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-1/01-ping-pong.html"><strong aria-hidden="true">7.1.</strong> Configurando os primeiros endpoints</a></li><li class="chapter-item expanded "><a href="../part-1/02-create.html"><strong aria-hidden="true">7.2.</strong> Criando Tarefas</a></li><li class="chapter-item expanded "><a href="../part-1/03-get.html"><strong aria-hidden="true">7.3.</strong> Obtendo todas as Todo Cards inseridas</a></li><li class="chapter-item expanded "><a href="../part-1/04-serving.html"><strong aria-hidden="true">7.4.</strong> Tornam nosso serviço mais realístico</a></li><li class="chapter-item expanded "><a href="../part-1/05-auth.html"><strong aria-hidden="true">7.5.</strong> Autenticação</a></li><li class="chapter-item expanded "><a href="../part-1/06-middleware.html"><strong aria-hidden="true">7.6.</strong> Exigindo Autenticação através de middlewares</a></li><li class="chapter-item expanded "><a href="../part-1/07-ci.html"><strong aria-hidden="true">7.7.</strong> Configurando um CI</a></li><li class="chapter-item expanded "><a href="../part-1/08-conclusao.html"><strong aria-hidden="true">7.8.</strong> Concluindo o serviço</a></li></ol></li><li class="chapter-item expanded "><a href="../part-2/00-capa.html"><strong aria-hidden="true">8.</strong> GraphQL com Actix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-2/01-ping-gql.html"><strong aria-hidden="true">8.1.</strong> Configurando o GraphQL</a></li><li class="chapter-item expanded "><a href="../part-2/02-bestprices.html"><strong aria-hidden="true">8.2.</strong> Query Best Prices</a></li><li class="chapter-item expanded "><a href="../part-2/03-recommendations.html"><strong aria-hidden="true">8.3.</strong> Query Recommendations</a></li><li class="chapter-item expanded "><a href="../part-2/04-redis.html"><strong aria-hidden="true">8.4.</strong> Adicionando Caching com Redis</a></li></ol></li><li class="chapter-item expanded "><a href="../part-3/00-capa.html"><strong aria-hidden="true">9.</strong> Frontend com WebAssembly e YewStack</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-3/01-setup.html" class="active"><strong aria-hidden="true">9.1.</strong> Setup de WebAssembly</a></li><li class="chapter-item expanded "><a href="../part-3/02-iniciando.html"><strong aria-hidden="true">9.2.</strong> Iniciando o projeto</a></li><li class="chapter-item expanded "><a href="../part-3/03-best-prices.html"><strong aria-hidden="true">9.3.</strong> Componente de Best Prices</a></li><li class="chapter-item expanded "><a href="../part-3/04-recommendations.html"><strong aria-hidden="true">9.4.</strong> Componente de Recomendações</a></li><li class="chapter-item expanded "><a href="../part-3/05-route.html"><strong aria-hidden="true">9.5.</strong> Aplicando um Router</a></li></ol></li><li class="chapter-item expanded "><a href="../appendix.html"><strong aria-hidden="true">10.</strong> Appendix</a></li><li class="chapter-item expanded "><a href="../bibliografia.html"><strong aria-hidden="true">11.</strong> Bibliografia</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Desenvolvimento Web em Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="setup-de-webassembly"><a class="header" href="#setup-de-webassembly">Setup de WebAssembly</a></h1>
+<p>Antes de fazermos o setup de WebAssembly para nosso computador, vamos entender o porquê de WebAssembly e o que é YewStack que vamos utilizar.</p>
+<h2 id="webassembly"><a class="header" href="#webassembly">WebAssembly</a></h2>
+<h3 id="o-que-é-webassembly"><a class="header" href="#o-que-é-webassembly">O que é WebAssembly</a></h3>
+<p>WebAssembly, também conhecido como <code>Wasm</code>, é um padrão que define um formato binário portável e compacto para executáveis com velocidades quase nativas. Sua correspondente textual da linguagem assembly é o <code>.wat</code>, que utiliza <code>expressões-s</code>, que lembra um pouco Clojure e Scheme. Sua principal aplicação é como interface simples entre o programa que você desenvolveu e seu host ambiente, assim seu maior objetivo é possibilitar páginas web de alta performance, mas existem outros exemplos aplicando os conceitos de WemAssemlby para mobile por exemplo.</p>
+<h3 id="por-que-webassembly"><a class="header" href="#por-que-webassembly">Por que WebAssembly</a></h3>
+<p>Aplicações web JavaScript possui uma certa incerteza quanto a performance que o produto final vai atingir. Seu sistema de tipos dinâmico dificulta muitas otimizações e o Garbage Collector muitas vezes não ajuda por depender de algumas pausas confusas. Além disso, aplicar um superset tipado não garante efetivamente uma melhora nesses quesitos, pois no final das contas, continua tendo que executar JavaScript. Outro grande problema pode ser o fato de pequenas mudanças impactarem profundamente a performance caso você caia em buracos como <code>fadiga do JavaScript</code> (JavaScript fatigue) e como <code>inferno de dependências</code> (dependency hell), que podem confundir muito o sistema de JIT. Outro ponto importante é o tamanho do código, especialmente quando falamos de <em>dependency hell</em>, o JavaScript pode causar grande impacto de performance, pois o tamanho do arquivo que vamos comunicar via internet é crucial.</p>
+<p>Assim, Rust provê um controler de baixo nível e uma performance confiável, especialmente por não depender de Garbage Collectors não deterministicos como o JavaScript, por possibilitar arquivos de tamanho reduzido, já que você só recebe o que você precisa, e por dar poder as pessoas que vão desenvolver de como o layout de memória será. Outra vantagem é que WebAssembly permite uma portabilidade muito boa, de forma que você pode começar implementando apenas as partes mais críticas de seu JavaScript.</p>
+<h3 id="yewstack"><a class="header" href="#yewstack">YewStack</a></h3>
+<p>Yew é um framework moderno para criar apps frontend multi-threaded com WebAssembly e Rust.</p>
+<ul>
+<li>Possui um framework baseado em componentes que permite criar UIs de forma interativa. Assim, quem já possui experiência de React e Elm devem se sentir bastante confortáveis com o funcionamento do Yew.</li>
+<li>Sua performance se da por minimizar chamadas a API de DOM e por permitir muito processamento nos web workers de background.</li>
+<li>Permite ótima interoperabilidade com JavaScript, o que permite desenvolver aproveitando os pacotes NPM e integrar com aplicações JavaScript já existentes.</li>
+</ul>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<p>Primeiro devemos começar com o setup do WebAssembly para Rust:</p>
+<ol>
+<li>Começamos com o <code>wasm-pack</code>, uma ferramenta para construir, testar e publicar WebAssembly gerado por Rust. Basta executar o comando <code>curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh</code> ou acessar o site https://rustwasm.github.io/wasm-pack/installer/ para mais informações. Outra opção é utilizar o <code>cargo install wasm-pack</code>.</li>
+<li>O segundo passo é instalar o <code>cargo-generate</code>, que pode ser feito através do comando <code>cargo install cargo-generate</code>. Sua função é facilitar a subida e execução de novos projetos e seus tempaltes em Rust.</li>
+<li>Por fim, instalar o NPM de sua escolha, uma sugestão é fazer o download pelo site https://www.npmjs.com/get-npm e executar <code>npm install npm@latest -g</code>.</li>
+</ol>
+<h3 id="setup-para-o-yew"><a class="header" href="#setup-para-o-yew">Setup para o Yew</a></h3>
+<p>Para utilizarmos o Yew vamos precisar de 2 novos pacotes, <code>wasm-bindgen</code> e <code>cargo-web</code>, e uma dependência NPM chamada <code>rollup</code>. </p>
+<ol>
+<li><code>wasm-bindgen</code> pode ser encontrado como <code>dependencies</code>. </li>
+<li>Para instalar o <code>cargo-web</code>  você precisa executar o comando <code>cargo install cargo-web</code>. Para o <code>build</code> basta utilizar <code>cargo web build</code> e o <code>run</code> utilizar <code>cargo web run</code>. Necessário para <code>stdweb</code>.</li>
+<li>Para o exemplo teste precisamos instalar o <code>rollup</code> execute <code>npm install --global rollup</code></li>
+<li>Para o nosso exemplo de teste vamos utilozar Python, ou Python3 se você preferir, e o módulo <code>http</code> isntalado com <code>pip install http</code>. Outros servidores também seriam possíveis como o <code>miniserve</code> do cargo, que pode ser obtido através do comando <code>cargo +nightly install miniserve</code>.</li>
+</ol>
+<p>Os alvos suportados são:</p>
+<ul>
+<li><code>wasm32-unknown-unknown</code></li>
+<li><code>wasm32-unknown-emscripten</code></li>
+<li><code>asmjs-unknown-emscripten</code></li>
+</ul>
+<h2 id="hello-world"><a class="header" href="#hello-world">Hello World</a></h2>
+<p>Nesse exemplo vamos utilizar o template mínimo da <code>yew-stack</code>, para isso faça clone do repositório https://github.com/yewstack/yew-wasm-pack-minimal.git. Você verá que o arquivo <code>Cargo.toml</code> está configurado da seguitne forma:</p>
+<pre><code class="language-toml">[package]
+authors = [
+    &quot;Kelly Thomas Kline &lt;kellytk@sw-e.org&gt;&quot;,
+    &quot;Samuel Rounce &lt;me@samuelrounce.co.uk&gt;&quot;
+]
+categories = [&quot;gui&quot;, &quot;wasm&quot;, &quot;web-programming&quot;]
+description = &quot;yew-wasm-pack-minimal demonstrates the minimum code and tooling necessary for a frontend web app with simple deployable artifacts consisting of one HTML file, one JavaScript file, and one WebAssembly file, using Yew, wasm-bindgen, and wasm-pack.&quot;
+edition = &quot;2018&quot;
+keywords = [&quot;yew&quot;, &quot;wasm&quot;, &quot;wasm-bindgen&quot;, &quot;web&quot;]
+license = &quot;MIT/Apache-2.0&quot;
+name = &quot;yew-wasm-pack-minimal&quot;
+readme = &quot;README.md&quot;
+repository = &quot;https://github.com/yewstack/yew-wasm-pack-minimal&quot;
+version = &quot;0.1.0&quot;
+
+[lib]
+crate-type = [&quot;cdylib&quot;]
+
+[dependencies]
+wasm-bindgen = &quot;^0.2&quot;
+yew = &quot;0.12&quot;
+</code></pre>
+<p>Na tag <code>author</code> mude para seu nome e seu email, a <code>description</code> pode ser <code>&quot;hello world in wasm&quot;</code>, a tag <code>name</code> pode ser <code>hello-world-wasm</code>, estaremos utilizando <code>websys</code>. Caso você deseje utilizar a <code>stdweb</code> basta modificar a dependência <code>yew</code> para <code>yew = { version = &quot;0.15&quot;, package = &quot;yew-stdweb&quot; }</code>. Alguns exemplos da diferença entre <code>websys</code> e <code>stdweb</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// web-sys
+let window: web_sys::Window = web_sys::window().expect(&quot;window not available&quot;);
+window.alert_with_message(&quot;hello from wasm!&quot;).expect(&quot;alert failed&quot;);
+
+// stdweb
+let window: stdweb::web::Window = stdweb::web::window();
+window.alert(&quot;hello from wasm!&quot;);
+
+// stdweb com a macro js!
+use stdweb::js;
+use stdweb::unstable::TryFrom;
+use stdweb::web::Window;
+
+let window_val: stdweb::Value = js!{ return window; };
+let window = Window::try_from(window_val).expect(&quot;conversion to window failed&quot;);
+window.alert(&quot;hello from wasm!&quot;);
+<span class="boring">}
+</span></code></pre></pre>
+<p>Dentro da macro <code>js!</code> é possível utilizar JavaScript, como no exemplo <code>js!{ return window; }</code>.</p>
+<p><strong>Diferenças entre <code>web-sys</code> e <code>stdweb</code></strong></p>
+<p>|  	| web-sys 	| stdweb 	|
+|-	|-	|-	|
+| Status do projeto 	| Ativamente mantido pelo wasm-working-group 	| Pouca atividade no Github, já passou longos períodos sem commits 	|
+| Cobertura da Web API 	| APIs Rust são auto geradas pela spec Web IDL e deveriam ter cobertura de ~100%. | APIs do Browser são adicionadas de acordo com as necessidades da comunidade |
+| Design da API Rust 	| Toma medidas conservadoras ao retornar quase sempre um <code>Result</code> para as chamadas da API	| Prefere utilizar <code>panic!</code> em vez de <code>Result</code>.	|
+| Suporte para build tools | * <code>wasm-pack</code> * <code>wasm-bindgen</code> | * <code>wasm-pack</code> * <code>wasm-bindgen</code> * <code>cargo-web</code> |
+| Alvos suportados | * <code>wasm32-unknown-unknown</code> | * <code>wasm32-unknown-unknown</code> * <code>wasm32-unknown-emscripten</code> * <code>asmjs-unknown-emscripten</code> |</p>
+<h3 id="executando-o-projeto"><a class="header" href="#executando-o-projeto">Executando o projeto</a></h3>
+<p><strong>Opção 1</strong></p>
+<ol>
+<li>Para buildar o projeto execute <code>wasm-pack build --target web</code>.</li>
+<li>Para fazer o bundle utilize <code>rollup ./main.js --format iife --file ./pkg/bundle.js</code>. </li>
+<li>Para expor seu bundle no browser execute o comando <code>python -m SimpleHTTPServer</code> para Python2 e <code>python3 -m http.server</code> para Python3, depois acesse em seu browser <code>localhost:8000</code> para ver um bome  velho <code>Hello world!</code>.</li>
+</ol>
+<p><strong>Opção 2</strong></p>
+<ol>
+<li>Crie a pasta <code>static</code> através de um <code>mkdir static</code> e inclua o seguinte arquivo <code>index.html</code>:</li>
+</ol>
+<pre><code class="language-html">&lt;html lang=&quot;en&quot;&gt;
+    &lt;head&gt;
+        &lt;meta charset=&quot;utf-8&quot;&gt;
+        &lt;title&gt;Yew Sample App&lt;/title&gt;
+        &lt;script type=&quot;module&quot;&gt;
+            import init from &quot;./wasm.js&quot;
+            init()
+        &lt;/script&gt;
+    &lt;/head&gt;
+    &lt;body&gt;&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<ol start="2">
+<li>Modifique a <code>src/lib.rs</code> para expor a função:</li>
+</ol>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>mod app;
+
+use wasm_bindgen::prelude::*;
+use yew::App;
+
+#[wasm_bindgen(start)]
+pub fn run_app() {
+    App::&lt;app::App&gt;::new().mount_to_body();
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ol start="3">
+<li>Execute o comando <code>wasm-pack build --target web --out-name wasm --out-dir ./static</code> para buildar seu projeto.</li>
+<li>Disponibilize o bundle no browser com <code>miniserve ./static --index index.html</code>. E pronto, basta acessar <code>localhost:8080</code>.</li>
+</ol>
+<p>Ao longo das próximas etapas do projeto vamos utilizar a <code>opção 2</code>, mas se você preferir utilizar a <code>opção 1</code> fique a vontade.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part-3/00-capa.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../part-3/02-iniciando.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part-3/00-capa.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../part-3/02-iniciando.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>

@@ -1,0 +1,972 @@
+<!DOCTYPE HTML>
+<html lang="pt" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Query Best Prices - Desenvolvimento Web em Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../0-capa.html"><strong aria-hidden="true">1.</strong> Capa</a></li><li class="chapter-item expanded "><a href="../intro/1-about.html"><strong aria-hidden="true">2.</strong> Sobre autora</a></li><li class="chapter-item expanded "><a href="../intro/2-Audience.html"><strong aria-hidden="true">3.</strong> Público alvo</a></li><li class="chapter-item expanded "><a href="../intro/3-book.html"><strong aria-hidden="true">4.</strong> Como o livro está organizado</a></li><li class="chapter-item expanded "><a href="../intro/4-setup.html"><strong aria-hidden="true">5.</strong> Instalando Rust</a></li><li class="chapter-item expanded "><a href="../intro/5-exercício.html"><strong aria-hidden="true">6.</strong> Exercício Maior Produto de uma Série</a></li><li class="chapter-item expanded "><a href="../part-1/00-capa.html"><strong aria-hidden="true">7.</strong> Todo Server com Actix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-1/01-ping-pong.html"><strong aria-hidden="true">7.1.</strong> Configurando os primeiros endpoints</a></li><li class="chapter-item expanded "><a href="../part-1/02-create.html"><strong aria-hidden="true">7.2.</strong> Criando Tarefas</a></li><li class="chapter-item expanded "><a href="../part-1/03-get.html"><strong aria-hidden="true">7.3.</strong> Obtendo todas as Todo Cards inseridas</a></li><li class="chapter-item expanded "><a href="../part-1/04-serving.html"><strong aria-hidden="true">7.4.</strong> Tornam nosso serviço mais realístico</a></li><li class="chapter-item expanded "><a href="../part-1/05-auth.html"><strong aria-hidden="true">7.5.</strong> Autenticação</a></li><li class="chapter-item expanded "><a href="../part-1/06-middleware.html"><strong aria-hidden="true">7.6.</strong> Exigindo Autenticação através de middlewares</a></li><li class="chapter-item expanded "><a href="../part-1/07-ci.html"><strong aria-hidden="true">7.7.</strong> Configurando um CI</a></li><li class="chapter-item expanded "><a href="../part-1/08-conclusao.html"><strong aria-hidden="true">7.8.</strong> Concluindo o serviço</a></li></ol></li><li class="chapter-item expanded "><a href="../part-2/00-capa.html"><strong aria-hidden="true">8.</strong> GraphQL com Actix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-2/01-ping-gql.html"><strong aria-hidden="true">8.1.</strong> Configurando o GraphQL</a></li><li class="chapter-item expanded "><a href="../part-2/02-bestprices.html" class="active"><strong aria-hidden="true">8.2.</strong> Query Best Prices</a></li><li class="chapter-item expanded "><a href="../part-2/03-recommendations.html"><strong aria-hidden="true">8.3.</strong> Query Recommendations</a></li><li class="chapter-item expanded "><a href="../part-2/04-redis.html"><strong aria-hidden="true">8.4.</strong> Adicionando Caching com Redis</a></li></ol></li><li class="chapter-item expanded "><a href="../part-3/00-capa.html"><strong aria-hidden="true">9.</strong> Frontend com WebAssembly e YewStack</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../part-3/01-setup.html"><strong aria-hidden="true">9.1.</strong> Setup de WebAssembly</a></li><li class="chapter-item expanded "><a href="../part-3/02-iniciando.html"><strong aria-hidden="true">9.2.</strong> Iniciando o projeto</a></li><li class="chapter-item expanded "><a href="../part-3/03-best-prices.html"><strong aria-hidden="true">9.3.</strong> Componente de Best Prices</a></li><li class="chapter-item expanded "><a href="../part-3/04-recommendations.html"><strong aria-hidden="true">9.4.</strong> Componente de Recomendações</a></li><li class="chapter-item expanded "><a href="../part-3/05-route.html"><strong aria-hidden="true">9.5.</strong> Aplicando um Router</a></li></ol></li><li class="chapter-item expanded "><a href="../appendix.html"><strong aria-hidden="true">10.</strong> Appendix</a></li><li class="chapter-item expanded "><a href="../bibliografia.html"><strong aria-hidden="true">11.</strong> Bibliografia</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Desenvolvimento Web em Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="best-prices"><a class="header" href="#best-prices">Best Prices</a></h1>
+<p>Nesta query, <code>bestPrices</code>, vamos fazer uma consulta a uma API externa que retorna os melhores preços para uma rota (data, origem e destino). Consultaremos a URL de <code>bestPrices</code> da Latam <code>https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure=&lt;YYYY-mm-dd&gt;&amp;origin=&lt;IATA&gt;&amp;destination=&lt;IATA&gt;&amp;cabin=Y&amp;country=BR&amp;language=PT&amp;home=pt_br&amp;adult=1&amp;promoCode=</code>, na qual <code>departure</code> é a data de partida no formato <code>ano-mes-dia</code>, <code>origin</code> é o código IATA da cidade ou do aeroporto de origem, <code>destination</code> é o código IATA da cidade ou do aeroporto de destino. Assim, nossa query deve receber 3 argumentos <code>departure</code>, <code>origin</code> e <code>destination</code> e retornar um conjunto de melhores preços, além de lançar erros. Caso estes argumentos não estejam dentro do padrão esperado. Com isso, nosso primeiro passo será implementar a função <code>bestPrices</code> que recebe os 3 argumentos e por enquanto retornará uma <code>String</code>.</p>
+<h2 id="implementando-a-função-básica-de-bestprices"><a class="header" href="#implementando-a-função-básica-de-bestprices">Implementando a função básica de <code>bestPrices</code></a></h2>
+<p>Nosso objetivo agora é fazer nosso GraphQL responder da seguinte forma:</p>
+<p><img src="../imagens/bestpricesbasicquery.png" alt="bestPrices basic query" /></p>
+<p>A query que usamos é:</p>
+<pre><code class="language-graphql">query {
+  bestPrices(
+    departure: &quot;sdf&quot;, 
+    origin: &quot;sdf&quot;, 
+    destinantion: &quot;sdfg&quot;)
+  ping
+}
+</code></pre>
+<p>E o valor de retorno é:</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: {
+    &quot;bestPrices&quot;: &quot;test&quot;,
+    &quot;ping&quot;: &quot;pong&quot;
+  }
+}
+</code></pre>
+<p>O resultado de uma query GraphQL como a que mostamos retorna o campo <code>data</code> que é um mapa contendo os resultados das queries <code>bestPrices</code> e <code>ping</code>. Para resolvermos isso, podemos escrever a seguinte função:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// schema/mod.rs
+// ...
+#[juniper::object]
+impl QueryRoot {
+    //...
+    fn bestPrices(departure: String, origin: String, destinantion: String) -&gt; FieldResult&lt;String&gt; {
+         Ok(String::from(&quot;test&quot;))
+    }
+}
+// ...
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora podemos começar a pensar um pouco melhor na organização do nosso código. Na seção de apresentação do livro desenhamos o seguinte diagrama:</p>
+<pre><code>api
+    main
+    |-&gt; boundaries
+        |-&gt; web
+        |-&gt; db
+        |-&gt; message
+    |-&gt; controllers/resolvers
+    |-&gt; adapters
+    |-&gt; core 
+        |-&gt; business
+        |-&gt; compute
+    |-&gt; models/schemas
+</code></pre>
+<p>Com este esquema em mente, vamos ordenar como nossos arquivos ficarão organizados para um projeto GraphQL e exemplificar para onde cada conjunto já existente será movido:</p>
+<pre><code>api
+    main
+    |-&gt; boundaries
+        |-&gt; web
+        |-&gt; db
+    |-&gt; resolvers
+        |-&gt; graphql
+            |-&gt; queries
+            |-&gt; mutations
+        |-&gt; internal
+    |-&gt; adapters
+    |-&gt; core 
+        |-&gt; business
+        |-&gt; compute
+    |-&gt; schemas
+        |-&gt; graphql
+        |-&gt; model
+            |-&gt; db
+            |-&gt; web
+        |-&gt; errors
+</code></pre>
+<p>Com esta definição em mente vamos alocar o projeto que contém as rotas e os handlers GraphQL em <code>boundaries/web/handlers.rs</code>, pois este aquivo é responsável pela interface web do projeto. Qualquer módulo de comunicaçnao com banco ficaria em <code>boudnaries/db/</code>, assim como de Kafka ficaria em <code>boudnaries/kafka</code> ou <code>boudnaries/messages</code>. Nosso arquivo <code>schema/mod.rs</code> possui as configurações de resolvers, assim não faz sentido que esteja em <code>schema/</code>, e moveremos ele para <code>resolvers/graphql/</code>, poderiamos separar em <code>queries</code> e <code>mutations</code>, mas como nosso projeto somente conterá 2 queries, não precisamos nos preocupar em extrair para pastas diferentes. Além disso, chamei o que tipicamente é considerado um <code>controller</code> de <code>resolver/internal</code>, por simplicidade, caso prefira chamar de controller esta adequado também. Na pasta <code>schemas</code> vamos adicionar todos os schemas de referência ao GraphQL em <code>schemas/graphql</code>, assim como os de comunicação com o banco em <code>schemas/model/db</code> e de interface web em <code>schemas/model/web</code>. Já os erros de que usaremos para comunicar problemas estarão em <code>schemas/errors</code>. Caso você fique com dúvidas de como ficou a organizacão do código, ela está disponível no commit https://github.com/web-dev-rust/airline-tickets/commit/c33a78cffbd74be49727c744623dcd1e10902cd4.</p>
+<h2 id="validando-argumentos"><a class="header" href="#validando-argumentos">Validando argumentos</a></h2>
+<p>Com a função que implementamos para <code>bestPrices</code> precisamos agora implementar os erros correspondentes, para isso criaremos o módulo <code>schemas/errors.rs</code> e lá implementaremos os erros Graphql. O primeiro erro que vamos implementar é o erro do formato de <code>origin</code> e <code>destination</code>, pois IATAs devem ser 3 letras. Chamaremos esse conjunto de erros de <code>InputError</code> e o erro correspondente ao IATA de <code>IataFormatError</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use juniper::{FieldError, IntoFieldError};
+
+pub enum InputError {
+    IataFormatError,
+}
+
+impl IntoFieldError for InputError {
+    fn into_field_error(self) -&gt; FieldError {
+        match self {
+            InputError::IataFormatError =&gt; FieldError::new(
+                &quot;The IATA format for origin and destinantion consists of 3 letter&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;IATA FORMAT ERROR&quot;
+                }),
+            ),
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora para usarmos esse erro precisamos modificar a função <code>bestPrices</code> em <code>resolvers/graphql.rs</code> para usar o tipo <code>InputError</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::schema::errors::InputError;
+// ...
+
+#[juniper::object]
+impl QueryRoot {
+    fn ping() -&gt; FieldResult&lt;String&gt; {
+        Ok(String::from(&quot;pong&quot;))
+    }
+
+    fn bestPrices(
+        departure: String,
+        origin: String,
+        destinantion: String,
+    ) -&gt; Result&lt;String, InputError&gt; {
+        if origin.len() != 3 || !origin.chars().all(char::is_alphabetic) {
+            return Err(InputError::IataFormatError);
+        }
+
+        Ok(String::from(&quot;test&quot;))
+    }
+}
+//...
+<span class="boring">}
+</span></code></pre></pre>
+<p>Se formos em  <code>localhost:4000/graphql</code> e enviarmos <code>{bestPrices(departure: &quot;IAT&quot;, origin: &quot;IATA&quot;, destinantion: &quot;sdfg&quot;)}</code> (<code>origin</code> com 4 letras) receberemos o campo <code>error</code> com o campo <code>InputError::IataFormatError</code>:</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: null,
+  &quot;errors&quot;: [
+    {
+      &quot;message&quot;: &quot;The IATA format for origin and destinantion consists of 3 letter&quot;,
+      &quot;locations&quot;: [
+        {
+          &quot;line&quot;: 1,
+          &quot;column&quot;: 2
+        }
+      ],
+      &quot;path&quot;: [
+        &quot;bestPrices&quot;
+      ],
+      &quot;extensions&quot;: {
+        &quot;type&quot;: &quot;IATA FORMAT ERROR&quot;
+      }
+    }
+  ]
+}
+</code></pre>
+<p>O campo <code>destination</code> também é um IATA e precisamos aplicar a lógica <code>iata.len() != 3 || !iata.chars().all(char::is_alphabetic)</code> a ambos os campos, assim vamos criar um módulo de lógica que controlar quando esse erro deve ser lançado. O módulo será <code>core/error.rs</code>:</p>
+<pre><code class="language-rs">use crate::schema::errors::InputError;
+
+pub fn iata_format(origin: &amp;str, destination: &amp;str) -&gt; Result&lt;(), InputError&gt; {
+    if origin.len() != 3
+        || !origin.chars().all(char::is_alphabetic)
+        || destination.len() != 3
+        || !destination.chars().all(char::is_alphabetic)
+    {
+        Err(InputError::IataFormatError)
+    } else {
+        Ok(())
+    }
+}
+</code></pre>
+<p>Os testes para esta função são:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[cfg(test)]
+mod iata {
+    use super::iata_format;
+    use crate::schema::errors::InputError;
+
+    #[test]
+    fn len_should_be_3() {
+        assert_eq!(
+            iata_format(&quot;IATA&quot;, &quot;IAT&quot;).err().unwrap(),
+            InputError::IataFormatError
+        );
+
+        assert_eq!(
+            iata_format(&quot;IAT&quot;, &quot;IATA&quot;).err().unwrap(),
+            InputError::IataFormatError
+        );
+    }
+
+    #[test]
+    fn only_letters() {
+        assert_eq!(
+            iata_format(&quot;IAT&quot;, &quot;I4T&quot;).err().unwrap(),
+            InputError::IataFormatError
+        );
+
+        assert_eq!(
+            iata_format(&quot;I&amp;T&quot;, &quot;IAT&quot;).err().unwrap(),
+            InputError::IataFormatError
+        );
+    }
+}
+
+<span class="boring">}
+</span></code></pre></pre>
+<p>Nesta função validamos que o formato IATA é respeitado tanto para <code>origin</code> quanto para <code>destination</code>, somente 3 letras. Caso alguma das verificaçnoes falhe, lançamos o erro <code>InputError::IataFormatError</code>. Depois disso, aplicamos a função <code>iata_format</code> em nosso resolver através de um match, que retorna o erro ou executa alguma função interna:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::core::error;
+// ...
+#[juniper::object]
+impl QueryRoot {
+    fn bestPrices(
+        departure: String,
+        origin: String,
+        destination: String,
+    ) -&gt; Result&lt;String, InputError&gt; {
+        match error::iata_format(&amp;origin, &amp;destination) {
+            Err(e) =&gt; Err(e),
+            Ok(_) =&gt; Ok(String::from(&quot;test&quot;)),
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Próximo passo é determinar se <code>departure</code> é uma data e seu valor é superior ao dia de hoje.</p>
+<h3 id="validando-datas"><a class="header" href="#validando-datas">Validando datas</a></h3>
+<p>Para trabalharmos com datas precisamos incluir a crate <code>chrono = &quot;0.4.11&quot;</code> no campo <code>[dependencies]</code> do Cargo.toml. A primeira coisa que vamos verificar é se o formato da data está correto. Podemos fazer isso com a seguinte função:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use chrono::naive::NaiveDate;
+// ...
+pub fn departure_date_format(date: &amp;str) -&gt; Result&lt;(), InputError&gt; {
+    let departure = NaiveDate::parse_from_str(date, &quot;%Y-%m-%d&quot;);
+    match departure {
+        Err(_) =&gt; Err(InputError::DateFormatError),
+        Ok(d) =&gt; Ok(()),
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com <code>parse_from_str</code> verificamos se o formato da string <code>departure</code> esta correto de acordo com o formatador que passamos <code>&quot;%Y-%m-%d&quot;</code>. <code>parse_from_str</code> nos retorna um <code>Result</code> que podemos utilizar para compor o erro. Precisamos incluir um novo caso de erro, <code>DateFormatError</code> em <code>InputError</code> e adicionar sua cláusula no <code>macth</code>. Assim, validamos isso com os testes a seguir:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[cfg(test)]
+mod date {
+    use super::departure_date_format;
+    use crate::schema::errors::InputError;
+
+    #[test]
+    fn date_is_correct() {
+        assert!(departure_date_format(&quot;3020-01-20&quot;).is_ok());
+    }
+
+    #[test]
+    fn date_should_be_yyyy_mm_dd() {
+        assert_eq!(
+            departure_date_format(&quot;2020/01/20&quot;).err().unwrap(),
+            InputError::DateFormatError
+        );
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Próximo passo é verificar se a data de departure data é maior que a data de hoje, para isso podemos utilizar a função <code>signed_duration_since</code> que nos retorna uma <code>Duration</code> desde a data passada como argumento (<code>today</code>). Podemos comparar essa data extraindo o número de dias com <code>num_days</code> e verificar se é maior que <code>0</code>. Novamente precisamos adicionar um nove erro <code>InvalidDateError</code> em <code>InputError</code>.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use chrono::{naive::NaiveDate, offset::Utc};
+// ...
+
+pub fn departure_date_format(date: &amp;str) -&gt; Result&lt;(), InputError&gt; {
+    let departure = NaiveDate::parse_from_str(date, &quot;%Y-%m-%d&quot;);
+    match departure {
+        Err(_) =&gt; Err(InputError::DateFormatError),
+        Ok(d) =&gt; {
+            let today = Utc::today();
+            if d.signed_duration_since(today.naive_utc()).num_days() &gt; 0 {
+                Ok(())
+            } else {
+                Err(InputError::InvalidDateError)
+            }
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>E o teste para esse novo caso pode ser:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[test]
+fn date_should_be_greater_than_today() {
+    assert_eq!(
+        departure_date_format(&quot;2019-01-20&quot;).err().unwrap(),
+        InputError::InvalidDateError
+    );
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>O módulo <code>schema/error.rs</code> fica da seguinte forma:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use juniper::{FieldError, IntoFieldError};
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InputError {
+    IataFormatError,
+    DateFormatError,
+    InvalidDateError,
+}
+
+impl IntoFieldError for InputError {
+    fn into_field_error(self) -&gt; FieldError {
+        match self {
+            InputError::IataFormatError =&gt; FieldError::new(
+                &quot;The IATA format for origin and destinantion consists of 3 letter&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;IATA FORMAT ERROR&quot;
+                }),
+            ),
+            InputError::DateFormatError =&gt; FieldError::new(
+                &quot;departure date should be formated yyyy-mm-dd&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;DATE FORMAT ERROR&quot;
+                }),
+            ),
+            InputError::InvalidDateError =&gt; FieldError::new(
+                &quot;Date should be greater than today&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;INVALID DATE ERROR&quot;
+                }),
+            ),
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora podemos adicionar este novo grupo de erros ao nosso resolver com:</p>
+<pre><code class="language-rs">fn bestPrices(
+    departure: String,
+    origin: String,
+    destination: String,
+) -&gt; Result&lt;String, InputError&gt; {
+    match (
+        error::iata_format(&amp;origin, &amp;destination),
+        error::departure_date_format(&amp;departure),
+    ) {
+        (Err(e), Err(e2)) =&gt; Err(e),
+        (Err(e), _) =&gt; Err(e),
+        (_, Err(e)) =&gt; Err(e),
+        _ =&gt; Ok(String::from(&quot;test&quot;)),
+    }
+}
+</code></pre>
+<p>Próximo passo é responder as informações de <code>bestPrices</code> em vez de <code>Ok(String::from(&quot;test&quot;))</code>.</p>
+<h2 id="respondendo-informacões-de-bestprices"><a class="header" href="#respondendo-informacões-de-bestprices">Respondendo informacões de <code>bestPrices</code></a></h2>
+<p>Para este caso devemos utilizar um cliente HTTP, que usualmente são assíncronos em Rust, porém a crate que estamos utilizando para GraphQL ainda não tem um suporte muito sólido para <code>async/await</code>, e por isso preferi utilizar a crate de cliente HTTP <code>reqwest</code> com o módulo <code>reqwest::blocking</code>, mesmo que actix possua seu próprio módulo de cliente <code>actix_web::client</code>.</p>
+<blockquote>
+<p>Exemplo de client com <code>actix_web::client</code></p>
+<pre><pre class="playground"><code class="language-rust">use actix_web::client::Client;
+
+#[actix_rt::main]
+async fn main() {
+  let mut client = Client::default();
+
+  // Cria `request builder` e envia com `send`
+  let response = client.get(&quot;http://www.rust-lang.org&quot;)
+     .header(&quot;User-Agent&quot;, &quot;Actix-web&quot;)
+     .send().await;  // &lt;-Envia o request
+
+  println!(&quot;Response: {:?}&quot;, response);
+}
+</code></pre></pre>
+</blockquote>
+<h3 id="conhecendo-o-endpoint"><a class="header" href="#conhecendo-o-endpoint">Conhecendo o endpoint</a></h3>
+<p>Consultando o endpoint de <code>best_prices</code> para data <code>&quot;2020-07-21&quot;</code>, para origem <code>POA</code> e para destino <code>GRU</code> https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure={data}&amp;origin={iata}&amp;destination={iata}&amp;cabin=Y&amp;country=BR&amp;language=PT&amp;home=pt_br&amp;adult=1&amp;promoCode= recebemos o seguinte campos relevantes no Json:</p>
+<pre><code class="language-json">{
+    &quot;itinerary&quot;:{
+       &quot;date&quot;:&quot;2020-07-21&quot;,
+       &quot;originDestinations&quot;:[
+          {
+             &quot;duration&quot;:95,
+             &quot;departure&quot;:{
+                &quot;airport&quot;:&quot;POA&quot;,
+                &quot;city&quot;:&quot;POA&quot;,
+                &quot;country&quot;:&quot;BR&quot;,
+                &quot;timestamp&quot;:&quot;2020-07-21T11:10-03:00&quot;
+             },
+             &quot;arrival&quot;:{
+                &quot;airport&quot;:&quot;GRU&quot;,
+                &quot;city&quot;:&quot;SAO&quot;,
+                &quot;country&quot;:&quot;BR&quot;,
+                &quot;timestamp&quot;:&quot;2020-07-21T12:45-03:00&quot;
+             }
+          }
+       ]
+    },
+    &quot;bestPrices&quot;:[
+       {
+          &quot;date&quot;:&quot;2020-07-18&quot;,
+          &quot;available&quot;:true,
+          &quot;price&quot;:{
+             &quot;amount&quot;:117.03, &quot;currency&quot;:&quot;BRL&quot;
+          }
+       },
+       {
+          &quot;date&quot;:&quot;2020-07-19&quot;,
+          &quot;available&quot;:true,
+          &quot;price&quot;:{
+             &quot;amount&quot;:117.03, &quot;currency&quot;:&quot;BRL&quot;
+          }
+       },
+       {
+          &quot;date&quot;:&quot;2020-07-20&quot;,
+          &quot;available&quot;:true,
+          &quot;price&quot;:{
+             &quot;amount&quot;:117.03, &quot;currency&quot;:&quot;BRL&quot;
+          }
+       },
+       {
+          &quot;date&quot;:&quot;2020-07-21&quot;,
+          &quot;available&quot;:true,
+          &quot;price&quot;:{
+             &quot;amount&quot;:117.03, &quot;currency&quot;:&quot;BRL&quot;
+          }
+       },
+       {
+          &quot;date&quot;:&quot;2020-07-22&quot;,
+          &quot;available&quot;:true,
+          &quot;price&quot;:{
+             &quot;amount&quot;:117.03, &quot;currency&quot;:&quot;BRL&quot;
+          }
+       },
+       {
+          &quot;date&quot;:&quot;2020-07-23&quot;,
+          &quot;available&quot;:true,
+          &quot;price&quot;:{
+             &quot;amount&quot;:117.03, &quot;currency&quot;:&quot;BRL&quot;
+          }
+       },
+       {
+          &quot;date&quot;:&quot;2020-07-24&quot;,
+          &quot;available&quot;:true,
+          &quot;price&quot;:{
+             &quot;amount&quot;:117.03, &quot;currency&quot;:&quot;BRL&quot;
+          }
+       }
+    ]
+ }
+</code></pre>
+<p>Com isso, precisamos modelar a resposta de cada campo para uma estrutura de dados correspondete localizadas em <code>schema/model/web.rs</code>, chamaremos esta estrutura de <code>BestPrices</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use juniper::GraphQLObject;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = &quot;camelCase&quot;)]
+pub struct BestPrices {
+    itinerary: Itinerary,
+    best_prices: Vec&lt;BestPrice&gt;,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+#[serde(rename_all = &quot;camelCase&quot;)]
+pub struct Itinerary {
+    date: String,
+    origin_destinations: Vec&lt;OriginDestination&gt;,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct OriginDestination {
+    duration: i32,
+    departure: AirportInfo,
+    arrival: AirportInfo,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct AirportInfo {
+    airport: String,
+    city: String,
+    country: String,
+    timestamp: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct BestPrice {
+    date: String,
+    available: bool,
+    price: Option&lt;Price&gt;,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, GraphQLObject)]
+pub struct Price {
+    amount: f64,
+    currency: String,
+}
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Para podermos converter o json em uma estrutura de dados Rust vamos precisar utilizar a crate <code>serde</code> e adicionar <code>#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]</code> em todas as struct anteriores. Além disso, utilizaremos <code>#[serde(rename_all = &quot;camelCase&quot;)]</code> para transformar campos <code>snake_case</code> em <code>camelCase</code>, como <code>origin_destinations</code>, e a macro <code>GraphQLObject</code> para indicar que estas structs correspondem a um objeto GraphQL. Agora podemos fazer um request para este endpoint, para isso vamos criar o módulo <code>boundaries/http_out</code> e utilizar o <code>reqwest</code> para fazer um <code>GET</code> no endpoint:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use reqwest::{blocking::Response, Result};
+
+pub fn best_prices(departure: String, origin: String, destination: String) -&gt; Result&lt;Response&gt; {
+    let url =
+        format!(&quot;https://bff.latam.com/ws/proxy/booking-webapp-bff/v1/public/revenue/bestprices/oneway?departure={}&amp;origin={}&amp;destination={}&amp;cabin=Y&amp;country=BR&amp;language=PT&amp;home=pt_br&amp;adult=1&amp;promoCode=&quot;, departure, origin, destination);
+    reqwest::blocking::get(&amp;url)
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>A função <code>best_prices</code> formata a <code>url</code> do request adicionando os parâmetros <code>departure, origin, destination</code> para utilizar a função bloqueante <code>get</code> de <code>reqwest</code>, <code>reqwest::blocking::get(&amp;url)</code>. O tipo de retorno é um <code>Result&lt;Response&gt;</code> da própria crate <code>reqwest</code>.</p>
+<h3 id="resolvendo-bestprices"><a class="header" href="#resolvendo-bestprices">Resolvendo <code>BestPrices</code></a></h3>
+<p>Com a função <code>boundaries::http_out::best_prices</code> fazendo o request, precisamos transformar o resultado desse request em uma estrutura de dados do tipo <code>BestPrices</code> que serializa e implementa <code>GraphQLObject</code>. Para coordenarmos isso, criamos um módulo <code>resolvers/internal</code> que vai implementar a função <code>best_prices_info</code>: </p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::boundaries::http_out::best_prices;
+use crate::schema::{errors::InputError, model::web::BestPrices};
+
+pub fn best_prices_info(
+    departure: String,
+    origin: String,
+    destination: String,
+) -&gt; Result&lt;BestPrices, InputError&gt; {
+    let best_prices_text = best_prices(departure, origin, destination)
+        .unwrap()
+        .text()
+        .unwrap();
+
+    let best_prices: BestPrices = serde_json::from_str(&amp;best_prices_text).unwrap();
+
+    Ok(best_prices)
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Note que o resultado da função <code>boundaries::http_out::best_prices</code> é um <code>reqwest::Result&lt;reqwest::blocking::response&gt;</code>, e que para utilizarmos seus dados precisamos tratar como um <code>Result</code> usual, por isso aplicamos <code>unwrap</code>. Além disso, queremos a informação presente no <code>body</code> da resposta, que obtemos como texto utilizando a função <code>text</code>, que retorna um <code>Result</code>, definimos o resultado deste processo como <code>best_prices_text</code>. Com <code>best_prices_text</code> podemos transformar esse texto em uma estrutura <code>BestPrices</code> utilizando a função <code>serde_json::from_str</code>, como em <code>let best_prices: BestPrices = serde_json::from_str(&amp;best_prices_text).unwrap();</code> e retornar essa infomacão em um <code>Ok</code>. O código ainda possui alguns defeitos como a grande quantidade de <code>unwraps</code> e um <code>InputError</code> totalmente deslocado, logo veremos como melhorar o código neste sentido. <code>best_prices_info</code> ainda não está conectado a nenhuma parte do código GraphQL, assim, precisamos chamar esta função no resolver GraphQL <code>best_prices</code> e mudar seu tipo de resposta para utilizar <code>schema::model::web::BestPrices</code>, <code>Result&lt;BestPrices, InputError</code>.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::core::error;
+use crate::resolvers::internal::best_prices_info;
+use crate::schema::{errors::InputError, model::web::BestPrices};
+use juniper::FieldResult;
+use juniper::RootNode;
+
+pub struct QueryRoot;
+
+#[juniper::object]
+impl QueryRoot {
+    fn ping() -&gt; FieldResult&lt;String&gt; {
+        Ok(String::from(&quot;pong&quot;))
+    }
+
+    fn bestPrices(
+        departure: String,
+        origin: String,
+        destination: String,
+    ) -&gt; Result&lt;BestPrices, InputError&gt; {
+        match (
+            error::iata_format(&amp;origin, &amp;destination),
+            error::departure_date_format(&amp;departure),
+        ) {
+            (Err(e), Err(e2)) =&gt; Err(e),
+            (Err(e), _) =&gt; Err(e),
+            (_, Err(e)) =&gt; Err(e),
+            _ =&gt; best_prices_info(departure, origin, destination),
+        }
+    }
+}
+// ...
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="melhorando-as-mensagens-de-erro"><a class="header" href="#melhorando-as-mensagens-de-erro">Melhorando as mensagens de erro.</a></h2>
+<p>O conceito de <code>Input Error</code> é particularmente estranho para erros de conversão de Json com <code>serde</code> ou de request com <code>reqwest</code>, assim, uma possível solução é fazer um <strong>&quot;super grupo&quot;</strong> de erros, que vou chamar de <code>GenericError</code>, e esse vai possuír um <code>enum</code> chamado <code>InternalError</code>:</p>
+<pre><code class="language-Rust">#[derive(Debug, Clone, PartialEq)]
+pub enum GenericError {
+    InputError(InputError),
+    InternalError(InternalError),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InputError {
+    IataFormatError,
+    DateFormatError,
+    InvalidDateError,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InternalError {
+    RequestFailedError,
+    ResponseParseError,
+}
+</code></pre>
+<p>A próxima mudança que podemos fazer é alterar todos os <code>Result&lt;BestPrices, InputError&gt;</code> para <code>Result&lt;BestPrices, GenericError&gt;</code>, o que causa uma grande quantidade de alarmes em nosso código, mas em vez de arrumarmos cada um dos alarmes e termos mais dor de cabeça, vamos implementar a trait <code>From</code> para dois erros do tipo <code>GenericError::InternalError</code>, <code>reqwest::Error</code> e <code>serde_json::Error</code>, pois estes são os erros que queremos lançar na função <code>esolvers::internal::best_prices_info;</code>. O primeiro erro, <code>reqwest::Error</code>, tem como objetivo retirar o <code>unwrap</code> e o <code>expect</code> da chamada <code>best_prices(departure, origin, destination).unwrap().text().expect(...);</code>, obtendo como resultado <code>best_prices(departure, origin, destination)?.text()?;</code>, que nos ajuda a aproveitar o tipo de retorno <code>GenericError</code>. O mesmo faremos para transformar a chamada de <code>serde_json::from_str(&amp;best_prices_text).unwrap();</code> em <code>serde_json::from_str(&amp;best_prices_text)?;</code> aplicando a trait <code>From</code> no tipo de erro <code>serde_json::Error</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl From&lt;reqwest::Error&gt; for GenericError {
+    fn from(e: reqwest::Error) -&gt; Self {
+        GenericError::InternalError(InternalError::RequestFailedError)
+    }
+}
+
+impl From&lt;serde_json::Error&gt; for GenericError {
+    fn from(e: serde_json::Error) -&gt; Self {
+        GenericError::InternalError(InternalError::ResponseParseError)
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>O efeito disso é que o arquivo <code>resolver/internal.rs</code> se torna muito mais simples:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::boundaries::http_out::best_prices;
+use crate::schema::{errors::GenericError, model::web::BestPrices};
+
+pub fn best_prices_info(
+    departure: String,
+    origin: String,
+    destination: String,
+) -&gt; Result&lt;BestPrices, GenericError&gt; {
+    let best_prices_text = best_prices(departure, origin, destination)?.text()?;
+    let best_prices: BestPrices = serde_json::from_str(&amp;best_prices_text)?;
+
+    Ok(best_prices)
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Com isso, podemos notar que a vida da query <code>bestPrices</code> ficou muito mais simples, pois o <code>match</code> se torna desnecessário, já que as funções <code>error::iata_format</code>e <code>error::departure_date_format</code> retornam um tipo <code>Result&lt;(),InputError&gt;</code>, que é facilmente convertido para um <code>Result&lt;(),GenericError&gt;</code>, nos permitindo utilizar a sintaxe <code>try</code> para elas na query <code>bestPrices</code>, <code>error::iata_format(&amp;origin, &amp;destination)?;</code> e <code>error::departure_date_format(&amp;departure)?;</code>. O arquivo <code>core/error.rs</code> passa a ter a seguinte aparência:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::schema::errors::{GenericError, InputError};
+use chrono::{naive::NaiveDate, offset::Utc};
+
+pub fn iata_format(origin: &amp;str, destination: &amp;str) -&gt; Result&lt;(), GenericError&gt; {
+    if origin.len() != 3
+        || !origin.chars().all(char::is_alphabetic)
+        || destination.len() != 3
+        || !destination.chars().all(char::is_alphabetic)
+    {
+        Err(GenericError::InputError(InputError::IataFormatError))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn departure_date_format(date: &amp;str) -&gt; Result&lt;(), GenericError&gt; {
+    let departure = NaiveDate::parse_from_str(date, &quot;%Y-%m-%d&quot;);
+    match departure {
+        Err(_) =&gt; Err(GenericError::InputError(InputError::DateFormatError)),
+        Ok(d) =&gt; {
+            let today = Utc::today();
+            if d.signed_duration_since(today.naive_utc()).num_days() &gt; 0 {
+                Ok(())
+            } else {
+                Err(GenericError::InputError(InputError::InvalidDateError))
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod date {
+    use super::departure_date_format;
+    use crate::schema::errors::{InputError, GenericError};
+
+    #[test]
+    fn date_is_correct() {
+        assert!(departure_date_format(&quot;3020-01-20&quot;).is_ok());
+    }
+
+    #[test]
+    fn date_should_be_yyyy_mm_dd() {
+        assert_eq!(
+            departure_date_format(&quot;2020/01/20&quot;).err().unwrap(),
+            GenericError::InputError(InputError::DateFormatError)
+        );
+    }
+
+    #[test]
+    fn date_should_be_greater_than_today() {
+        assert_eq!(
+            departure_date_format(&quot;2019-01-20&quot;).err().unwrap(),
+            GenericError::InputError(InputError::InvalidDateError)
+        );
+    }
+}
+
+#[cfg(test)]
+mod iata {
+    use super::iata_format;
+    use crate::schema::errors::{InputError, GenericError};
+
+    #[test]
+    fn len_should_be_3() {
+        assert_eq!(
+            iata_format(&quot;IATA&quot;, &quot;IAT&quot;).err().unwrap(),
+            GenericError::InputError(InputError::IataFormatError)
+        );
+
+        assert_eq!(
+            iata_format(&quot;IAT&quot;, &quot;IATA&quot;).err().unwrap(),
+            GenericError::InputError(InputError::IataFormatError)
+        );
+    }
+
+    #[test]
+    fn only_letters() {
+        assert_eq!(
+            iata_format(&quot;IAT&quot;, &quot;I4T&quot;).err().unwrap(),
+            GenericError::InputError(InputError::IataFormatError)
+        );
+
+        assert_eq!(
+            iata_format(&quot;I&amp;T&quot;, &quot;IAT&quot;).err().unwrap(),
+            GenericError::InputError(InputError::IataFormatError)
+        );
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Todas essas mudanças nos permitem ainda simplificar a query <code>bestPrices</code> para utilizar os operadores <code>try</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[juniper::object]
+impl QueryRoot {
+    fn ping() -&gt; FieldResult&lt;String&gt; {
+        Ok(String::from(&quot;pong&quot;))
+    }
+
+    fn bestPrices(
+        departure: String,
+        origin: String,
+        destination: String,
+    ) -&gt; Result&lt;BestPrices, GenericError&gt; {
+        error::iata_format(&amp;origin, &amp;destination)?;
+        error::departure_date_format(&amp;departure)?;
+        let best_price = best_prices_info(departure, origin, destination)?;
+        Ok(best_price)
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Note que ainda há um problema envolvendo a trait <code>IntoFieldError</code> que não está implementada para o enum <code>GenericError</code>. Fazemos isso refatorando a implementação da trait para o enum <code>InputError</code>, reaproveitando todos seus campos:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl IntoFieldError for GenericError {
+    fn into_field_error(self) -&gt; FieldError {
+        match self {
+            GenericError::InputError(InputError::IataFormatError) =&gt; FieldError::new(
+                &quot;The IATA format for origin and destinantion consists of 3 letter&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;IATA FORMAT ERROR&quot;
+                }),
+            ),
+            GenericError::InputError(InputError::DateFormatError) =&gt; FieldError::new(
+                &quot;departure date should be formated yyyy-mm-dd&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;DATE FORMAT ERROR&quot;
+                }),
+            ),
+            GenericError::InputError(InputError::InvalidDateError) =&gt; FieldError::new(
+                &quot;Date should be greater than today&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;INVALID DATE ERROR&quot;
+                }),
+            ),
+            GenericError::InternalError(InternalError::RequestFailedError) =&gt; FieldError::new(
+                &quot;Could not complete properly request to the backend&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;REQUEST FAILED ERROR&quot;
+                }),
+            ),
+            GenericError::InternalError(InternalError::ResponseParseError) =&gt; FieldError::new(
+                &quot;Could not parse response from backend&quot;,
+                graphql_value!({
+                    &quot;type&quot;: &quot;RESPONSE PARSE ERROR&quot;
+                }),
+            ),
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Agora que evoluímos os erros da nossa API, podemos fazer a query de recommendations.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part-2/01-ping-gql.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../part-2/03-recommendations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part-2/01-ping-gql.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../part-2/03-recommendations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>
