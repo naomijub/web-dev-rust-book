@@ -283,7 +283,7 @@ No nosso teste anterior, percebemos que nossas rotas da `main.rs` são desconect
 ```rust
 use actix_web::{web, HttpResponse};
 use crate::todo_api_web::controller::{
-    pong, readiness,
+    ping, readiness,
     todo::create_todo
 };
 
