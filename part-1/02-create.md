@@ -437,7 +437,7 @@ db:
 
 Como essa primeira feature envolve exploração, primeiro vou apresentar a lógica de como fazemos para depois escrever os testes e generalizações. O próximo passo para termos a lógica do banco de dados é criar um novo módulo em `lib.rs` (e no `main.rs`) chamado `todo_api`, que por sua vez possuirá o módulo `db`, que vai gerenciar todas as relações com o DynamoDB. Antes de seguir com o servidor em si, vou comentar a atual função `main` e substituir por outra simples que sera descrita posteriormente, que utiliza somente o módulo `todo_api` para executar a criação de uma `TodoCard` no banco de dados, depois disso podemos conectar as partes novamente.
 
-Para podermos nos comunicar facilmente com o DynamoDB em Rust, existem a biblioteca oferecida pela AWS, chamada `aws-sdk-dynamodb`. Basta adicioná-las às dependências no `Cargo.toml`. (Atualmente a sdk Rust da AWS está em Developer Preview e não deve ser usada em produção).
+Para podermos nos comunicar facilmente com o DynamoDB em Rust, existem as bibliotecas oferecidas pela AWS, chamadas `aws-sdk-dynamodb` e `aws-config`. Basta adicioná-las às dependências no `Cargo.toml`. (Atualmente a sdk Rust da AWS está em Developer Preview e não deve ser usada em produção).
 
 ```toml
 [dependencies]
